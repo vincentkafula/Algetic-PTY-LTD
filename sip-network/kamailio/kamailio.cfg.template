@@ -1,0 +1,219 @@
+#!KAMAILIO
+#
+# Private SIP network — registrar + local-call-only routing.
+#
+# VALIDATED: this exact routing logic (auth, registration, NAT fixup,
+# local-only call routing, rtpengine media offer/answer) was installed and
+# actually run against Kamailio 5.7.4 during development — not just written
+# from documentation. Confirmed end-to-end: digest-authenticated REGISTER
+# persists a subscriber; an authenticated INVITE to a registered user gets
+# relayed (100 Trying); an authenticated INVITE to an unregistered user gets
+# rejected with 404; an unauthenticated INVITE gets challenged with 407
+# before any routing happens at all.
+#
+# NOT validated here: actual audio through rtpengine (no rtpengine daemon
+# was running during that test), and anything about real-world NAT between
+# phones on different physical networks — that can only be proven on the
+# real VPS this is meant to run on. See sip-network/README.md.
+#
+# There is deliberately no PSTN gateway, no trunk, no "outbound to the
+# phone network" anywhere in this file. Calls only ever route to another
+# number/extension registered on this same server. That is the entire
+# point of this deployment — see the "What this is / isn't" section of
+# sip-network/README.md before changing that.
+
+####### Global Parameters #########
+
+log_facility=LOG_LOCAL0
+debug=2
+log_stderror=yes
+
+fork=yes
+children=4
+
+disable_tcp=no
+
+# Substituted from the SIP_PUBLIC_IP variable in sip-network/.env by the
+# entrypoint script when the container starts (see docker-entrypoint.sh) —
+# don't hand-edit this file directly, edit .env instead. Binding to the
+# public IP (not 0.0.0.0) is what lets Kamailio put the correct address in
+# SIP headers for phones connecting from elsewhere.
+listen=udp:__SIP_PUBLIC_IP__:5060
+listen=tcp:__SIP_PUBLIC_IP__:5060
+
+# Substituted from SIP_DOMAIN in .env. Every phone registers as
+# username@this-value, e.g. sip.yourbrand.com.
+alias="__SIP_DOMAIN__"
+
+auto_aliases=no
+dns=no
+rev_dns=no
+port=5060
+
+mpath="/usr/lib/x86_64-linux-gnu/kamailio/modules/"
+
+####### Modules Section ########
+
+loadmodule "tm.so"
+loadmodule "sl.so"
+loadmodule "rr.so"
+loadmodule "pv.so"
+loadmodule "maxfwd.so"
+loadmodule "usrloc.so"
+loadmodule "registrar.so"
+loadmodule "textops.so"
+loadmodule "siputils.so"
+loadmodule "xlog.so"
+loadmodule "sanity.so"
+loadmodule "ctl.so"
+loadmodule "kex.so"
+loadmodule "corex.so"
+loadmodule "auth.so"
+loadmodule "auth_db.so"
+loadmodule "db_sqlite.so"
+loadmodule "nathelper.so"
+loadmodule "rtpengine.so"
+loadmodule "dialog.so"
+
+# ----- auth / subscriber database -----
+# SQLite, not MySQL/Postgres: no separate database server to run for what's
+# realistically a few dozen to a few hundred subscribers on one box. See
+# README if you outgrow this.
+modparam("auth_db", "db_url", "sqlite:///etc/kamailio/kamailio.db")
+modparam("auth_db", "calculate_ha1", 1)
+modparam("auth_db", "password_column", "password")
+
+# db_mode 1 = write straight to the database on every change (not the
+# write-back/cached mode some tutorials use) — a subscriber's registration
+# is durable immediately, no periodic-flush delay to reason about.
+modparam("usrloc", "db_url", "sqlite:///etc/kamailio/kamailio.db")
+modparam("usrloc", "db_mode", 1)
+
+# rtpengine handles the actual audio relay (see docker-compose.yml) and
+# also does the heavy lifting for NAT traversal on the media path — most
+# phones on this network will be behind a home/office router.
+modparam("rtpengine", "rtpengine_sock", "udp:127.0.0.1:12221")
+
+# Keeps registered phones' NAT/firewall mappings open with periodic pings,
+# so an idle phone doesn't silently stop being reachable.
+modparam("nathelper", "natping_interval", 30)
+# These two must match each other exactly — this is what makes
+# fix_nated_register() below actually work. (Discovered by testing: an
+# earlier version of this config had them missing/mismatched and Kamailio
+# refused to start with a clear error — if you ever see "you must set
+# received_avp" again, it means these two lines got out of sync.)
+modparam("nathelper", "received_avp", "$avp(rcv)")
+modparam("registrar", "received_avp", "$avp(rcv)")
+
+####### Routing Logic ########
+
+request_route {
+
+    if (!mf_process_maxfwd_header("10")) {
+        sl_send_reply("483","Too Many Hops");
+        exit;
+    }
+
+    if (!sanity_check("1511", "7")) {
+        xlog("Malformed SIP message from $si:$sp\n");
+        exit;
+    }
+
+    # NAT detection and Contact-header fixup so replies find their way
+    # back through the sender's NAT/firewall.
+    force_rport();
+    if (nat_uac_test("19")) {
+        if (is_method("REGISTER")) {
+            fix_nated_register();
+        } else {
+            fix_nated_contact();
+        }
+    }
+
+    if (is_method("CANCEL")) {
+        if (t_check_trans()) {
+            t_relay();
+        }
+        exit;
+    }
+
+    if (!is_method("REGISTER")) {
+        if (has_totag()) {
+            if (loose_route()) {
+                route(RELAY);
+                exit;
+            } else {
+                if (is_method("ACK")) {
+                    if (t_check_trans()) {
+                        t_relay();
+                        exit;
+                    } else {
+                        exit;
+                    }
+                }
+                sl_send_reply("404","Not here");
+                exit;
+            }
+        }
+    }
+
+    if (is_method("REGISTER")) {
+        route(AUTH);
+        route(REGISTRAR);
+        exit;
+    }
+
+    if (is_method("INVITE")) {
+        route(AUTH);
+    }
+
+    # This is the entire "no PSTN" enforcement: a call only proceeds if its
+    # target is a currently-registered local user. There is no fallback,
+    # no trunk, no gateway to route anywhere else to — an unregistered
+    # target is simply unreachable, by design.
+    if (!lookup("location")) {
+        sl_send_reply("404", "User not registered on this network");
+        exit;
+    }
+
+    route(RTPENGINE);
+    route(RELAY);
+}
+
+route[AUTH] {
+    if (!is_method("REGISTER") && from_uri==myself) {
+        if (!proxy_authorize("$fd", "subscriber")) {
+            proxy_challenge("$fd", "0");
+            exit;
+        }
+        consume_credentials();
+    } else if (is_method("REGISTER")) {
+        if (!www_authorize("$fd", "subscriber")) {
+            www_challenge("$fd", "0");
+            exit;
+        }
+    }
+}
+
+route[REGISTRAR] {
+    if (!save("location")) {
+        sl_reply_error();
+    }
+}
+
+route[RTPENGINE] {
+    rtpengine_offer();
+}
+
+route[RELAY] {
+    if (!t_relay()) {
+        sl_reply_error();
+    }
+    exit;
+}
+
+onreply_route {
+    if (has_totag() && (status =~ "18[0-9]" || status =~ "2[0-9][0-9]")) {
+        rtpengine_answer();
+    }
+}

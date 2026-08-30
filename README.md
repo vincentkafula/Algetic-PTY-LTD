@@ -211,6 +211,15 @@ list. Before relying on them:
   requested through Twilio support rather than bought directly — in that
   case, remove `ZM` from `SUPPORTED_NUMBER_COUNTRIES` until confirmed.
 
+## Private SIP network (no telecom carrier)
+
+`sip-network/` is a separate, self-hosted alternative to the Twilio-based
+voice piece above — a SIP registrar and call router (Kamailio + rtpengine)
+that lets registered users call each other with zero carrier involvement.
+It cannot reach or be reached by real phone numbers, and it runs on its own
+VPS, not on Railway — see `sip-network/README.md` for the full scope,
+what's been verified vs. not, and deployment steps.
+
 ## China
 
 Numbers for China are intentionally excluded from `SUPPORTED_NUMBER_COUNTRIES`
