@@ -116,12 +116,36 @@ similar) behind the same four functions (`find`, `filter`, `insert`,
 `JWT_SECRET` and provider keys into a proper secrets manager rather than a
 plaintext `.env` file on the box.
 
-## Email: the gap between this demo and a real mailbox product
+## Email: send and receive, and the gap that remains
 
 Mailgun is built for **sending and inbound routing** (forward mail, hit a
 webhook), not for storing mail behind an IMAP login the way Outlook expects.
-To give customers a real "type in your email and password" Outlook setup,
-you have two realistic paths:
+This starter now does both send and receive for real:
+
+- **Sending**: `POST /api/mailboxes/:id/send` calls the Mailgun Messages API
+  directly from a mailbox's address, and records the sent message.
+- **Receiving**: if `PUBLIC_BASE_URL` and `MAILGUN_WEBHOOK_SIGNING_KEY` are
+  set (see `server/.env.example`), each new mailbox's Mailgun route
+  forwards inbound mail to this app's own webhook
+  (`routes/webhooks.js`), which verifies Mailgun's signature and stores the
+  message so it shows up in the dashboard and via `GET
+  /api/mailboxes/:id/messages`. Without those two variables set, mailboxes
+  still work but fall back to plain forwarding only — nothing is captured
+  or shown in the dashboard. A mailbox's `inboundCaptureEnabled` field
+  tells you which mode it's in.
+- **Webhook security**: Mailgun's inbound signature uses a **separate
+  "HTTP webhook signing key"**, not `MAILGUN_API_KEY` — Mailgun split these
+  so a leaked sending key can't be used to forge inbound webhook calls.
+  Find it in the Mailgun dashboard under Settings → API Keys. The webhook
+  route rejects any request whose signature doesn't verify before it's
+  allowed to touch storage.
+- **Storage caveat**: message bodies are capped at 5,000 characters and
+  live in the same JSON file as everything else in this starter — fine for
+  development, not for real mail volume. See the database section above.
+
+What's still missing — a real Outlook-style "type in your email and
+password" login — needs actual IMAP, which Mailgun doesn't provide. Two
+realistic paths if you need that:
 
 1. **Pair Mailgun's inbound routing with your own mail store** — run
    Dovecot (IMAP server) behind the scenes, have Mailgun forward incoming
@@ -132,9 +156,8 @@ you have two realistic paths:
    work, but you're reselling someone else's mailbox product under your
    brand rather than fully owning the stack.
 
-`routes/mailboxes.js` shows the Mailgun side (routing) so you can see the
-API shape either way, and now also supports deleting a mailbox (removes the
-Mailgun route and the local record).
+`routes/mailboxes.js` also supports deleting a mailbox (removes the Mailgun
+route, the local record, and that mailbox's captured message history).
 
 ## Voice: SIP trunking
 

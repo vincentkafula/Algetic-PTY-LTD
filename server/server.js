@@ -6,6 +6,9 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const mailboxRoutes = require('./routes/mailboxes');
 const numberRoutes = require('./routes/numbers');
+const webhookRoutes = require('./routes/webhooks');
+const { isMailgunConfigured, isInboundCaptureConfigured } = require('./mailgunClient');
+const { isTwilioConfigured } = require('./twilioClient');
 
 const app = express();
 app.use(cors());
@@ -22,13 +25,17 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/mailboxes', mailboxRoutes);
 app.use('/api/numbers', numberRoutes);
+// Not behind requireAuth — Mailgun calls this directly. Authenticity comes
+// from verifying Mailgun's own signature inside the route, not a session.
+app.use('/api/webhooks', webhookRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     jwtConfigured: Boolean(process.env.JWT_SECRET),
-    mailgunConfigured: Boolean(process.env.MAILGUN_API_KEY && process.env.MAILGUN_API_KEY !== 'key-xxxxxxxxxxxxxxxxxxxxxxxx'),
-    twilioConfigured: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_ACCOUNT_SID.startsWith('AC') && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_AUTH_TOKEN !== 'your_auth_token_here'),
+    mailgunConfigured: isMailgunConfigured(),
+    mailgunInboundCaptureConfigured: isInboundCaptureConfigured(),
+    twilioConfigured: isTwilioConfigured(),
     supportedCountries: (process.env.SUPPORTED_NUMBER_COUNTRIES || 'US,CA,GB').split(',')
   });
 });

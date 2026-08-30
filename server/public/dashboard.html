@@ -46,8 +46,36 @@
       <div class="panel-box">
         <h2>Your mailboxes</h2>
         <table>
-          <thead><tr><th>Address</th><th>SMTP host</th><th>Created</th><th></th></tr></thead>
-          <tbody id="mailTable"><tr class="empty-row"><td colspan="4">No mailboxes yet</td></tr></tbody>
+          <thead><tr><th>Address</th><th>SMTP host</th><th>Inbound</th><th>Created</th><th></th></tr></thead>
+          <tbody id="mailTable"><tr class="empty-row"><td colspan="5">No mailboxes yet</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Messages</h2>
+        <div class="form-row">
+          <select id="msgMailboxSelect" onchange="loadMessages()">
+            <option value="">Select a mailbox…</option>
+          </select>
+        </div>
+
+        <div id="composeForm" style="display:none">
+          <div class="form-row">
+            <input id="msgTo" placeholder="to@example.com" style="flex:1;min-width:180px" />
+            <input id="msgSubject" placeholder="Subject" style="flex:1;min-width:180px" />
+          </div>
+          <div class="form-row">
+            <textarea id="msgBody" placeholder="Message" rows="3" style="flex:1;min-width:260px;background:var(--panel-raised);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
+          </div>
+          <div class="form-row">
+            <button class="primary" onclick="sendMessage()">Send</button>
+          </div>
+          <div id="msgSendResult"></div>
+        </div>
+
+        <table>
+          <thead><tr><th>Direction</th><th>From</th><th>To</th><th>Subject</th><th>When</th></tr></thead>
+          <tbody id="msgTable"><tr class="empty-row"><td colspan="5">Select a mailbox above</td></tr></tbody>
         </table>
       </div>
     </div>

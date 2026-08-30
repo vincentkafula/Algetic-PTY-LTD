@@ -5,24 +5,14 @@ const router = express.Router();
 
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
-
-const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
-const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
-const MAILGUN_BASE_URL = process.env.MAILGUN_BASE_URL || 'https://api.mailgun.net/v3';
-
-function authHeader() {
-  const token = Buffer.from(`api:${MAILGUN_API_KEY}`).toString('base64');
-  return `Basic ${token}`;
-}
-
-function isMailgunConfigured() {
-  return Boolean(
-    MAILGUN_API_KEY &&
-    MAILGUN_API_KEY !== 'key-xxxxxxxxxxxxxxxxxxxxxxxx' &&
-    MAILGUN_DOMAIN &&
-    MAILGUN_DOMAIN !== 'mail.yourbrand.com'
-  );
-}
+const {
+  MAILGUN_DOMAIN,
+  MAILGUN_BASE_URL,
+  PUBLIC_BASE_URL,
+  isMailgunConfigured,
+  isInboundCaptureConfigured,
+  authHeader
+} = require('../mailgunClient');
 
 // Every route below requires a logged-in account; mailboxes are always
 // scoped to req.user.id so one customer never sees another's data.
@@ -40,16 +30,21 @@ router.get('/', (req, res) => {
 /**
  * POST /api/mailboxes
  * body: { localPart: "sales", forwardTo: "..." }
- * Creates sales@MAILGUN_DOMAIN and returns the IMAP/SMTP settings
- * the customer pastes into Outlook.
+ * Creates sales@MAILGUN_DOMAIN.
  *
- * Note: Mailgun is primarily built for transactional/outbound sending and
- * inbound routing (forwarding/webhooks), not native IMAP storage. To give
- * customers a real Outlook-style "mailbox" (IMAP login, folders, persistent
- * storage) you'd pair Mailgun's inbound routing with a mail store like
- * Dovecot, or use a provider that offers IMAP directly (e.g. Migadu,
- * ImprovMX + a store, or Amazon WorkMail). This route shows the Mailgun
- * side (send/receive over HTTP + routing) so you can see the API shape.
+ * Inbound mail handling depends on whether PUBLIC_BASE_URL and
+ * MAILGUN_WEBHOOK_SIGNING_KEY are set (see server/.env.example):
+ * - If configured: Mailgun forwards inbound mail to this app's own
+ *   webhook (routes/webhooks.js), which stores it so it shows up in the
+ *   dashboard and via GET /api/mailboxes/:id/messages. If forwardTo is
+ *   also given, mail is additionally forwarded there as a backup copy.
+ * - If not configured: falls back to plain forwarding only (forwardTo, or
+ *   the mailbox address itself) — the old behavior. inboundCaptureEnabled
+ *   on the returned record tells you which mode a mailbox is in.
+ *
+ * This still isn't a real IMAP mailbox — see README for why Mailgun alone
+ * can't offer that, and what "type your password into Outlook" actually
+ * requires.
  */
 router.post('/', async (req, res) => {
   const { localPart, forwardTo } = req.body || {};
@@ -68,13 +63,24 @@ router.post('/', async (req, res) => {
   const dup = db.mailboxes.find((m) => m.ownerId === req.user.id && m.address === address);
   if (dup) return res.status(409).json({ error: `${address} already exists on your account` });
 
+  // Generated up front so it can be embedded in the webhook callback URL
+  // Mailgun will POST inbound mail to.
+  const mailboxId = crypto.randomUUID();
+  const inboundCaptureEnabled = isInboundCaptureConfigured();
+
   try {
-    // Create an inbound route: mail to this address gets forwarded/stored.
     const params = new URLSearchParams();
     params.append('priority', '0');
     params.append('description', `Route for ${address}`);
     params.append('expression', `match_recipient("${address}")`);
-    params.append('action', `forward("${forwardTo || address}")`);
+
+    if (inboundCaptureEnabled) {
+      const webhookUrl = `${PUBLIC_BASE_URL}/api/webhooks/mailgun/inbound?mailboxId=${mailboxId}`;
+      params.append('action', `forward("${webhookUrl}")`);
+      if (forwardTo) params.append('action', `forward("${forwardTo}")`);
+    } else {
+      params.append('action', `forward("${forwardTo || address}")`);
+    }
     params.append('action', 'stop()');
 
     const response = await fetch(`${MAILGUN_BASE_URL}/routes`, {
@@ -104,13 +110,17 @@ router.post('/', async (req, res) => {
     }
 
     const record = {
-      id: crypto.randomUUID(),
+      id: mailboxId,
       ownerId: req.user.id,
       address,
       createdAt: new Date().toISOString(),
       smtp: { host: `smtp.${MAILGUN_DOMAIN}`, port: 587, security: 'STARTTLS' },
       imapNote: 'Mailgun has no native IMAP - pair with a mail store (Dovecot) or an IMAP-capable provider for real Outlook login.',
-      mailgunRouteId: data.route ? data.route.id : null
+      mailgunRouteId: data.route ? data.route.id : null,
+      inboundCaptureEnabled,
+      inboundNote: inboundCaptureEnabled
+        ? 'Inbound mail is captured and shown in this dashboard (GET /api/mailboxes/:id/messages).'
+        : 'PUBLIC_BASE_URL / MAILGUN_WEBHOOK_SIGNING_KEY are not set, so inbound mail only plain-forwards and will not appear in this dashboard — see server/.env.example.'
     };
     await db.mailboxes.insert(record);
     res.status(201).json(record);
@@ -120,8 +130,91 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * GET /api/mailboxes/:id/messages
+ * Lists inbound and outbound message history captured for this mailbox,
+ * most recent first. Requires inbound capture to be configured for
+ * inbound messages to appear at all — sent messages always show up.
+ */
+router.get('/:id/messages', (req, res) => {
+  const mailbox = db.mailboxes.find((m) => m.id === req.params.id && m.ownerId === req.user.id);
+  if (!mailbox) return res.status(404).json({ error: 'Mailbox not found' });
+
+  const messages = db.messages
+    .filter((msg) => msg.mailboxId === mailbox.id && msg.ownerId === req.user.id)
+    .sort((a, b) => new Date(b.at) - new Date(a.at));
+  res.json({ messages });
+});
+
+/**
+ * POST /api/mailboxes/:id/send
+ * body: { to, subject, text }
+ * Sends an email from this mailbox's address via the Mailgun Messages API
+ * and records it in this mailbox's message history.
+ */
+router.post('/:id/send', async (req, res) => {
+  const mailbox = db.mailboxes.find((m) => m.id === req.params.id && m.ownerId === req.user.id);
+  if (!mailbox) return res.status(404).json({ error: 'Mailbox not found' });
+
+  const { to, subject, text } = req.body || {};
+  if (!to || !subject || !text) {
+    return res.status(400).json({ error: 'to, subject, and text are all required' });
+  }
+  if (!isMailgunConfigured()) {
+    return res.status(500).json({ error: 'Server is missing MAILGUN_API_KEY / MAILGUN_DOMAIN in .env' });
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.append('from', mailbox.address);
+    params.append('to', to);
+    params.append('subject', subject);
+    params.append('text', text);
+
+    const response = await fetch(`${MAILGUN_BASE_URL}/${MAILGUN_DOMAIN}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader(),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    });
+
+    const rawBody = await response.text();
+    let data;
+    try {
+      data = JSON.parse(rawBody);
+    } catch {
+      return res.status(response.status || 502).json({
+        error: 'Mailgun did not return a valid response when sending. Check MAILGUN_DOMAIN and MAILGUN_BASE_URL in .env.'
+      });
+    }
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data.message || 'Mailgun error', data });
+    }
+
+    const record = {
+      id: crypto.randomUUID(),
+      ownerId: req.user.id,
+      mailboxId: mailbox.id,
+      direction: 'outbound',
+      from: mailbox.address,
+      to,
+      subject,
+      bodyText: text.slice(0, 5000),
+      mailgunMessageId: data.id || null,
+      at: new Date().toISOString()
+    };
+    await db.messages.insert(record);
+    res.status(201).json(record);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * DELETE /api/mailboxes/:id
- * Removes the Mailgun route (if configured) and the local record.
+ * Removes the Mailgun route (if configured) and the local record, along
+ * with that mailbox's captured message history.
  * Only the owning account can delete its own mailbox.
  */
 router.delete('/:id', async (req, res) => {
@@ -142,6 +235,7 @@ router.delete('/:id', async (req, res) => {
   }
 
   await db.mailboxes.remove((m) => m.id === record.id);
+  await db.messages.remove((msg) => msg.mailboxId === record.id);
   res.status(204).end();
 });
 

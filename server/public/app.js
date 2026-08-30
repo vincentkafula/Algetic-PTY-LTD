@@ -90,20 +90,30 @@ async function deleteMailbox(id) {
 
 async function loadMailboxes() {
   const tbody = document.getElementById('mailTable');
+  const select = document.getElementById('msgMailboxSelect');
   try {
     const res = await authedFetch(`${API}/api/mailboxes`);
     const data = await res.json();
     if (!data.mailboxes || data.mailboxes.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No mailboxes yet</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No mailboxes yet</td></tr>';
+      select.innerHTML = '<option value="">Select a mailbox…</option>';
       return;
     }
     tbody.innerHTML = data.mailboxes.map(m => `
       <tr>
         <td class="mono">${m.address}</td>
         <td class="mono">${m.smtp.host}</td>
+        <td>${m.inboundCaptureEnabled ? '<span style="color:var(--mail)">Captured</span>' : '<span style="color:var(--muted)">Forward only</span>'}</td>
         <td>${new Date(m.createdAt).toLocaleString()}</td>
         <td><button class="danger" onclick="deleteMailbox('${m.id}')">Delete</button></td>
       </tr>`).join('');
+
+    const previousSelection = select.value;
+    select.innerHTML = '<option value="">Select a mailbox…</option>' +
+      data.mailboxes.map(m => `<option value="${m.id}">${m.address}</option>`).join('');
+    if (previousSelection && data.mailboxes.some(m => m.id === previousSelection)) {
+      select.value = previousSelection;
+    }
   } catch (err) { /* server not running yet, leave empty state */ }
 }
 
@@ -196,6 +206,66 @@ async function loadNumbers() {
         <td><button class="danger" onclick="releaseNumber('${n.id}')">Release</button></td>
       </tr>`).join('');
   } catch (err) { /* server not running yet, leave empty state */ }
+}
+
+// ---- messages ----
+async function loadMessages() {
+  const mailboxId = document.getElementById('msgMailboxSelect').value;
+  const tbody = document.getElementById('msgTable');
+  const composeForm = document.getElementById('composeForm');
+
+  if (!mailboxId) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Select a mailbox above</td></tr>';
+    composeForm.style.display = 'none';
+    return;
+  }
+  composeForm.style.display = 'block';
+
+  try {
+    const res = await authedFetch(`${API}/api/mailboxes/${mailboxId}/messages`);
+    const data = await res.json();
+    if (!data.messages || data.messages.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No messages yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.messages.map(m => `
+      <tr>
+        <td>${m.direction === 'inbound' ? '↓ In' : '↑ Out'}</td>
+        <td class="mono">${m.from}</td>
+        <td class="mono">${m.to}</td>
+        <td>${m.subject}</td>
+        <td>${new Date(m.at).toLocaleString()}</td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet, leave empty state */ }
+}
+
+async function sendMessage() {
+  const mailboxId = document.getElementById('msgMailboxSelect').value;
+  const to = document.getElementById('msgTo').value.trim();
+  const subject = document.getElementById('msgSubject').value.trim();
+  const text = document.getElementById('msgBody').value.trim();
+  const resultEl = document.getElementById('msgSendResult');
+
+  if (!mailboxId) { resultEl.innerHTML = '<p style="color:var(--danger)">Select a mailbox first.</p>'; return; }
+  if (!to || !subject || !text) { resultEl.innerHTML = '<p style="color:var(--danger)">Fill in to, subject, and message.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Sending…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/mailboxes/${mailboxId}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, text })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = '<p style="color:var(--mail)">Sent.</p>';
+    document.getElementById('msgTo').value = '';
+    document.getElementById('msgSubject').value = '';
+    document.getElementById('msgBody').value = '';
+    loadMessages();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
 }
 
 loadMailboxes();

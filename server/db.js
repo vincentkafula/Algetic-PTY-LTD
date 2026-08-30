@@ -21,7 +21,8 @@ const DEFAULT_DATA = {
   users: [],
   mailboxes: [],
   numbers: [],
-  trunks: []
+  trunks: [],
+  messages: []
 };
 
 function ensureStore() {
@@ -100,5 +101,6 @@ module.exports = {
   users: collection('users'),
   mailboxes: collection('mailboxes'),
   numbers: collection('numbers'),
-  trunks: collection('trunks')
+  trunks: collection('trunks'),
+  messages: collection('messages')
 };
