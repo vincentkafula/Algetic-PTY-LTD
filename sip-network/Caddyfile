@@ -1,0 +1,17 @@
+# Automatic HTTPS (Let's Encrypt) in front of the SIP management API.
+#
+# NOT runtime-tested — no Docker daemon was available during development
+# (same limitation noted for rtpengine in README.md). Caddy's automatic
+# HTTPS is a well-documented, widely-used feature, but verify this
+# actually issues a certificate on your VPS before trusting it — if
+# {$API_DOMAIN} can't resolve to this VPS's IP over DNS, or ports 80/443
+# aren't open, certificate issuance will fail silently-ish and Caddy will
+# keep retrying rather than serving your traffic.
+#
+# Substituted from API_DOMAIN in .env via docker-compose's environment
+# variable interpolation (Caddy reads {$VAR} directly, no separate
+# templating step needed here, unlike kamailio.cfg).
+
+{$API_DOMAIN} {
+	reverse_proxy api:3000
+}

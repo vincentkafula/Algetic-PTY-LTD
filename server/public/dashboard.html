@@ -14,6 +14,7 @@
     <nav>
       <a href="#" data-view="mail" class="active">✉ Mailboxes</a>
       <a href="#" data-view="voice">☎ Phone numbers</a>
+      <a href="#" data-view="sipnet">🔒 Private SIP network</a>
       <a href="index.html">← Back to site</a>
     </nav>
   </div>
@@ -132,6 +133,42 @@
 
         <button class="danger" onclick="resetTrunkPassword()">Reset SIP password</button>
         <div id="trunkResult"></div>
+      </div>
+    </div>
+
+    <!-- PRIVATE SIP NETWORK VIEW -->
+    <div id="view-sipnet" style="display:none">
+      <h1>Private SIP network</h1>
+      <p class="subtitle">
+        A separate, self-hosted calling system on your own VPS — no telecom
+        carrier involved. This manages the shared subscriber list your
+        <code>sip-network/</code> deployment uses; every account with access
+        to this dashboard sees the same list (this feature is not isolated
+        per CommHub account — see sip-network/README.md).
+      </p>
+      <div id="sipnetStatus" class="status-banner warn">Checking connection…</div>
+
+      <div class="panel-box">
+        <h2>Add a subscriber</h2>
+        <div class="form-row">
+          <input id="sipnetUsername" placeholder="username, e.g. alice" />
+          <input id="sipnetPassword" placeholder="password (min 8 characters)" type="password" style="flex:1;min-width:200px" />
+          <button class="primary" onclick="addSipUser()">Add / update</button>
+        </div>
+        <p class="hint" style="color:var(--muted);font-size:12px;margin:4px 0 16px">
+          Adding a username that already exists updates its password instead
+          of creating a duplicate. There's no password recovery — if someone
+          forgets theirs, just add them again with a new one.
+        </p>
+        <div id="sipnetResult"></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Subscribers</h2>
+        <table>
+          <thead><tr><th>Username</th><th>SIP address</th><th></th></tr></thead>
+          <tbody id="sipnetTable"><tr class="empty-row"><td colspan="3">No subscribers yet</td></tr></tbody>
+        </table>
       </div>
     </div>
   </div>

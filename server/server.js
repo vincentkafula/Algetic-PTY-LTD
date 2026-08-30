@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const mailboxRoutes = require('./routes/mailboxes');
 const numberRoutes = require('./routes/numbers');
 const webhookRoutes = require('./routes/webhooks');
+const sipNetworkRoutes = require('./routes/sipNetwork');
 const { isMailgunConfigured, isInboundCaptureConfigured } = require('./mailgunClient');
 const { isTwilioConfigured } = require('./twilioClient');
 
@@ -25,6 +26,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/mailboxes', mailboxRoutes);
 app.use('/api/numbers', numberRoutes);
+app.use('/api/sip-network', sipNetworkRoutes);
 // Not behind requireAuth — Mailgun calls this directly. Authenticity comes
 // from verifying Mailgun's own signature inside the route, not a session.
 app.use('/api/webhooks', webhookRoutes);
@@ -36,6 +38,7 @@ app.get('/api/health', (req, res) => {
     mailgunConfigured: isMailgunConfigured(),
     mailgunInboundCaptureConfigured: isInboundCaptureConfigured(),
     twilioConfigured: isTwilioConfigured(),
+    sipNetworkConfigured: Boolean(process.env.SIP_NETWORK_API_URL && process.env.SIP_NETWORK_API_KEY),
     supportedCountries: (process.env.SUPPORTED_NUMBER_COUNTRIES || 'US,CA,GB').split(',')
   });
 });

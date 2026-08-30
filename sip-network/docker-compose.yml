@@ -26,5 +26,37 @@ services:
     cap_add:
       - NET_ADMIN
 
+  api:
+    build: ./api
+    container_name: commhub-sip-api
+    restart: unless-stopped
+    env_file: .env
+    # Regular bridge networking is fine here (unlike kamailio/rtpengine) —
+    # this service only speaks plain HTTP on one port, no SIP/RTP involved.
+    # Not exposed directly to the internet; only Caddy talks to it.
+    expose:
+      - "3000"
+    volumes:
+      # Same volume as kamailio, so this service reads/writes the exact
+      # same subscriber database Kamailio itself uses.
+      - kamailio-data:/etc/kamailio
+
+  caddy:
+    image: caddy:2
+    container_name: commhub-sip-caddy
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
 volumes:
   kamailio-data:
+  caddy-data:
+  caddy-config:

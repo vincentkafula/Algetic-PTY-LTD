@@ -45,6 +45,12 @@ before you rely on it in production:
   removing, and listing subscribers, then confirmed a subscriber added
   through the script successfully authenticates against a live Kamailio
   instance.
+- **`api/server.js` (the management API) — verified for real.** Full CRUD
+  flow tested against a real Kamailio-schema SQLite database, including
+  auth rejection and input validation. Confirmed its HA1/HA1B hashes are
+  byte-identical to the formula already proven to authenticate against
+  live Kamailio. The full chain — CommHub dashboard → CommHub backend →
+  this API → the database — was tested end-to-end locally.
 - **`rtpengine.conf.template` — NOT runtime-tested.** Installing
   `rtpengine-daemon` during development hit a broken package mirror (an
   unrelated `libmysqlclient21` fetch failure in its dependency chain) that
@@ -52,13 +58,15 @@ before you rely on it in production:
   config is based on a verified real-world working example, not
   guesswork, but this is meaningfully less certain than the Kamailio
   piece. **Test this file for real on your VPS before trusting it.**
-- **`docker-compose.yml` and both Dockerfiles — not built or run.** No
-  Docker daemon was available in the development sandbox. `network_mode:
-  host` is the standard, widely-documented pattern for dockerized SIP
-  servers (not improvised for this project), and the package names/versions
-  were confirmed installable via `apt-get` on the exact same Ubuntu 24.04
-  base — but the actual `docker build` / `docker compose up` has not been
-  exercised. Budget time for troubleshooting the first real run.
+- **`docker-compose.yml`, the Dockerfiles, and the Caddyfile — not built
+  or run.** No Docker daemon was available in the development sandbox.
+  `network_mode: host` is the standard, widely-documented pattern for
+  dockerized SIP servers (not improvised for this project), the package
+  names/versions were confirmed installable via `apt-get` on the exact
+  same Ubuntu 24.04 base, and Caddy's `{$VAR}` substitution syntax was
+  confirmed against current Caddy documentation — but none of that is the
+  same as actually running `docker compose up` and watching it work.
+  Budget time for troubleshooting the first real run.
 - **Nothing here proves real-world NAT traversal.** All testing happened
   between processes on `127.0.0.1` inside one sandbox. Two phones behind
   two different home routers on the real internet is a materially
@@ -72,6 +80,9 @@ before you rely on it in production:
 - Ubuntu 24.04 recommended, since that's what this was built and tested
   against
 - Docker and Docker Compose installed
+- A DNS A record pointing `API_DOMAIN` (from `.env`) at this VPS's IP, if
+  you want the CommHub dashboard integration — Caddy needs this to obtain
+  a TLS certificate
 - Firewall rules (both the OS firewall and any cloud provider security
   group) opening:
   - `5060/udp` and `5060/tcp` — SIP signaling
@@ -79,13 +90,18 @@ before you rely on it in production:
     audio. The `.env.example` default (30000–31000) is 1,000 ports, enough
     for 500 simultaneous calls (2 ports each) — plenty for a private team
     network; narrow or widen as needed.
+  - `80/tcp` and `443/tcp` — only needed if you're using the management
+    API/dashboard integration (Caddy needs 80 for Let's Encrypt's
+    challenge, 443 to serve the API over HTTPS). Skip these if you're only
+    ever going to manage subscribers via the command-line scripts.
 
 ## Deploy
 
 ```bash
 cd sip-network
 cp .env.example .env
-# edit .env: your VPS's real public IP, your SIP domain, RTP port range
+# edit .env: your VPS's real public IP, your SIP domain, RTP port range,
+# and (if you want the dashboard integration) SIP_API_KEY + API_DOMAIN
 docker compose up -d --build
 ```
 
@@ -95,7 +111,20 @@ Watch the logs on first run — this is the untested-in-sandbox part:
 docker compose logs -f
 ```
 
+If you're using the dashboard integration, also set `SIP_NETWORK_API_URL`
+(`https://<API_DOMAIN>`) and `SIP_NETWORK_API_KEY` (matching `SIP_API_KEY`
+exactly) on the main CommHub app — see its `server/.env.example`.
+
 ## Managing subscribers
+
+Two ways to do this — pick whichever fits:
+
+**From the CommHub dashboard** (once you've set `SIP_NETWORK_API_URL` and
+`SIP_NETWORK_API_KEY` on the main CommHub app — see its
+`server/.env.example`): the dashboard's "Private SIP network" panel talks
+to the `api` service below over HTTPS. This is the easier path day-to-day.
+
+**From the command line, directly on the VPS:**
 
 ```bash
 ./scripts/add-user.sh alice a-strong-password
@@ -103,14 +132,47 @@ docker compose logs -f
 ./scripts/remove-user.sh alice
 ```
 
+Both paths write to the exact same database — use whichever is convenient,
+they don't conflict.
+
 Each user configures their SIP phone or softphone with:
 - **SIP server / domain:** whatever you set `SIP_DOMAIN` to
-- **Username:** what you passed to `add-user.sh`
-- **Password:** what you passed to `add-user.sh`
+- **Username:** what you passed to `add-user.sh` (or the dashboard)
+- **Password:** what you passed to `add-user.sh` (or the dashboard)
 
 There's no password recovery — if someone forgets theirs, add them again
-with a new password (the script updates in place if the username already
+with a new password (both paths update in place if the username already
 exists).
+
+## The management API and dashboard integration
+
+The `api` service (in `sip-network/api/`) is a small Express app that
+shares the same `kamailio-data` Docker volume as Kamailio itself — it
+reads and writes the exact same SQLite file, using the exact HA1/HA1B hash
+formula validated against real Kamailio auth during development (see
+above). It's fronted by Caddy for automatic HTTPS, and protected by a
+single shared `SIP_API_KEY` — treat that key like a root password for your
+subscriber list.
+
+**Verified for real:** the API's full CRUD flow (add, update, list,
+remove, auth rejection, validation) was tested against a real
+Kamailio-schema SQLite database, and the HA1 hashes it produces were
+confirmed byte-identical to the formula already proven to authenticate
+against live Kamailio. The full chain — CommHub dashboard → CommHub
+backend → this API → the database — was also tested end-to-end locally.
+
+**Not verified:** Caddy's automatic HTTPS itself (no Docker daemon
+available during development, same limitation as rtpengine above) — the
+Caddyfile uses Caddy's standard, documented `{$API_DOMAIN}` substitution
+syntax, but confirm a certificate actually issues once this is deployed.
+
+**Scoping:** unlike CommHub's mailboxes and phone numbers, subscribers
+here are **not** isolated per CommHub customer account. Every CommHub
+account with dashboard access manages the same shared list. That's the
+right shape for "my own team's private calling system" — it is not a
+multi-tenant, resell-to-separate-customers feature. Adding that would mean
+an account-tag column on the `subscriber` table, filtered throughout
+`api/server.js`.
 
 ## Testing a first call
 

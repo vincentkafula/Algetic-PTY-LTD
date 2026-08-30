@@ -16,12 +16,14 @@ document.querySelectorAll('.sidebar nav a[data-view]').forEach(a => {
     const view = a.dataset.view;
     document.getElementById('view-mail').style.display = view === 'mail' ? 'block' : 'none';
     document.getElementById('view-voice').style.display = view === 'voice' ? 'block' : 'none';
+    document.getElementById('view-sipnet').style.display = view === 'sipnet' ? 'block' : 'none';
   });
 });
 
 // ---- health check banner ----
 async function checkHealth() {
   const el = document.getElementById('apiStatus');
+  const sipEl = document.getElementById('sipnetStatus');
   try {
     const res = await fetch(`${API}/api/health`);
     const data = await res.json();
@@ -34,6 +36,15 @@ async function checkHealth() {
       if (!data.mailgunConfigured) missing.push('Mailgun');
       if (!data.twilioConfigured) missing.push('Twilio');
       el.textContent = `Demo mode — add real ${missing.join(' and ')} credentials to server/.env to go live.`;
+    }
+    if (sipEl) {
+      if (data.sipNetworkConfigured) {
+        sipEl.className = 'status-banner ok';
+        sipEl.textContent = 'Connected to your private SIP network.';
+      } else {
+        sipEl.className = 'status-banner warn';
+        sipEl.textContent = 'Not configured — set SIP_NETWORK_API_URL and SIP_NETWORK_API_KEY in server/.env once you\'ve deployed sip-network/.';
+      }
     }
   } catch (err) {
     el.className = 'status-banner warn';
@@ -333,3 +344,68 @@ async function resetTrunkPassword() {
     resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
   }
 }
+
+// ---- private SIP network ----
+async function loadSipUsers() {
+  const tbody = document.getElementById('sipnetTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/sip-network/users`);
+    const data = await res.json();
+    if (!res.ok) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="3">${data.error}</td></tr>`;
+      return;
+    }
+    if (!data.subscribers || data.subscribers.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No subscribers yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.subscribers.map(u => `
+      <tr>
+        <td class="mono">${u}</td>
+        <td class="mono">${u}@${data.domain}</td>
+        <td><button class="danger" onclick="removeSipUser('${u}')">Remove</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet, leave empty state */ }
+}
+
+async function addSipUser() {
+  const username = document.getElementById('sipnetUsername').value.trim();
+  const password = document.getElementById('sipnetPassword').value;
+  const resultEl = document.getElementById('sipnetResult');
+  if (!username || !password) { resultEl.innerHTML = '<p style="color:var(--danger)">Enter a username and password.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Saving…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/sip-network/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = `<p style="color:var(--mail)">${data.created ? 'Added' : 'Updated'} ${data.username}@${data.domain}.</p>`;
+    document.getElementById('sipnetUsername').value = '';
+    document.getElementById('sipnetPassword').value = '';
+    loadSipUsers();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function removeSipUser(username) {
+  if (!confirm(`Remove ${username}? Their phone will stop working immediately.`)) return;
+  try {
+    const res = await authedFetch(`${API}/api/sip-network/users/${encodeURIComponent(username)}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to remove subscriber');
+      return;
+    }
+    loadSipUsers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+loadSipUsers();
