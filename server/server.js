@@ -8,12 +8,18 @@ const mailboxRoutes = require('./routes/mailboxes');
 const numberRoutes = require('./routes/numbers');
 const webhookRoutes = require('./routes/webhooks');
 const sipNetworkRoutes = require('./routes/sipNetwork');
-const { isMailgunConfigured, isInboundCaptureConfigured } = require('./mailgunClient');
+const callCentreRoutes = require('./routes/callCentre');
+const callCentreWebhookRoutes = require('./routes/callCentreWebhooks');
+const { isMailgunConfigured, isInboundCaptureConfigured, PUBLIC_BASE_URL } = require('./mailgunClient');
 const { isTwilioConfigured } = require('./twilioClient');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+// Twilio's webhooks POST application/x-www-form-urlencoded, not JSON —
+// needed for callCentreWebhooks.js to read req.body at all (and for
+// twilio.validateRequest to see the exact params Twilio signed).
+app.use(express.urlencoded({ extended: false }));
 
 // Basic request logging — replace with a real logger (pino/winston) + request
 // IDs before running this in production.
@@ -27,6 +33,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/mailboxes', mailboxRoutes);
 app.use('/api/numbers', numberRoutes);
 app.use('/api/sip-network', sipNetworkRoutes);
+app.use('/api/call-centre', callCentreRoutes);
+// Not behind requireAuth — Twilio calls this directly. Authenticity comes
+// from verifying Twilio's own X-Twilio-Signature header inside the route.
+app.use('/api/webhooks/twilio', callCentreWebhookRoutes);
 // Not behind requireAuth — Mailgun calls this directly. Authenticity comes
 // from verifying Mailgun's own signature inside the route, not a session.
 app.use('/api/webhooks', webhookRoutes);
@@ -39,6 +49,7 @@ app.get('/api/health', (req, res) => {
     mailgunInboundCaptureConfigured: isInboundCaptureConfigured(),
     twilioConfigured: isTwilioConfigured(),
     sipNetworkConfigured: Boolean(process.env.SIP_NETWORK_API_URL && process.env.SIP_NETWORK_API_KEY),
+    callCentreConfigured: isTwilioConfigured() && Boolean(PUBLIC_BASE_URL),
     supportedCountries: (process.env.SUPPORTED_NUMBER_COUNTRIES || 'US,CA,GB').split(',')
   });
 });

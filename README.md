@@ -193,6 +193,57 @@ route, the local record, and that mailbox's captured message history).
   leave an orphaned, billed number with no way to manage it from the
   dashboard.
 
+## Call centre: IVR, queues, and agents
+
+Built on top of the phone numbers/Twilio integration above — `routes/callCentre.js`
+(CRUD for menus/queues/agents, scoped per CommHub account like mailboxes and
+numbers) and `routes/callCentreWebhooks.js` (the actual TwiML call-flow logic
+Twilio calls into).
+
+**Mutually exclusive with SIP trunking, per number.** A Twilio phone number
+can be attached to a SIP trunk (direct-dial IP phones, described above) *or*
+have its own Voice URL webhook (IVR/queue routing, this feature) — Twilio
+only honors one at a time; trunk attachment makes Twilio ignore that
+number's Voice URL entirely. Assigning a number to a call-centre menu
+automatically detaches it from any trunk it was on.
+
+**Verified for real:**
+- The full CRUD flow — auth enforcement, input validation (bad digits,
+  invalid actions, malformed phone numbers) — tested with real HTTP
+  requests.
+- **Twilio webhook signature verification**, the security foundation these
+  webhooks depend on since they're unauthenticated (Twilio calls them
+  directly, no CommHub session involved): generated real valid signatures
+  with Twilio's own library, confirmed forged/unsigned requests are
+  rejected (403), confirmed correctly-signed ones are accepted. This isn't
+  optional hardening — without it, anyone who finds these URLs could inject
+  fake call events.
+- **Every branch of the call-routing logic**, checked against actual TwiML
+  XML output: pressing a digit that dials out, one that hangs up with a
+  message, an invalid digit (redirects back to the menu start), and one
+  that enqueues a caller. All confirmed byte-correct, not just "should
+  work."
+- The dashboard panel's exact API call shapes, tested end-to-end against a
+  running server.
+
+**NOT verified — read before relying on it:** placing an actual phone call
+isn't possible from a development sandbox, so the "ring every available
+agent, first to answer gets bridged to the caller" flow
+(`notifyAgents()` in `callCentreWebhooks.js`) has never rung a real phone.
+It's built on Twilio's own officially documented pattern for exactly this
+(`<Enqueue>` a caller, separately `<Dial><Queue>` from each agent's
+answered leg — confirmed against current Twilio docs), not guesswork, but
+your first real inbound call is the actual test of that piece.
+
+**Agents answer on a real phone, not a browser.** When someone reaches a
+queue, CommHub places outbound calls to every available agent's registered
+phone number (their cell, a desk phone, or a private-SIP-network extension
+if you've made it independently reachable — the private SIP network has no
+PSTN connectivity by default, see its own README). This was a deliberate
+scope decision — a browser-based softphone (Twilio Voice SDK, WebRTC,
+microphone permissions, a token-issuing endpoint) is a materially larger,
+separate feature that wasn't built here.
+
 ## South Africa and Zambia
 
 Both are included in `SUPPORTED_NUMBER_COUNTRIES` and the dashboard's country

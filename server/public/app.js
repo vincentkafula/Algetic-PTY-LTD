@@ -17,6 +17,7 @@ document.querySelectorAll('.sidebar nav a[data-view]').forEach(a => {
     document.getElementById('view-mail').style.display = view === 'mail' ? 'block' : 'none';
     document.getElementById('view-voice').style.display = view === 'voice' ? 'block' : 'none';
     document.getElementById('view-sipnet').style.display = view === 'sipnet' ? 'block' : 'none';
+    document.getElementById('view-callcentre').style.display = view === 'callcentre' ? 'block' : 'none';
   });
 });
 
@@ -44,6 +45,16 @@ async function checkHealth() {
       } else {
         sipEl.className = 'status-banner warn';
         sipEl.textContent = 'Not configured — set SIP_NETWORK_API_URL and SIP_NETWORK_API_KEY in server/.env once you\'ve deployed sip-network/.';
+      }
+    }
+    const ccEl = document.getElementById('ccStatus');
+    if (ccEl) {
+      if (data.callCentreConfigured) {
+        ccEl.className = 'status-banner ok';
+        ccEl.textContent = 'Connected — Twilio and PUBLIC_BASE_URL are configured.';
+      } else {
+        ccEl.className = 'status-banner warn';
+        ccEl.textContent = 'Not configured — set TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / PUBLIC_BASE_URL in server/.env.';
       }
     }
   } catch (err) {
@@ -409,3 +420,291 @@ async function removeSipUser(username) {
 }
 
 loadSipUsers();
+
+// ---- call centre ----
+function parseMenuOptions(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
+    const [digit, action, ...rest] = line.split(':');
+    return { digit: (digit || '').trim(), action: (action || '').trim(), target: rest.join(':').trim() };
+  });
+}
+
+async function createMenu() {
+  const name = document.getElementById('ccMenuName').value.trim();
+  const greeting = document.getElementById('ccMenuGreeting').value.trim();
+  const optionsText = document.getElementById('ccMenuOptions').value;
+  const resultEl = document.getElementById('ccMenuResult');
+  if (!name || !greeting) { resultEl.innerHTML = '<p style="color:var(--danger)">Name and greeting are required.</p>'; return; }
+  const options = parseMenuOptions(optionsText);
+  if (options.length === 0) { resultEl.innerHTML = '<p style="color:var(--danger)">Add at least one option line.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Saving…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/menus`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, greeting, options })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = `<p style="color:var(--mail)">Created "${data.name}". Its id is <span class="mono">${data.id}</span> — use that as a target for "menu" or "queue" options.</p>`;
+    document.getElementById('ccMenuName').value = '';
+    document.getElementById('ccMenuGreeting').value = '';
+    document.getElementById('ccMenuOptions').value = '';
+    loadMenus();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function deleteMenu(id) {
+  if (!confirm('Delete this menu?')) return;
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/menus/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to delete menu');
+      return;
+    }
+    loadMenus();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadMenus() {
+  const tbody = document.getElementById('ccMenuTable');
+  const menuSelect = document.getElementById('ccNumberMenu');
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/menus`);
+    const data = await res.json();
+    if (!data.menus || data.menus.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No menus yet</td></tr>';
+      if (menuSelect) menuSelect.innerHTML = '<option value="">Select a menu…</option>';
+      return;
+    }
+    tbody.innerHTML = data.menus.map(m => `
+      <tr>
+        <td>${m.name}</td>
+        <td>${m.greeting}</td>
+        <td class="mono">${(m.options || []).map(o => `${o.digit}→${o.action}`).join(', ')}</td>
+        <td><button class="danger" onclick="deleteMenu('${m.id}')">Delete</button></td>
+      </tr>`).join('');
+    if (menuSelect) {
+      menuSelect.innerHTML = '<option value="">Select a menu…</option>' +
+        data.menus.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    }
+  } catch (err) { /* server not running yet */ }
+}
+
+async function createQueue() {
+  const name = document.getElementById('ccQueueName').value.trim();
+  const resultEl = document.getElementById('ccQueueResult');
+  if (!name) { resultEl.innerHTML = '<p style="color:var(--danger)">Enter a queue name.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Creating…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/queues`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = `<p style="color:var(--mail)">Created "${data.name}". Its id is <span class="mono">${data.id}</span> — use that as the target of a "queue" menu option.</p>`;
+    document.getElementById('ccQueueName').value = '';
+    loadQueues();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function deleteQueue(id) {
+  if (!confirm('Delete this queue?')) return;
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/queues/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to delete queue');
+      return;
+    }
+    loadQueues();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadQueues() {
+  const tbody = document.getElementById('ccQueueTable');
+  const queueSelect = document.getElementById('ccAgentQueue');
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/queues`);
+    const data = await res.json();
+    if (!data.queues || data.queues.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No queues yet</td></tr>';
+      if (queueSelect) queueSelect.innerHTML = '<option value="">Select a queue…</option>';
+      return;
+    }
+    const rows = await Promise.all(data.queues.map(async q => {
+      let waiting = '—';
+      try {
+        const statusRes = await authedFetch(`${API}/api/call-centre/queues/${q.id}/status`);
+        const statusData = await statusRes.json();
+        if (statusRes.ok) waiting = statusData.currentSize;
+      } catch (e) { /* leave as — if Twilio isn't configured */ }
+      return `<tr><td>${q.name}</td><td>${waiting}</td><td><button class="danger" onclick="deleteQueue('${q.id}')">Delete</button></td></tr>`;
+    }));
+    tbody.innerHTML = rows.join('');
+    if (queueSelect) {
+      queueSelect.innerHTML = '<option value="">Select a queue…</option>' +
+        data.queues.map(q => `<option value="${q.id}">${q.name}</option>`).join('');
+    }
+  } catch (err) { /* server not running yet */ }
+}
+
+async function createAgent() {
+  const name = document.getElementById('ccAgentName').value.trim();
+  const phoneNumber = document.getElementById('ccAgentPhone').value.trim();
+  const queueId = document.getElementById('ccAgentQueue').value;
+  const resultEl = document.getElementById('ccAgentResult');
+  if (!name || !phoneNumber || !queueId) { resultEl.innerHTML = '<p style="color:var(--danger)">Name, phone, and queue are all required.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Adding…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/agents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phoneNumber, queueId })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = `<p style="color:var(--mail)">Added ${data.name}.</p>`;
+    document.getElementById('ccAgentName').value = '';
+    document.getElementById('ccAgentPhone').value = '';
+    loadAgents();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function toggleAgentAvailability(id, available) {
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/agents/${id}/availability`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ available })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to update availability');
+    }
+    loadAgents();
+  } catch (err) { alert(err.message); }
+}
+
+async function deleteAgent(id) {
+  if (!confirm('Remove this agent?')) return;
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/agents/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to remove agent');
+      return;
+    }
+    loadAgents();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadAgents() {
+  const tbody = document.getElementById('ccAgentTable');
+  try {
+    const [agentsRes, queuesRes] = await Promise.all([
+      authedFetch(`${API}/api/call-centre/agents`),
+      authedFetch(`${API}/api/call-centre/queues`)
+    ]);
+    const agentsData = await agentsRes.json();
+    const queuesData = await queuesRes.json();
+    const queueNames = {};
+    (queuesData.queues || []).forEach(q => { queueNames[q.id] = q.name; });
+
+    if (!agentsData.agents || agentsData.agents.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No agents yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = agentsData.agents.map(a => `
+      <tr>
+        <td>${a.name}</td>
+        <td class="mono">${a.phoneNumber}</td>
+        <td>${queueNames[a.queueId] || '—'}</td>
+        <td><input type="checkbox" ${a.available ? 'checked' : ''} onchange="toggleAgentAvailability('${a.id}', this.checked)" /></td>
+        <td><button class="danger" onclick="deleteAgent('${a.id}')">Remove</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+async function assignNumberToMenu() {
+  const numberId = document.getElementById('ccNumberSelect').value;
+  const menuId = document.getElementById('ccNumberMenu').value;
+  const resultEl = document.getElementById('ccAssignResult');
+  if (!numberId || !menuId) { resultEl.innerHTML = '<p style="color:var(--danger)">Select both a number and a menu.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Assigning…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/numbers/${numberId}/assign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ menuId })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = '<p style="color:var(--mail)">Assigned.</p>';
+    loadCallCentreNumbers();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function unassignNumber(numberId) {
+  if (!confirm('Unassign this number from the call centre? It will stop handling calls until reassigned.')) return;
+  try {
+    const res = await authedFetch(`${API}/api/call-centre/numbers/${numberId}/unassign`, { method: 'POST' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to unassign');
+      return;
+    }
+    loadCallCentreNumbers();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadCallCentreNumbers() {
+  const tbody = document.getElementById('ccNumberTable');
+  const numberSelect = document.getElementById('ccNumberSelect');
+  try {
+    const [numbersRes, menusRes] = await Promise.all([
+      authedFetch(`${API}/api/numbers`),
+      authedFetch(`${API}/api/call-centre/menus`)
+    ]);
+    const numbersData = await numbersRes.json();
+    const menusData = await menusRes.json();
+    const menuNames = {};
+    (menusData.menus || []).forEach(m => { menuNames[m.id] = m.name; });
+
+    if (!numbersData.provisioned || numbersData.provisioned.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No numbers yet — provision one under Phone numbers first</td></tr>';
+      if (numberSelect) numberSelect.innerHTML = '<option value="">Select a number…</option>';
+      return;
+    }
+    tbody.innerHTML = numbersData.provisioned.map(n => `
+      <tr>
+        <td class="mono">${n.phoneNumber}</td>
+        <td>${n.callCentreMenuId ? (menuNames[n.callCentreMenuId] || 'Unknown menu') : '—'}</td>
+        <td>${n.callCentreMenuId ? `<button class="danger" onclick="unassignNumber('${n.id}')">Unassign</button>` : ''}</td>
+      </tr>`).join('');
+    if (numberSelect) {
+      numberSelect.innerHTML = '<option value="">Select a number…</option>' +
+        numbersData.provisioned.map(n => `<option value="${n.id}">${n.phoneNumber}</option>`).join('');
+    }
+  } catch (err) { /* server not running yet */ }
+}
+
+loadMenus();
+loadQueues();
+loadAgents();
+loadCallCentreNumbers();

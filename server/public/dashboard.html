@@ -15,6 +15,7 @@
       <a href="#" data-view="mail" class="active">✉ Mailboxes</a>
       <a href="#" data-view="voice">☎ Phone numbers</a>
       <a href="#" data-view="sipnet">🔒 Private SIP network</a>
+      <a href="#" data-view="callcentre">📞 Call centre</a>
       <a href="index.html">← Back to site</a>
     </nav>
   </div>
@@ -168,6 +169,82 @@
         <table>
           <thead><tr><th>Username</th><th>SIP address</th><th></th></tr></thead>
           <tbody id="sipnetTable"><tr class="empty-row"><td colspan="3">No subscribers yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CALL CENTRE VIEW -->
+    <div id="view-callcentre" style="display:none">
+      <h1>Call centre</h1>
+      <p class="subtitle">
+        IVR menus, queues, and agents — built on the phone numbers above.
+        Assigning a number here detaches it from any SIP trunk it was on
+        (a number can only do one job at a time).
+      </p>
+      <div id="ccStatus" class="status-banner warn">Checking connection…</div>
+
+      <div class="panel-box">
+        <h2>IVR menus</h2>
+        <div class="form-row">
+          <input id="ccMenuName" placeholder="Menu name, e.g. Main Menu" style="flex:1;min-width:180px" />
+        </div>
+        <div class="form-row">
+          <input id="ccMenuGreeting" placeholder="Greeting, e.g. Press 1 for sales, 2 for support" style="flex:1;min-width:260px" />
+        </div>
+        <div class="form-row">
+          <textarea id="ccMenuOptions" rows="3" placeholder="One option per line: digit:action:target&#10;1:dial:+14155551234&#10;2:queue:&lt;queue id&gt;&#10;3:hangup:Thanks, goodbye" style="flex:1;min-width:260px;background:var(--panel-raised);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:8px;font-family:inherit;font-size:13px"></textarea>
+        </div>
+        <p class="hint" style="color:var(--muted);font-size:12px;margin:4px 0 16px">
+          Actions: <code>dial</code> (target = phone number), <code>queue</code> (target = a queue id, see below),
+          <code>menu</code> (target = another menu id, for submenus), <code>hangup</code> (target = closing message).
+        </p>
+        <button class="primary voice" onclick="createMenu()">Create menu</button>
+        <div id="ccMenuResult"></div>
+        <table>
+          <thead><tr><th>Name</th><th>Greeting</th><th>Options</th><th></th></tr></thead>
+          <tbody id="ccMenuTable"><tr class="empty-row"><td colspan="4">No menus yet</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Queues</h2>
+        <div class="form-row">
+          <input id="ccQueueName" placeholder="Queue name, e.g. support" />
+          <button class="primary voice" onclick="createQueue()">Create queue</button>
+        </div>
+        <div id="ccQueueResult"></div>
+        <table>
+          <thead><tr><th>Name</th><th>Waiting now</th><th></th></tr></thead>
+          <tbody id="ccQueueTable"><tr class="empty-row"><td colspan="3">No queues yet</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Agents</h2>
+        <div class="form-row">
+          <input id="ccAgentName" placeholder="Agent name" />
+          <input id="ccAgentPhone" placeholder="+14155551234" />
+          <select id="ccAgentQueue"><option value="">Select a queue…</option></select>
+          <button class="primary voice" onclick="createAgent()">Add agent</button>
+        </div>
+        <div id="ccAgentResult"></div>
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Queue</th><th>Available</th><th></th></tr></thead>
+          <tbody id="ccAgentTable"><tr class="empty-row"><td colspan="5">No agents yet</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Assign a number</h2>
+        <div class="form-row">
+          <select id="ccNumberSelect"><option value="">Select a number…</option></select>
+          <select id="ccNumberMenu"><option value="">Select a menu…</option></select>
+          <button class="primary voice" onclick="assignNumberToMenu()">Assign</button>
+        </div>
+        <div id="ccAssignResult"></div>
+        <table>
+          <thead><tr><th>Number</th><th>Assigned menu</th><th></th></tr></thead>
+          <tbody id="ccNumberTable"><tr class="empty-row"><td colspan="3">No numbers yet</td></tr></tbody>
         </table>
       </div>
     </div>

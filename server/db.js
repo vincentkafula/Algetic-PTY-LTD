@@ -22,7 +22,10 @@ const DEFAULT_DATA = {
   mailboxes: [],
   numbers: [],
   trunks: [],
-  messages: []
+  messages: [],
+  ivrMenus: [],
+  callQueues: [],
+  callAgents: []
 };
 
 function ensureStore() {
@@ -102,5 +105,8 @@ module.exports = {
   mailboxes: collection('mailboxes'),
   numbers: collection('numbers'),
   trunks: collection('trunks'),
-  messages: collection('messages')
+  messages: collection('messages'),
+  ivrMenus: collection('ivrMenus'),
+  callQueues: collection('callQueues'),
+  callAgents: collection('callAgents')
 };
