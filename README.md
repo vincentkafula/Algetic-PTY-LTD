@@ -136,16 +136,39 @@ you have two realistic paths:
 API shape either way, and now also supports deleting a mailbox (removes the
 Mailgun route and the local record).
 
-## Voice: what's stubbed vs. production-ready
+## Voice: SIP trunking
 
 - Number search and purchase (`routes/numbers.js`) calls real Twilio APIs,
-  and releasing a number now actually calls Twilio to release it (stops
-  billing), not just deletes the local row.
-- SIP credential issuance is still a **placeholder**. In production, create
-  a dedicated SIP Trunk per customer (`twilioClient.trunking.v1.trunks`)
-  with its own credential list, rather than one shared trunk — otherwise one
-  customer's compromised IP phone could make calls billed to another
-  customer's account.
+  and releasing a number calls Twilio to release it (stops billing), not
+  just deletes the local row.
+- Each account gets its own dedicated Twilio Elastic SIP Trunk and
+  Credential List (`server/services/trunking.js`), created automatically the
+  first time that account provisions a number. Every number an account
+  provisions afterward is attached to that same trunk — one customer's
+  credentials can never be used to place calls billed to another account.
+- **Read this before promising customers "just enter these details into any
+  softphone":** Twilio Elastic SIP Trunking does not accept SIP REGISTER.
+  A trunk only delivers inbound calls to a static **origination address** —
+  the public SIP address of a PBX, session border controller, or a
+  softphone with a stable, reachable address. The dashboard's "Set
+  origination address" field is exactly that — it is not a registration
+  step, and there's no way to make an arbitrary softphone with no fixed
+  address "just work" using this trunk-based approach.
+  - If the product needs literal registration-based softphones (no static
+    address required), that's a different Twilio product — Programmable
+    Voice **SIP Domains** with registration-based credential auth, plus a
+    TwiML voice handler that dials the currently-registered contact. That's
+    a legitimate separate feature to build, not an extension of the trunk
+    code here.
+- SIP passwords are generated with `crypto.randomBytes` and are never
+  stored — Twilio holds the credential, and this app only shows the
+  password once, at creation or reset time (`POST
+  /api/numbers/trunk/reset-password`). If a customer loses it, reset it;
+  there's no "forgot password" recovery by design, same as any API key.
+- If trunk setup fails after a number is already purchased, the route rolls
+  back by releasing the number from Twilio, so a failed request doesn't
+  leave an orphaned, billed number with no way to manage it from the
+  dashboard.
 
 ## South Africa and Zambia
 
@@ -179,7 +202,8 @@ handles that leg, while you keep reselling US/CA/UK numbers directly.
 ## Before you charge real customers
 
 - Swap the JSON file store for a real database (see above)
-- Per-customer SIP trunks instead of the shared placeholder credentials
+- Support multiple origination URIs per trunk (Twilio allows up to 10) for
+  failover, rather than this starter's single address
 - KYC on customers provisioning phone numbers — carriers require this, and
   it's your main defense against fraud/abuse burning your account
 - Rate limiting on `/api/auth/*` (this starter has none — add something like

@@ -20,7 +20,8 @@ const DATA_FILE = path.join(DATA_DIR, 'db.json');
 const DEFAULT_DATA = {
   users: [],
   mailboxes: [],
-  numbers: []
+  numbers: [],
+  trunks: []
 };
 
 function ensureStore() {
@@ -98,5 +99,6 @@ function collection(name) {
 module.exports = {
   users: collection('users'),
   mailboxes: collection('mailboxes'),
-  numbers: collection('numbers')
+  numbers: collection('numbers'),
+  trunks: collection('trunks')
 };

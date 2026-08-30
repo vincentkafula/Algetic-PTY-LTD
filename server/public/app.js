@@ -145,7 +145,19 @@ async function provisionNumber(phoneNumber) {
     });
     const data = await res.json();
     if (!res.ok) { resultEl.innerHTML += `<p style="color:var(--danger)">${data.error}</p>`; return; }
+
+    const s = data.sipSetup;
+    resultEl.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>Number</span><span class="value">${data.phoneNumber}</span></div>
+        <div class="row"><span>SIP domain</span><span class="value">${s.domain}</span></div>
+        <div class="row"><span>SIP username</span><span class="value">${s.username}</span></div>
+        ${s.password ? `<div class="row"><span>SIP password</span><span class="value">${s.password}</span></div>` : ''}
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">${s.passwordNote}</p>
+      <p style="color:var(--muted);font-size:12px">${s.inboundNote}</p>`;
     loadNumbers();
+    loadTrunk();
   } catch (err) {
     resultEl.innerHTML += `<p style="color:var(--danger)">${err.message}</p>`;
   }
@@ -188,3 +200,66 @@ async function loadNumbers() {
 
 loadMailboxes();
 loadNumbers();
+loadTrunk();
+
+// ---- SIP trunk ----
+async function loadTrunk() {
+  const el = document.getElementById('trunkInfo');
+  try {
+    const res = await authedFetch(`${API}/api/numbers/trunk`);
+    if (res.status === 404) {
+      el.innerHTML = '<p style="color:var(--muted)">No trunk yet — provision a number first.</p>';
+      return;
+    }
+    const data = await res.json();
+    if (!res.ok) { el.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    const t = data.trunk;
+    el.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>SIP domain</span><span class="value">${t.domainName}</span></div>
+        <div class="row"><span>SIP username</span><span class="value">${t.sipUsername}</span></div>
+        <div class="row"><span>Origination address</span><span class="value">${t.originationUri || 'not set'}</span></div>
+      </div>`;
+  } catch (err) { /* server not running yet, leave empty state */ }
+}
+
+async function setTrunkOrigination() {
+  const sipUri = document.getElementById('trunkOriginationUri').value.trim();
+  const resultEl = document.getElementById('trunkResult');
+  if (!sipUri) { resultEl.innerHTML = '<p style="color:var(--danger)">Enter a SIP URI first.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Setting…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/numbers/trunk/origination`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sipUri })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = '<p style="color:var(--mail)">Origination address updated.</p>';
+    document.getElementById('trunkOriginationUri').value = '';
+    loadTrunk();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function resetTrunkPassword() {
+  if (!confirm('Reset the SIP password? Any device using the current password will stop working until updated.')) return;
+  const resultEl = document.getElementById('trunkResult');
+  try {
+    const res = await authedFetch(`${API}/api/numbers/trunk/reset-password`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>New SIP username</span><span class="value">${data.trunk.sipUsername}</span></div>
+        <div class="row"><span>New SIP password</span><span class="value">${data.password}</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">Save this now — it will not be shown again.</p>`;
+    loadTrunk();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}

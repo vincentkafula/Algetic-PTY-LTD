@@ -81,6 +81,30 @@
           <tbody id="voiceTable"><tr class="empty-row"><td colspan="5">No numbers yet</td></tr></tbody>
         </table>
       </div>
+
+      <div class="panel-box">
+        <h2>SIP trunk</h2>
+        <p class="subtitle" style="margin-bottom:16px">
+          Every number on your account shares one dedicated trunk. Inbound calls
+          only reach a device once you set an origination address below — a
+          softphone with no fixed public address can't just "register" here;
+          see the note under the form.
+        </p>
+        <div id="trunkInfo"><p style="color:var(--muted)">No trunk yet — provision a number first.</p></div>
+
+        <div class="form-row" style="margin-top:16px">
+          <input id="trunkOriginationUri" placeholder="sip:203.0.113.10:5060" style="flex:1;min-width:240px" />
+          <button class="primary voice" onclick="setTrunkOrigination()">Set origination address</button>
+        </div>
+        <p class="hint" style="color:var(--muted);font-size:12px;margin:4px 0 16px">
+          This must be the public SIP address of a PBX, session border controller,
+          or a softphone with a stable, reachable address — Twilio's trunk API
+          cannot accept a plain SIP REGISTER from an arbitrary device.
+        </p>
+
+        <button class="danger" onclick="resetTrunkPassword()">Reset SIP password</button>
+        <div id="trunkResult"></div>
+      </div>
     </div>
   </div>
 </div>
