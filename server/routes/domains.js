@@ -193,4 +193,141 @@ router.get('/:id/status', async (req, res) => {
   }
 });
 
+// ===== DNS records =====
+//
+// SECURITY: GODADDY_PAT is one shared credential for the whole CommHub
+// deployment, covering every domain in that GoDaddy account — not scoped
+// per CommHub customer the way Twilio/Mailgun credentials effectively are
+// per-resource. Every DNS route below therefore requires :id to match a
+// domain record this specific account registered THROUGH CommHub (in
+// db.domains), not just any domain string. Without this check, any
+// CommHub account could edit DNS for any domain in the underlying
+// GoDaddy account, including ones belonging to other CommHub customers.
+// Domains registered directly in GoDaddy (outside CommHub) are not
+// manageable here at all — there's no local record to match against.
+
+function findOwnedDomain(req, res) {
+  const domain = db.domains.find((d) => d.id === req.params.id && d.ownerId === req.user.id);
+  if (!domain) {
+    res.status(404).json({ error: 'Domain not found on your account — only domains registered through CommHub can be managed here' });
+    return null;
+  }
+  return domain;
+}
+
+/**
+ * GET /api/domains/:id/dns?type=A&name=www
+ * Lists DNS records for this domain. type/name filter is optional.
+ */
+router.get('/:id/dns', async (req, res) => {
+  const domain = findOwnedDomain(req, res);
+  if (!domain) return;
+  if (!assertConfigured(res)) return;
+
+  try {
+    const url = new URL(`${GODADDY_BASE_URL}/domains/zones/${domain.domain}/dns-records`);
+    if (req.query.type) url.searchParams.set('type', req.query.type);
+    if (req.query.name) url.searchParams.set('name', req.query.name);
+    const response = await fetch(url, { headers: { Authorization: authHeader() } });
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json({ error: data.message || 'GoDaddy error', data });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/domains/:id/dns
+ * body: { type, name, data, ttl }
+ * Appends a record. GoDaddy rejects this if an identical record already
+ * exists, or if it would conflict with an existing one (e.g. a CNAME at
+ * the apex, or a CNAME alongside an A record for the same name) — that
+ * rejection is passed through as-is rather than papered over.
+ */
+router.post('/:id/dns', async (req, res) => {
+  const domain = findOwnedDomain(req, res);
+  if (!domain) return;
+  if (!assertConfigured(res)) return;
+
+  const { type, name, data: recordData, ttl } = req.body || {};
+  if (!type || !name || !recordData) {
+    return res.status(400).json({ error: 'type, name, and data are all required' });
+  }
+
+  try {
+    const response = await fetch(`${GODADDY_BASE_URL}/domains/zones/${domain.domain}/dns-records`, {
+      method: 'POST',
+      headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ type, name, data: recordData, ttl: ttl || 600 }])
+    });
+    if (response.status === 204 || response.status === 200) {
+      return res.status(201).json({ type, name, data: recordData, ttl: ttl || 600 });
+    }
+    const data = await response.json();
+    res.status(response.status).json({ error: data.message || 'GoDaddy error', data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PUT /api/domains/:id/dns/:type/:name
+ * body: { records: [{ data, ttl }, ...] }
+ * Replaces every record of this type+name in one call — the safe way to
+ * "update" a record (POST only appends and will reject a duplicate).
+ */
+router.put('/:id/dns/:type/:name', async (req, res) => {
+  const domain = findOwnedDomain(req, res);
+  if (!domain) return;
+  if (!assertConfigured(res)) return;
+
+  const { records } = req.body || {};
+  if (!Array.isArray(records) || records.length === 0) {
+    return res.status(400).json({ error: 'records must be a non-empty array of { data, ttl }' });
+  }
+
+  try {
+    const response = await fetch(
+      `${GODADDY_BASE_URL}/domains/zones/${domain.domain}/dns-records/${req.params.type}/${req.params.name}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(records)
+      }
+    );
+    if (response.status === 204 || response.status === 200) {
+      return res.json({ type: req.params.type, name: req.params.name, records });
+    }
+    const data = await response.json();
+    res.status(response.status).json({ error: data.message || 'GoDaddy error', data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/domains/:id/dns/:type/:name
+ * Removes every record of this type+name (GoDaddy has no single-record
+ * delete-by-id in the zone endpoint — deletion is by type+name, same
+ * granularity as the replace operation above).
+ */
+router.delete('/:id/dns/:type/:name', async (req, res) => {
+  const domain = findOwnedDomain(req, res);
+  if (!domain) return;
+  if (!assertConfigured(res)) return;
+
+  try {
+    const response = await fetch(
+      `${GODADDY_BASE_URL}/domains/zones/${domain.domain}/dns-records/${req.params.type}/${req.params.name}`,
+      { method: 'DELETE', headers: { Authorization: authHeader() } }
+    );
+    if (response.status === 204 || response.status === 200) return res.status(204).end();
+    const data = await response.json();
+    res.status(response.status).json({ error: data.message || 'GoDaddy error', data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

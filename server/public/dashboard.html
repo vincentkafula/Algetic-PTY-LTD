@@ -278,6 +278,39 @@
           <tbody id="domainsTable"><tr class="empty-row"><td colspan="3">No domains yet</td></tr></tbody>
         </table>
       </div>
+
+      <div class="panel-box">
+        <h2>DNS records</h2>
+        <div class="form-row">
+          <select id="dnsDomainSelect" onchange="loadDnsRecords()"><option value="">Select a domain…</option></select>
+        </div>
+
+        <div id="dnsAddForm" style="display:none">
+          <div class="form-row">
+            <select id="dnsRecordType">
+              <option value="A">A</option>
+              <option value="AAAA">AAAA</option>
+              <option value="CNAME">CNAME</option>
+              <option value="TXT">TXT</option>
+              <option value="MX">MX</option>
+            </select>
+            <input id="dnsRecordName" placeholder="Name, e.g. www or @ for root" />
+            <input id="dnsRecordData" placeholder="Value, e.g. 192.0.2.10" style="flex:1;min-width:180px" />
+            <input id="dnsRecordTtl" placeholder="TTL (default 600)" style="max-width:120px" />
+          </div>
+          <button class="primary voice" onclick="addDnsRecord()">Add record</button>
+          <p class="hint" style="color:var(--muted);font-size:12px;margin:6px 0 0">
+            Adding a record that already exists (same type/name/value) will be rejected by GoDaddy —
+            use Delete then Add to change an existing record's value.
+          </p>
+        </div>
+        <div id="dnsResult"></div>
+
+        <table>
+          <thead><tr><th>Type</th><th>Name</th><th>Value</th><th>TTL</th><th></th></tr></thead>
+          <tbody id="dnsTable"><tr class="empty-row"><td colspan="5">Select a domain above</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- PROJECTS VIEW -->

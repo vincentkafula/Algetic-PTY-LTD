@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CommHub — Email and calling, under your brand</title>
+<title>CommHub — Email, voice, domains, and development, under your brand</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,9 +19,9 @@
 </div>
 
 <div class="hero">
-  <div class="eyebrow">Reseller platform · Email + Voice</div>
-  <h1>One panel to provision inboxes and phone lines for every customer you sign up.</h1>
-  <p class="sub">CommHub sits on top of established email and telecom infrastructure — it doesn't replace it — so each mailbox and each number is real, deliverable, and callable from day one.</p>
+  <div class="eyebrow">Reseller platform · Email · Voice · Domains · Development</div>
+  <h1>One panel to provision inboxes, phone lines, domains, and calling infrastructure for every customer you sign up.</h1>
+  <p class="sub">CommHub sits on top of established infrastructure — email delivery, telecom carriers, domain registries — it doesn't replace them, so what you provision is real, deliverable, and callable from day one.</p>
   <div class="hero-ctas">
     <a class="btn btn-primary" href="login.html">Create an account</a>
     <a class="btn btn-ghost" href="#capabilities">See how routing works</a>
@@ -61,28 +61,38 @@
 </div>
 
 <div class="section" id="capabilities">
-  <h2>Two products, one panel</h2>
-  <p class="lede">Each side of CommHub is a thin, opinionated layer over infrastructure that already handles deliverability and call routing at scale.</p>
+  <h2>Six services, one panel</h2>
+  <p class="lede">Each service is a thin, opinionated layer over infrastructure that already handles deliverability, routing, and registration at scale — not a rebuild of any of it.</p>
   <div class="grid-2">
     <div class="card">
       <span class="tag mail">Email</span>
       <h3>Mailboxes customers can drop into Outlook</h3>
-      <p>Create an address, and the panel hands back host, port, and security settings for standard IMAP/SMTP setup — no manual DNS work for your customer.</p>
+      <p>Create an address, and the panel hands back host, port, and security settings for standard IMAP/SMTP setup — plus inbound mail capture and sending, right from the dashboard.</p>
     </div>
     <div class="card">
       <span class="tag voice">Voice</span>
       <h3>Numbers registered straight to a SIP endpoint</h3>
-      <p>Search by country and area code, provision a number, and get SIP credentials your customer enters into any IP phone or softphone.</p>
-    </div>
-    <div class="card">
-      <span class="tag mail">Email</span>
-      <h3>Deliverability handled upstream</h3>
-      <p>Sending reputation, SPF/DKIM/DMARC, and inbound spam filtering are managed by the underlying mail infrastructure, not rebuilt from scratch.</p>
+      <p>Search by country and area code, provision a number, and get SIP credentials your customer enters into any IP phone or softphone — via a dedicated trunk per account.</p>
     </div>
     <div class="card">
       <span class="tag voice">Voice</span>
-      <h3>Usage and call logs per customer</h3>
-      <p>Every provisioned line reports back call and SMS activity so you can bill accurately and support customers when something breaks.</p>
+      <h3>A call centre on top of your numbers</h3>
+      <p>Build IVR menus, route callers into queues, and ring your agents' real phones — "press 1 for sales" without a separate PBX to run.</p>
+    </div>
+    <div class="card">
+      <span class="tag platform">Private network</span>
+      <h3>Self-hosted calling, zero carrier</h3>
+      <p>A private SIP registrar for your own team's IP phones — internal calling with no telecom carrier involved, managed from the same dashboard.</p>
+    </div>
+    <div class="card">
+      <span class="tag platform">Domains</span>
+      <h3>Search, price, and register domains</h3>
+      <p>Real-time availability and locked pricing, a deliberate multi-step confirmation before anything is charged, and DNS record management once a domain is live.</p>
+    </div>
+    <div class="card">
+      <span class="tag platform">Development</span>
+      <h3>Website &amp; software requests, tracked</h3>
+      <p>Submit a project, follow it from Requested through Delivered — a clear pipeline for work a real person still designs and builds.</p>
     </div>
   </div>
 </div>
@@ -101,7 +111,7 @@
 </div>
 
 <footer class="foot">
-  CommHub starter panel · connect your own Mailgun and Twilio credentials in <code>server/.env</code>
+  CommHub starter panel · connect your own Mailgun, Twilio, and GoDaddy credentials in <code>server/.env</code>
 </footer>
 
 </body>

@@ -11,6 +11,8 @@
   --mail-dim: rgba(62, 193, 179, 0.14);
   --voice: #F2A65A;
   --voice-dim: rgba(242, 166, 90, 0.14);
+  --platform: #9A8CF0;
+  --platform-dim: rgba(154, 140, 240, 0.14);
   --danger: #E2685C;
   --radius: 10px;
 }
@@ -162,6 +164,7 @@ a { color: inherit; }
 }
 .tag.mail { background: var(--mail-dim); color: var(--mail); }
 .tag.voice { background: var(--voice-dim); color: var(--voice); }
+.tag.platform { background: var(--platform-dim); color: var(--platform); }
 .card h3 { margin: 0 0 8px; font-size: 18px; }
 .card p { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0; }
 

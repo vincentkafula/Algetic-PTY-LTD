@@ -818,12 +818,14 @@ async function refreshDomainStatus(id) {
 
 async function loadDomains() {
   const tbody = document.getElementById('domainsTable');
+  const dnsSelect = document.getElementById('dnsDomainSelect');
   if (!tbody) return;
   try {
     const res = await authedFetch(`${API}/api/domains`);
     const data = await res.json();
     if (!data.domains || data.domains.length === 0) {
       tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No domains yet</td></tr>';
+      if (dnsSelect) dnsSelect.innerHTML = '<option value="">Select a domain…</option>';
       return;
     }
     tbody.innerHTML = data.domains.map(d => `
@@ -832,7 +834,93 @@ async function loadDomains() {
         <td>${d.status}</td>
         <td><button class="link-btn" onclick="refreshDomainStatus('${d.id}')">Refresh status</button></td>
       </tr>`).join('');
+    if (dnsSelect) {
+      const previousSelection = dnsSelect.value;
+      dnsSelect.innerHTML = '<option value="">Select a domain…</option>' +
+        data.domains.map(d => `<option value="${d.id}">${d.domain}</option>`).join('');
+      if (previousSelection && data.domains.some(d => d.id === previousSelection)) {
+        dnsSelect.value = previousSelection;
+      }
+    }
   } catch (err) { /* server not running yet */ }
+}
+
+// ---- DNS records ----
+async function loadDnsRecords() {
+  const domainId = document.getElementById('dnsDomainSelect').value;
+  const tbody = document.getElementById('dnsTable');
+  const addForm = document.getElementById('dnsAddForm');
+
+  if (!domainId) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Select a domain above</td></tr>';
+    addForm.style.display = 'none';
+    return;
+  }
+  addForm.style.display = 'block';
+
+  try {
+    const res = await authedFetch(`${API}/api/domains/${domainId}/dns`);
+    const data = await res.json();
+    if (!res.ok) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${data.error}</td></tr>`;
+      return;
+    }
+    const records = Array.isArray(data) ? data : (data.records || []);
+    if (records.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No DNS records yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = records.map(r => `
+      <tr>
+        <td>${r.type}</td>
+        <td class="mono">${r.name}</td>
+        <td class="mono">${r.data}</td>
+        <td>${r.ttl}</td>
+        <td><button class="danger" onclick="deleteDnsRecord('${domainId}', '${r.type}', '${r.name}')">Delete</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+async function addDnsRecord() {
+  const domainId = document.getElementById('dnsDomainSelect').value;
+  const type = document.getElementById('dnsRecordType').value;
+  const name = document.getElementById('dnsRecordName').value.trim();
+  const data = document.getElementById('dnsRecordData').value.trim();
+  const ttl = document.getElementById('dnsRecordTtl').value.trim();
+  const resultEl = document.getElementById('dnsResult');
+  if (!domainId) { resultEl.innerHTML = '<p style="color:var(--danger)">Select a domain first.</p>'; return; }
+  if (!name || !data) { resultEl.innerHTML = '<p style="color:var(--danger)">Name and value are required.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Adding…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/domains/${domainId}/dns`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, name, data, ttl: ttl ? parseInt(ttl, 10) : undefined })
+    });
+    const responseData = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${responseData.error}</p>`; return; }
+    resultEl.innerHTML = '<p style="color:var(--mail)">Record added.</p>';
+    document.getElementById('dnsRecordName').value = '';
+    document.getElementById('dnsRecordData').value = '';
+    document.getElementById('dnsRecordTtl').value = '';
+    loadDnsRecords();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function deleteDnsRecord(domainId, type, name) {
+  if (!confirm(`Delete all ${type} records for "${name}"?`)) return;
+  try {
+    const res = await authedFetch(`${API}/api/domains/${domainId}/dns/${type}/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to delete record');
+      return;
+    }
+    loadDnsRecords();
+  } catch (err) { alert(err.message); }
 }
 
 // ---- website & software projects ----

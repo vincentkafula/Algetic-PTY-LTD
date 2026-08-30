@@ -275,6 +275,30 @@ money — there was no GoDaddy account available to test against during
 development. The search/quote endpoints (read-only, free, no account
 interaction) are the safe first things to try once `GODADDY_PAT` is set.
 
+### DNS record management
+
+Once a domain is registered, `routes/domains.js` also lists, adds, replaces,
+and deletes its DNS records (A, AAAA, CNAME, TXT, MX) via GoDaddy's v3 zone
+API, surfaced in the dashboard's "DNS records" panel.
+
+**Security note specific to this piece:** `GODADDY_PAT` is one credential
+covering every domain in the connected GoDaddy account — unlike Twilio or
+Mailgun, it isn't scoped per resource by the provider itself. Every DNS
+route therefore checks that the domain in the URL matches a record this
+specific CommHub account registered *through CommHub* (in the local
+`domains` collection) before doing anything — tested directly with two
+separate accounts, confirming one account gets a 404 (not the DNS data)
+when it tries to touch a domain it doesn't own. A domain registered
+directly in GoDaddy, outside CommHub, has no local record to match against
+and so can't be managed from this dashboard at all — by design, not a gap
+to fix.
+
+**Verified for real:** the ownership check itself, and all input
+validation. **Not verified:** an actual DNS write against a live zone,
+same reason as registration above — no live account to test against.
+
+interaction) are the safe first things to try once `GODADDY_PAT` is set.
+
 ## Website & software development requests
 
 `routes/projects.js` — a lightweight request tracker (`Requested` → `In
