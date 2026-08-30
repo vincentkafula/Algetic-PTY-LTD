@@ -1,0 +1,21 @@
+{
+  "name": "commhub-server",
+  "version": "0.2.0",
+  "description": "Backend API for a reseller email + VoIP dashboard (Mailgun + Twilio integration) with account signup/login and persistent storage",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.7.0",
+    "twilio": "^5.2.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

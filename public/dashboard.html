@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommHub — Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div class="sidebar">
+    <div class="brand">CommHub</div>
+    <nav>
+      <a href="#" data-view="mail" class="active">✉ Mailboxes</a>
+      <a href="#" data-view="voice">☎ Phone numbers</a>
+      <a href="index.html">← Back to site</a>
+    </nav>
+  </div>
+
+  <div class="main">
+    <div class="account-bar">
+      <div class="who">Signed in as <span class="value" id="accountEmail">…</span></div>
+      <button class="link-btn" onclick="logout()">Log out</button>
+    </div>
+    <div id="apiStatus" class="status-banner warn">Checking connection to Mailgun / Twilio…</div>
+
+    <!-- MAIL VIEW -->
+    <div id="view-mail">
+      <h1>Mailboxes</h1>
+      <p class="subtitle">Create an address; hand the customer the settings below to add it in Outlook.</p>
+
+      <div class="panel-box">
+        <h2>Create a mailbox</h2>
+        <div class="form-row">
+          <input id="mailLocalPart" placeholder="local part, e.g. sales" />
+          <span style="align-self:center;color:var(--muted)">@ your Mailgun domain</span>
+        </div>
+        <div class="form-row">
+          <input id="mailForwardTo" placeholder="forward/store to (optional)" style="flex:1;min-width:220px" />
+          <button class="primary" onclick="createMailbox()">Create mailbox</button>
+        </div>
+        <div id="mailResult"></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Your mailboxes</h2>
+        <table>
+          <thead><tr><th>Address</th><th>SMTP host</th><th>Created</th><th></th></tr></thead>
+          <tbody id="mailTable"><tr class="empty-row"><td colspan="4">No mailboxes yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VOICE VIEW -->
+    <div id="view-voice" style="display:none">
+      <h1>Phone numbers</h1>
+      <p class="subtitle">Search available numbers, provision one, and issue SIP credentials for an IP phone.</p>
+
+      <div class="panel-box">
+        <h2>Search numbers</h2>
+        <div class="form-row">
+          <select id="voiceCountry">
+            <option value="US">United States</option>
+            <option value="CA">Canada</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CN" disabled>China — not available (see note below)</option>
+          </select>
+          <input id="voiceAreaCode" placeholder="area code, e.g. 415 (optional)" />
+          <button class="primary voice" onclick="searchNumbers()">Search</button>
+        </div>
+        <div id="voiceSearchResult"></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Your phone numbers</h2>
+        <table>
+          <thead><tr><th>Number</th><th>Label</th><th>SIP username</th><th>Provisioned</th><th></th></tr></thead>
+          <tbody id="voiceTable"><tr class="empty-row"><td colspan="5">No numbers yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>requireSession();</script>
+<script src="app.js"></script>
+</body>
+</html>

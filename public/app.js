@@ -1,0 +1,190 @@
+const API = ''; // same-origin; server serves this static site too
+
+// ---- account bar ----
+(function initAccountBar() {
+  const user = getStoredUser();
+  const el = document.getElementById('accountEmail');
+  if (el) el.textContent = user ? (user.companyName ? `${user.email} (${user.companyName})` : user.email) : '…';
+})();
+
+// ---- view switching ----
+document.querySelectorAll('.sidebar nav a[data-view]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar nav a[data-view]').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    const view = a.dataset.view;
+    document.getElementById('view-mail').style.display = view === 'mail' ? 'block' : 'none';
+    document.getElementById('view-voice').style.display = view === 'voice' ? 'block' : 'none';
+  });
+});
+
+// ---- health check banner ----
+async function checkHealth() {
+  const el = document.getElementById('apiStatus');
+  try {
+    const res = await fetch(`${API}/api/health`);
+    const data = await res.json();
+    if (data.mailgunConfigured && data.twilioConfigured) {
+      el.className = 'status-banner ok';
+      el.textContent = `Connected — supported number countries: ${data.supportedCountries.join(', ')}`;
+    } else {
+      el.className = 'status-banner warn';
+      const missing = [];
+      if (!data.mailgunConfigured) missing.push('Mailgun');
+      if (!data.twilioConfigured) missing.push('Twilio');
+      el.textContent = `Demo mode — add real ${missing.join(' and ')} credentials to server/.env to go live.`;
+    }
+  } catch (err) {
+    el.className = 'status-banner warn';
+    el.textContent = 'Could not reach the CommHub server. Is `npm start` running in /server?';
+  }
+}
+checkHealth();
+
+// ---- mailboxes ----
+async function createMailbox() {
+  const localPart = document.getElementById('mailLocalPart').value.trim();
+  const forwardTo = document.getElementById('mailForwardTo').value.trim();
+  const resultEl = document.getElementById('mailResult');
+  if (!localPart) { resultEl.innerHTML = '<p style="color:var(--danger)">Enter a local part first.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Creating…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/mailboxes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ localPart, forwardTo: forwardTo || undefined })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+
+    resultEl.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>Address</span><span class="value">${data.address}</span></div>
+        <div class="row"><span>SMTP host</span><span class="value">${data.smtp.host}</span></div>
+        <div class="row"><span>Port</span><span class="value">${data.smtp.port} (${data.smtp.security})</span></div>
+      </div>`;
+    document.getElementById('mailLocalPart').value = '';
+    document.getElementById('mailForwardTo').value = '';
+    loadMailboxes();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function deleteMailbox(id) {
+  if (!confirm('Delete this mailbox? This cannot be undone.')) return;
+  try {
+    const res = await authedFetch(`${API}/api/mailboxes/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to delete mailbox');
+      return;
+    }
+    loadMailboxes();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function loadMailboxes() {
+  const tbody = document.getElementById('mailTable');
+  try {
+    const res = await authedFetch(`${API}/api/mailboxes`);
+    const data = await res.json();
+    if (!data.mailboxes || data.mailboxes.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No mailboxes yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.mailboxes.map(m => `
+      <tr>
+        <td class="mono">${m.address}</td>
+        <td class="mono">${m.smtp.host}</td>
+        <td>${new Date(m.createdAt).toLocaleString()}</td>
+        <td><button class="danger" onclick="deleteMailbox('${m.id}')">Delete</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet, leave empty state */ }
+}
+
+// ---- numbers ----
+async function searchNumbers() {
+  const country = document.getElementById('voiceCountry').value;
+  const areaCode = document.getElementById('voiceAreaCode').value.trim();
+  const resultEl = document.getElementById('voiceSearchResult');
+  resultEl.innerHTML = '<p style="color:var(--muted)">Searching…</p>';
+
+  try {
+    const qs = new URLSearchParams({ country });
+    if (areaCode) qs.set('areaCode', areaCode);
+    const res = await authedFetch(`${API}/api/numbers/search?${qs}`);
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+
+    if (!data.results || data.results.length === 0) {
+      resultEl.innerHTML = '<p style="color:var(--muted)">No numbers found for that search.</p>';
+      return;
+    }
+    resultEl.innerHTML = data.results.map(r => `
+      <div class="credential">
+        <div class="row"><span>${r.friendlyName}</span>
+        <button class="primary voice" onclick="provisionNumber('${r.phoneNumber}')">Provision</button></div>
+      </div>`).join('');
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function provisionNumber(phoneNumber) {
+  const resultEl = document.getElementById('voiceSearchResult');
+  try {
+    const res = await authedFetch(`${API}/api/numbers/provision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phoneNumber })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML += `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    loadNumbers();
+  } catch (err) {
+    resultEl.innerHTML += `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function releaseNumber(id) {
+  if (!confirm('Release this number? It will stop working immediately.')) return;
+  try {
+    const res = await authedFetch(`${API}/api/numbers/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to release number');
+      return;
+    }
+    loadNumbers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function loadNumbers() {
+  const tbody = document.getElementById('voiceTable');
+  try {
+    const res = await authedFetch(`${API}/api/numbers`);
+    const data = await res.json();
+    if (!data.provisioned || data.provisioned.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No numbers yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.provisioned.map(n => `
+      <tr>
+        <td class="mono">${n.phoneNumber}</td>
+        <td>${n.customerLabel || '—'}</td>
+        <td class="mono">${n.sipSetup.username}</td>
+        <td>${new Date(n.provisionedAt).toLocaleString()}</td>
+        <td><button class="danger" onclick="releaseNumber('${n.id}')">Release</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet, leave empty state */ }
+}
+
+loadMailboxes();
+loadNumbers();

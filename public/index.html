@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommHub — Email and calling, under your brand</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand"><span class="dot"></span> CommHub</div>
+  <div class="links">
+    <a href="#capabilities">Capabilities</a>
+    <a href="#countries">Coverage</a>
+    <a href="login.html">Log in</a>
+    <a class="cta" href="login.html">Get started</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="eyebrow">Reseller platform · Email + Voice</div>
+  <h1>One panel to provision inboxes and phone lines for every customer you sign up.</h1>
+  <p class="sub">CommHub sits on top of established email and telecom infrastructure — it doesn't replace it — so each mailbox and each number is real, deliverable, and callable from day one.</p>
+  <div class="hero-ctas">
+    <a class="btn btn-primary" href="login.html">Create an account</a>
+    <a class="btn btn-ghost" href="#capabilities">See how routing works</a>
+  </div>
+
+  <div class="rail">
+    <svg viewBox="0 0 1000 210" xmlns="http://www.w3.org/2000/svg">
+      <!-- mail path -->
+      <line x1="70" y1="55" x2="930" y2="55" stroke="#253148" stroke-width="2"/>
+      <line x1="70" y1="55" x2="480" y2="55" stroke="#3EC1B3" stroke-width="2" stroke-dasharray="4 5"/>
+      <circle cx="70" cy="55" r="6" fill="#3EC1B3"/>
+      <circle cx="300" cy="55" r="6" fill="#3EC1B3"/>
+      <circle cx="480" cy="55" r="6" fill="#3EC1B3"/>
+      <circle cx="700" cy="55" r="6" fill="#253148" stroke="#3EC1B3" stroke-width="1.5"/>
+      <circle cx="930" cy="55" r="6" fill="#253148" stroke="#3EC1B3" stroke-width="1.5"/>
+      <text x="70" y="35" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">sales@yourbrand.com</text>
+      <text x="300" y="35" fill="#8291AC" font-family="JetBrains Mono" font-size="11">MX / SPF / DKIM</text>
+      <text x="480" y="35" fill="#8291AC" font-family="JetBrains Mono" font-size="11">route</text>
+      <text x="700" y="35" fill="#8291AC" font-family="JetBrains Mono" font-size="11">IMAP</text>
+      <text x="890" y="35" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">Outlook</text>
+
+      <!-- voice path -->
+      <line x1="70" y1="150" x2="930" y2="150" stroke="#253148" stroke-width="2"/>
+      <line x1="70" y1="150" x2="480" y2="150" stroke="#F2A65A" stroke-width="2" stroke-dasharray="4 5"/>
+      <circle cx="70" cy="150" r="6" fill="#F2A65A"/>
+      <circle cx="300" cy="150" r="6" fill="#F2A65A"/>
+      <circle cx="480" cy="150" r="6" fill="#F2A65A"/>
+      <circle cx="700" cy="150" r="6" fill="#253148" stroke="#F2A65A" stroke-width="1.5"/>
+      <circle cx="930" cy="150" r="6" fill="#253148" stroke="#F2A65A" stroke-width="1.5"/>
+      <text x="70" y="130" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">+1 415 555 0134</text>
+      <text x="300" y="130" fill="#8291AC" font-family="JetBrains Mono" font-size="11">carrier trunk</text>
+      <text x="480" y="130" fill="#8291AC" font-family="JetBrains Mono" font-size="11">SIP</text>
+      <text x="700" y="130" fill="#8291AC" font-family="JetBrains Mono" font-size="11">registrar</text>
+      <text x="890" y="130" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">IP phone</text>
+    </svg>
+  </div>
+</div>
+
+<div class="section" id="capabilities">
+  <h2>Two products, one panel</h2>
+  <p class="lede">Each side of CommHub is a thin, opinionated layer over infrastructure that already handles deliverability and call routing at scale.</p>
+  <div class="grid-2">
+    <div class="card">
+      <span class="tag mail">Email</span>
+      <h3>Mailboxes customers can drop into Outlook</h3>
+      <p>Create an address, and the panel hands back host, port, and security settings for standard IMAP/SMTP setup — no manual DNS work for your customer.</p>
+    </div>
+    <div class="card">
+      <span class="tag voice">Voice</span>
+      <h3>Numbers registered straight to a SIP endpoint</h3>
+      <p>Search by country and area code, provision a number, and get SIP credentials your customer enters into any IP phone or softphone.</p>
+    </div>
+    <div class="card">
+      <span class="tag mail">Email</span>
+      <h3>Deliverability handled upstream</h3>
+      <p>Sending reputation, SPF/DKIM/DMARC, and inbound spam filtering are managed by the underlying mail infrastructure, not rebuilt from scratch.</p>
+    </div>
+    <div class="card">
+      <span class="tag voice">Voice</span>
+      <h3>Usage and call logs per customer</h3>
+      <p>Every provisioned line reports back call and SMS activity so you can bill accurately and support customers when something breaks.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="countries">
+  <h2>Coverage</h2>
+  <p class="lede">Number availability depends on local carrier and regulatory relationships in each market.</p>
+  <div class="countries">
+    <span class="pill live">United States</span>
+    <span class="pill live">Canada</span>
+    <span class="pill live">United Kingdom</span>
+    <span class="pill blocked">China — requires local licensing, not yet available</span>
+  </div>
+</div>
+
+<footer class="foot">
+  CommHub starter panel · connect your own Mailgun and Twilio credentials in <code>server/.env</code>
+</footer>
+
+</body>
+</html>
