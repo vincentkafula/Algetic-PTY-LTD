@@ -1,6 +1,6 @@
-# CommHub — reseller panel for email + VoIP
+# Altegic — reseller panel for email + VoIP
 
-CommHub is a starter for a SaaS product that lets you sign customers up for
+Altegic is a starter for a SaaS product that lets you sign customers up for
 branded mailboxes (usable in Outlook) and phone numbers (usable on IP
 phones/softphones), by reselling **Mailgun** (email) and **Twilio** (voice)
 under your own dashboard. It is not, and cannot be, a from-scratch mail
@@ -69,7 +69,7 @@ on top.
 
 **Isn't:** a replacement for running Postfix/Dovecot or becoming a licensed
 telecom carrier yourself. Those are what Mailgun and Twilio already do
-underneath — CommHub resells access to them, it doesn't reimplement them.
+underneath — Altegic resells access to them, it doesn't reimplement them.
 That's true of essentially every "build me email + VoIP hosting" product;
 the deliverability and carrier relationships are the hard, slow-to-earn part,
 and nobody rebuilds them from zero for a new SaaS.
@@ -196,7 +196,7 @@ route, the local record, and that mailbox's captured message history).
 ## Call centre: IVR, queues, and agents
 
 Built on top of the phone numbers/Twilio integration above — `routes/callCentre.js`
-(CRUD for menus/queues/agents, scoped per CommHub account like mailboxes and
+(CRUD for menus/queues/agents, scoped per Altegic account like mailboxes and
 numbers) and `routes/callCentreWebhooks.js` (the actual TwiML call-flow logic
 Twilio calls into).
 
@@ -213,7 +213,7 @@ automatically detaches it from any trunk it was on.
   requests.
 - **Twilio webhook signature verification**, the security foundation these
   webhooks depend on since they're unauthenticated (Twilio calls them
-  directly, no CommHub session involved): generated real valid signatures
+  directly, no Altegic session involved): generated real valid signatures
   with Twilio's own library, confirmed forged/unsigned requests are
   rejected (403), confirmed correctly-signed ones are accepted. This isn't
   optional hardening — without it, anyone who finds these URLs could inject
@@ -236,7 +236,7 @@ answered leg — confirmed against current Twilio docs), not guesswork, but
 your first real inbound call is the actual test of that piece.
 
 **Agents answer on a real phone, not a browser.** When someone reaches a
-queue, CommHub places outbound calls to every available agent's registered
+queue, Altegic places outbound calls to every available agent's registered
 phone number (their cell, a desk phone, or a private-SIP-network extension
 if you've made it independently reachable — the private SIP network has no
 PSTN connectivity by default, see its own README). This was a deliberate
@@ -248,7 +248,7 @@ separate feature that wasn't built here.
 
 `routes/domains.js` integrates GoDaddy's v3 "quote-execute" Domains API:
 search availability, get a locked price quote, then execute the
-registration. Scoped per CommHub account like mailboxes and numbers.
+registration. Scoped per Altegic account like mailboxes and numbers.
 
 **Registering a domain charges the connected GoDaddy account's payment
 method and is not reversible** — this is GoDaddy's own characterization of
@@ -285,11 +285,11 @@ API, surfaced in the dashboard's "DNS records" panel.
 covering every domain in the connected GoDaddy account — unlike Twilio or
 Mailgun, it isn't scoped per resource by the provider itself. Every DNS
 route therefore checks that the domain in the URL matches a record this
-specific CommHub account registered *through CommHub* (in the local
+specific Altegic account registered *through Altegic* (in the local
 `domains` collection) before doing anything — tested directly with two
 separate accounts, confirming one account gets a 404 (not the DNS data)
 when it tries to touch a domain it doesn't own. A domain registered
-directly in GoDaddy, outside CommHub, has no local record to match against
+directly in GoDaddy, outside Altegic, has no local record to match against
 and so can't be managed from this dashboard at all — by design, not a gap
 to fix.
 

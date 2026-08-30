@@ -1,7 +1,7 @@
 services:
   kamailio:
     build: ./kamailio
-    container_name: commhub-kamailio
+    container_name: altegic-kamailio
     # Host networking, not bridge — SIP/RTP need a real, stable public IP
     # and a wide UDP port range that Docker's default bridge+NAT networking
     # can't cleanly forward. This is the standard, widely-used pattern for
@@ -17,7 +17,7 @@ services:
 
   rtpengine:
     build: ./rtpengine
-    container_name: commhub-rtpengine
+    container_name: altegic-rtpengine
     network_mode: host
     restart: unless-stopped
     env_file: .env
@@ -28,7 +28,7 @@ services:
 
   api:
     build: ./api
-    container_name: commhub-sip-api
+    container_name: altegic-sip-api
     restart: unless-stopped
     env_file: .env
     # Regular bridge networking is fine here (unlike kamailio/rtpengine) —
@@ -43,7 +43,7 @@ services:
 
   caddy:
     image: caddy:2
-    container_name: commhub-sip-caddy
+    container_name: altegic-sip-caddy
     restart: unless-stopped
     env_file: .env
     ports:

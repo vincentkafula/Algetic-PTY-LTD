@@ -10,7 +10,7 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 
 // ---------------------------------------------------------------------------
 // NOT behind requireAuth — Twilio calls these directly for both inbound
-// calls to a CommHub number and outbound legs CommHub itself placed (to
+// calls to a Altegic number and outbound legs Altegic itself placed (to
 // ring agents). Authenticity comes from verifying Twilio's own
 // X-Twilio-Signature header on every request, the same pattern used for
 // Mailgun's inbound webhook (routes/webhooks.js) — different provider,
@@ -154,7 +154,7 @@ router.post('/gather', async (req, res) => {
 
 /**
  * POST /api/webhooks/twilio/agent-connect?queueId=<id>
- * TwiML fetched when an agent answers the outbound call CommHub placed to
+ * TwiML fetched when an agent answers the outbound call Altegic placed to
  * ring them — bridges them to the oldest waiting caller in the queue.
  */
 router.post('/agent-connect', (req, res) => {

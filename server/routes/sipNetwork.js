@@ -8,8 +8,8 @@ const { requireAuth } = require('../middleware/auth');
 // Proxies the dashboard's "Private SIP Network" panel to the management API
 // running on the separate SIP-network VPS (see /sip-network in this repo).
 //
-// SCOPING NOTE, same as sip-network/api/server.js: this is NOT per-CommHub-
-// account like mailboxes/numbers are. Every logged-in CommHub user who can
+// SCOPING NOTE, same as sip-network/api/server.js: this is NOT per-Altegic-
+// account like mailboxes/numbers are. Every logged-in Altegic user who can
 // reach this dashboard can manage the one shared subscriber list — correct
 // for "my own team's private calling system," wrong for reselling isolated
 // networks to separate customers. If you need that, both this file and

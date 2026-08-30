@@ -45,7 +45,7 @@ function readAll() {
   } catch (err) {
     // Corrupt or empty file — don't crash the server, start fresh in memory
     // (existing file is left on disk in case someone wants to inspect it).
-    console.error('commhub db: failed to read data file, starting empty store:', err.message);
+    console.error('altegic db: failed to read data file, starting empty store:', err.message);
     return { ...DEFAULT_DATA };
   }
 }

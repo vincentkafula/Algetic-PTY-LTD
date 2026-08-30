@@ -54,7 +54,7 @@ function domainForAccount(ownerId) {
   // A short random suffix avoids collisions across all Twilio customers,
   // not just this app's accounts.
   const suffix = randomToken(6).replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 8);
-  return `commhub-${suffix}.pstn.twilio.com`;
+  return `altegic-${suffix}.pstn.twilio.com`;
 }
 
 function publicTrunk(record) {
@@ -86,12 +86,12 @@ async function ensureTrunkForAccount(ownerId) {
   const password = generatePassword();
 
   const trunk = await twilioClient.trunking.v1.trunks.create({
-    friendlyName: `CommHub account ${ownerId}`,
+    friendlyName: `Altegic account ${ownerId}`,
     domainName
   });
 
   const credentialList = await twilioClient.sip.credentialLists.create({
-    friendlyName: `commhub-${ownerId}`
+    friendlyName: `altegic-${ownerId}`
   });
 
   await twilioClient.sip.credentialLists(credentialList.sid).credentials.create({

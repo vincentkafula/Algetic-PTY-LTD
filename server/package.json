@@ -1,5 +1,5 @@
 {
-  "name": "commhub-server",
+  "name": "altegic-server",
   "version": "0.2.0",
   "description": "Backend API for a reseller email + VoIP dashboard (Mailgun + Twilio integration) with account signup/login and persistent storage",
   "main": "server.js",

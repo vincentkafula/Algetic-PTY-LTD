@@ -77,7 +77,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`CommHub server running on http://localhost:${PORT}`);
+  console.log(`Altegic server running on http://localhost:${PORT}`);
   if (!process.env.JWT_SECRET) {
     console.warn('WARNING: JWT_SECRET is not set — signup/login will fail. Set one in server/.env.');
   }

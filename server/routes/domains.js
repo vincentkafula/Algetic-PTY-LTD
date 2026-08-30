@@ -9,7 +9,7 @@ const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('../godadd
 
 // ---------------------------------------------------------------------------
 // Domain registration via GoDaddy's v3 "quote-execute" API. Scoped per
-// CommHub account, same as mailboxes/numbers.
+// Altegic account, same as mailboxes/numbers.
 //
 // IMPORTANT: registering a domain charges GoDaddy's payment profile on
 // this account and is NOT reversible (GoDaddy's own words, in their
@@ -160,7 +160,7 @@ router.post('/register', async (req, res) => {
 
 /**
  * GET /api/domains
- * List domains this account has registered through CommHub.
+ * List domains this account has registered through Altegic.
  */
 router.get('/', (req, res) => {
   const domains = db.domains.filter((d) => d.ownerId === req.user.id);
@@ -195,21 +195,21 @@ router.get('/:id/status', async (req, res) => {
 
 // ===== DNS records =====
 //
-// SECURITY: GODADDY_PAT is one shared credential for the whole CommHub
+// SECURITY: GODADDY_PAT is one shared credential for the whole Altegic
 // deployment, covering every domain in that GoDaddy account — not scoped
-// per CommHub customer the way Twilio/Mailgun credentials effectively are
+// per Altegic customer the way Twilio/Mailgun credentials effectively are
 // per-resource. Every DNS route below therefore requires :id to match a
-// domain record this specific account registered THROUGH CommHub (in
+// domain record this specific account registered THROUGH Altegic (in
 // db.domains), not just any domain string. Without this check, any
-// CommHub account could edit DNS for any domain in the underlying
-// GoDaddy account, including ones belonging to other CommHub customers.
-// Domains registered directly in GoDaddy (outside CommHub) are not
+// Altegic account could edit DNS for any domain in the underlying
+// GoDaddy account, including ones belonging to other Altegic customers.
+// Domains registered directly in GoDaddy (outside Altegic) are not
 // manageable here at all — there's no local record to match against.
 
 function findOwnedDomain(req, res) {
   const domain = db.domains.find((d) => d.id === req.params.id && d.ownerId === req.user.id);
   if (!domain) {
-    res.status(404).json({ error: 'Domain not found on your account — only domains registered through CommHub can be managed here' });
+    res.status(404).json({ error: 'Domain not found on your account — only domains registered through Altegic can be managed here' });
     return null;
   }
   return domain;

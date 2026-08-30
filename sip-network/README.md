@@ -1,9 +1,9 @@
-# CommHub private SIP network
+# Altegic private SIP network
 
 A self-hosted VoIP system for calling between people registered on your own
 server — real SIP/IP-phone hardware and softphones, digest-authenticated,
 zero telecom carrier involved. This is a genuinely separate deployment from
-the rest of CommHub: it runs on its own VPS, not on Railway.
+the rest of Altegic: it runs on its own VPS, not on Railway.
 
 ## What this is / isn't — read this first
 
@@ -16,7 +16,7 @@ no PSTN gateway, no trunk, nowhere else for a call to go. An INVITE to
 anyone not currently registered on this exact server gets rejected with
 `404 User not registered on this network` — by design, not as a bug to fix
 later. If you need real phone numbers, that's the Twilio-based
-`server/services/trunking.js` piece of the main CommHub app, which is a
+`server/services/trunking.js` piece of the main Altegic app, which is a
 completely different, carrier-backed system.
 
 **Why not Railway:** SIP needs a stable public IP and, more importantly,
@@ -49,7 +49,7 @@ before you rely on it in production:
   flow tested against a real Kamailio-schema SQLite database, including
   auth rejection and input validation. Confirmed its HA1/HA1B hashes are
   byte-identical to the formula already proven to authenticate against
-  live Kamailio. The full chain — CommHub dashboard → CommHub backend →
+  live Kamailio. The full chain — Altegic dashboard → Altegic backend →
   this API → the database — was tested end-to-end locally.
 - **`rtpengine.conf.template` — NOT runtime-tested.** Installing
   `rtpengine-daemon` during development hit a broken package mirror (an
@@ -81,7 +81,7 @@ before you rely on it in production:
   against
 - Docker and Docker Compose installed
 - A DNS A record pointing `API_DOMAIN` (from `.env`) at this VPS's IP, if
-  you want the CommHub dashboard integration — Caddy needs this to obtain
+  you want the Altegic dashboard integration — Caddy needs this to obtain
   a TLS certificate
 - Firewall rules (both the OS firewall and any cloud provider security
   group) opening:
@@ -113,14 +113,14 @@ docker compose logs -f
 
 If you're using the dashboard integration, also set `SIP_NETWORK_API_URL`
 (`https://<API_DOMAIN>`) and `SIP_NETWORK_API_KEY` (matching `SIP_API_KEY`
-exactly) on the main CommHub app — see its `server/.env.example`.
+exactly) on the main Altegic app — see its `server/.env.example`.
 
 ## Managing subscribers
 
 Two ways to do this — pick whichever fits:
 
-**From the CommHub dashboard** (once you've set `SIP_NETWORK_API_URL` and
-`SIP_NETWORK_API_KEY` on the main CommHub app — see its
+**From the Altegic dashboard** (once you've set `SIP_NETWORK_API_URL` and
+`SIP_NETWORK_API_KEY` on the main Altegic app — see its
 `server/.env.example`): the dashboard's "Private SIP network" panel talks
 to the `api` service below over HTTPS. This is the easier path day-to-day.
 
@@ -158,7 +158,7 @@ subscriber list.
 remove, auth rejection, validation) was tested against a real
 Kamailio-schema SQLite database, and the HA1 hashes it produces were
 confirmed byte-identical to the formula already proven to authenticate
-against live Kamailio. The full chain — CommHub dashboard → CommHub
+against live Kamailio. The full chain — Altegic dashboard → Altegic
 backend → this API → the database — was also tested end-to-end locally.
 
 **Not verified:** Caddy's automatic HTTPS itself (no Docker daemon
@@ -166,8 +166,8 @@ available during development, same limitation as rtpengine above) — the
 Caddyfile uses Caddy's standard, documented `{$API_DOMAIN}` substitution
 syntax, but confirm a certificate actually issues once this is deployed.
 
-**Scoping:** unlike CommHub's mailboxes and phone numbers, subscribers
-here are **not** isolated per CommHub customer account. Every CommHub
+**Scoping:** unlike Altegic's mailboxes and phone numbers, subscribers
+here are **not** isolated per Altegic customer account. Every Altegic
 account with dashboard access manages the same shared list. That's the
 right shape for "my own team's private calling system" — it is not a
 multi-tenant, resell-to-separate-customers feature. Adding that would mean

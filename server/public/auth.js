@@ -1,6 +1,6 @@
 // Shared across dashboard.html and login.html.
-const AUTH_TOKEN_KEY = 'commhub_token';
-const AUTH_USER_KEY = 'commhub_user';
+const AUTH_TOKEN_KEY = 'altegic_token';
+const AUTH_USER_KEY = 'altegic_user';
 
 function getToken() {
   return localStorage.getItem(AUTH_TOKEN_KEY);

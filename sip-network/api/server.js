@@ -8,11 +8,11 @@ const Database = require('better-sqlite3');
 // Runs as its own container on the same VPS as Kamailio, sharing the
 // kamailio-data volume so it reads/writes the exact same SQLite database
 // Kamailio itself uses (the same file manage_subscribers.py touches — this
-// service exists so CommHub's dashboard can do the same thing over HTTPS
+// service exists so Altegic's dashboard can do the same thing over HTTPS
 // instead of you SSHing in and running that script by hand).
 //
-// SCOPING NOTE: unlike CommHub's mailboxes/numbers (which are isolated per
-// customer account), SIP subscribers here are NOT scoped to any CommHub
+// SCOPING NOTE: unlike Altegic's mailboxes/numbers (which are isolated per
+// customer account), SIP subscribers here are NOT scoped to any Altegic
 // account. This is a single shared subscriber list for one private network
 // — appropriate for "my own team's calling system," not for reselling
 // separate isolated networks to different customers. If you ever need
@@ -20,8 +20,8 @@ const Database = require('better-sqlite3');
 // by it throughout this file.
 //
 // Auth: a single shared API key (SIP_API_KEY), checked via a constant-time
-// comparison. This is simpler than CommHub's per-user JWT sessions because
-// there's exactly one caller (the CommHub backend) — but that also means
+// comparison. This is simpler than Altegic's per-user JWT sessions because
+// there's exactly one caller (the Altegic backend) — but that also means
 // this key is as sensitive as a root password for the subscriber list.
 // This service MUST sit behind TLS in production — see the bundled Caddy
 // reverse proxy in docker-compose.yml. Running it over plain HTTP would

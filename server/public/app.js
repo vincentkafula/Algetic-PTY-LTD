@@ -71,7 +71,7 @@ async function checkHealth() {
     }
   } catch (err) {
     el.className = 'status-banner warn';
-    el.textContent = 'Could not reach the CommHub server. Is `npm start` running in /server?';
+    el.textContent = 'Could not reach the Altegic server. Is `npm start` running in /server?';
   }
 }
 checkHealth();

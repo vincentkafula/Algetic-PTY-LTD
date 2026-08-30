@@ -8,9 +8,9 @@ const { twilioClient, isTwilioConfigured } = require('../twilioClient');
 const { PUBLIC_BASE_URL } = require('../mailgunClient'); // shared env var, not Mailgun-specific
 
 // ---------------------------------------------------------------------------
-// Call centre: IVR menus, queues, and agents, scoped per CommHub account
+// Call centre: IVR menus, queues, and agents, scoped per Altegic account
 // (unlike the private SIP network, this one DOES follow the normal
-// per-account isolation every other CommHub resource uses).
+// per-account isolation every other Altegic resource uses).
 //
 // IMPORTANT — how this relates to the SIP trunk feature: a Twilio phone
 // number can be attached to a SIP trunk (for direct-dial IP phones, see
@@ -113,8 +113,8 @@ router.post('/queues', async (req, res) => {
     return res.status(500).json({ error: 'Server is missing TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / PUBLIC_BASE_URL in .env' });
   }
 
-  // Twilio queue names are scoped per account, so prefix with the CommHub
-  // account id to avoid two different CommHub customers' queues colliding
+  // Twilio queue names are scoped per account, so prefix with the Altegic
+  // account id to avoid two different Altegic customers' queues colliding
   // inside the same Twilio account.
   const twilioQueueName = `${req.user.id}-${name}`.slice(0, 64);
 
