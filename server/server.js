@@ -33,8 +33,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve the static dashboard/landing frontend
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Serve the static dashboard/landing frontend.
+// This lives at server/public (not a sibling ../public) so it's included
+// when a host's build is scoped to the server/ directory (e.g. Railway's
+// "root directory" setting) — a sibling folder outside that root would be
+// left out of the build entirely, which is what caused earlier 404s.
+app.use(express.static(path.join(__dirname, 'public')));
 
 // JSON error handler for anything that slips past individual routes
 // (e.g. malformed JSON bodies), so clients always get JSON back, not an
