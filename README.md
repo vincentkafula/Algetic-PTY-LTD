@@ -147,6 +147,24 @@ Mailgun route and the local record).
   customer's compromised IP phone could make calls billed to another
   customer's account.
 
+## South Africa and Zambia
+
+Both are included in `SUPPORTED_NUMBER_COUNTRIES` and the dashboard's country
+list. Before relying on them:
+
+- **South Africa (ZA)**: Twilio does sell numbers here, but local and mobile
+  South African numbers require a **regulatory bundle** (proof of address)
+  approved on your Twilio account before a purchase completes — a search can
+  return results that still fail at the provision step until that's done.
+  Check Twilio's regulatory requirements for South Africa in your console.
+- **Zambia (ZM)**: Twilio has confirmed voice and SMS coverage for Zambia,
+  but this project hasn't verified whether *local* Zambian numbers are
+  available for direct purchase via the API — that's a narrower capability
+  than call/SMS coverage. Test a number search for ZM in your own Twilio
+  console first. If it comes back empty, Zambian numbers may need to be
+  requested through Twilio support rather than bought directly — in that
+  case, remove `ZM` from `SUPPORTED_NUMBER_COUNTRIES` until confirmed.
+
 ## China
 
 Numbers for China are intentionally excluded from `SUPPORTED_NUMBER_COUNTRIES`

@@ -27,7 +27,9 @@ router.use(requireAuth);
 /**
  * GET /api/numbers/search?country=US&areaCode=415
  * Searches for available numbers to provision.
- * Twilio country codes used here: US, CA, GB.
+ * Twilio country codes used here: US, CA, GB, ZA, ZM (see server/.env.example
+ * for caveats on ZA's regulatory bundle requirement and ZM's unconfirmed
+ * local-number availability).
  * CN (China) is not offered - see README "China" section for why.
  */
 router.get('/search', async (req, res) => {
