@@ -3,115 +3,670 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CommHub — Email, voice, domains, and development, under your brand</title>
-<link rel="stylesheet" href="styles.css">
+<title>CommHub — One panel. Every connection.</title>
+<style>
+  :root{
+    --bg-0:#05060d;
+    --bg-1:#0a0c1a;
+    --bg-2:#0e1024;
+    --panel:#10122499;
+    --panel-solid:#12142a;
+    --border:#ffffff14;
+    --border-soft:#ffffff0d;
+    --text-0:#f5f6fb;
+    --text-1:#b9bcd4;
+    --text-2:#7d81a3;
+    --violet:#7c5cff;
+    --blue:#4f8dff;
+    --cyan:#31c4d8;
+    --green:#33c281;
+    --amber:#e08a3c;
+    --pink:#e05a9c;
+    --grad: linear-gradient(90deg, #7c5cff, #4f8dff);
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 600px at 82% 8%, #3a2a8a55, transparent 60%),
+      radial-gradient(900px 500px at 100% 40%, #2450a344, transparent 60%),
+      var(--bg-0);
+    color:var(--text-0);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit;}
+
+  .wrap{
+    max-width:1360px;
+    margin:0 auto;
+    padding:0 48px;
+  }
+
+  @media (max-width: 900px){
+    .wrap{padding:0 20px;}
+  }
+
+  /* ---------- NAV ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter: blur(14px);
+    background:#05060dcc;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 0;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-weight:700; font-size:17px; letter-spacing:-0.01em;
+  }
+  .brand-mark{
+    width:32px; height:32px; border-radius:9px;
+    background:linear-gradient(135deg,#8a6bff,#3f7cff);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 18px #6b4fff55;
+    font-size:16px;
+  }
+  nav.links{
+    display:flex; align-items:center; gap:34px;
+    font-size:14.5px; color:var(--text-1);
+  }
+  nav.links a{
+    display:flex; align-items:center; gap:5px;
+    transition:color .15s ease;
+  }
+  nav.links a:hover{color:var(--text-0);}
+  .chev{font-size:10px; opacity:.7; transform:translateY(1px);}
+
+  .nav-actions{display:flex; align-items:center; gap:12px;}
+  .btn{
+    border-radius:10px;
+    padding:10px 18px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-ghost{
+    background:transparent;
+    border-color:#ffffff26;
+    color:var(--text-0);
+  }
+  .btn-ghost:hover{border-color:#ffffff4d; background:#ffffff08;}
+  .btn-primary{
+    background:var(--grad);
+    color:white;
+    box-shadow:0 6px 24px #6a56ff4d;
+  }
+  .btn-primary:hover{box-shadow:0 8px 30px #6a56ff70; transform:translateY(-1px);}
+  .btn-outline{
+    background:transparent;
+    border-color:#ffffff26;
+    color:var(--text-0);
+  }
+  .btn-outline:hover{background:#ffffff08; border-color:#ffffff45;}
+  .btn-row{display:flex; align-items:center; gap:6px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:76px 0 40px;
+    position:relative;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap:20px;
+    align-items:center;
+  }
+  @media (max-width: 1080px){
+    .hero-grid{grid-template-columns:1fr; text-align:left;}
+  }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    border:1px solid #ffffff26;
+    border-radius:999px;
+    padding:8px 16px;
+    font-size:12.5px;
+    color:var(--text-1);
+    margin-bottom:28px;
+    background:#ffffff06;
+  }
+  .pill b{color:var(--text-0); font-weight:600;}
+  .dot{width:4px;height:4px;border-radius:50%;background:var(--text-2);}
+
+  h1.hero-title{
+    font-size:56px;
+    line-height:1.05;
+    letter-spacing:-0.025em;
+    font-weight:700;
+    margin:0 0 24px;
+  }
+  h1.hero-title .grad{
+    background:linear-gradient(95deg,#a98bff 0%, #6f8cff 45%, #46c6e0 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  @media (max-width:1080px){ h1.hero-title{font-size:42px;} }
+  @media (max-width:520px){ h1.hero-title{font-size:34px;} }
+
+  p.lede{
+    font-size:16.5px;
+    line-height:1.65;
+    color:var(--text-1);
+    max-width:520px;
+    margin:0 0 20px;
+  }
+  p.sub-lede{
+    font-size:14.5px;
+    line-height:1.7;
+    color:var(--text-2);
+    max-width:540px;
+    margin:0 0 34px;
+  }
+
+  .hero-cta{display:flex; gap:14px; margin-bottom:44px; flex-wrap:wrap;}
+  .arrow{transition:transform .15s ease; display:inline-block;}
+  .btn-primary:hover .arrow{transform:translateX(3px);}
+
+  .trust-row{
+    display:flex; gap:38px; flex-wrap:wrap;
+  }
+  .trust-item{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px; color:var(--text-2);
+  }
+  .trust-icon{
+    width:34px; height:34px; border-radius:9px;
+    background:#ffffff08; border:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-size:15px;
+  }
+  .trust-item strong{display:block; color:var(--text-0); font-size:13.5px; font-weight:600;}
+
+  /* ---------- DASHBOARD MOCKUP ---------- */
+  .mockup-frame{
+    position:relative;
+    border-radius:22px;
+    padding:2px;
+    background:linear-gradient(140deg,#4a3fae55,#1c2050 40%, #101128 70%);
+    box-shadow:0 40px 90px -30px #150a4090, 0 0 0 1px #ffffff08;
+  }
+  .mockup{
+    background:linear-gradient(160deg,#0d0f22,#0a0b18);
+    border-radius:20px;
+    padding:20px;
+    overflow:hidden;
+  }
+  .mockup-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .mockup-brand{
+    display:flex; align-items:center; gap:8px;
+    font-weight:700; font-size:14px;
+  }
+  .mockup-body{
+    display:grid;
+    grid-template-columns:170px 1fr;
+    gap:16px;
+  }
+  @media (max-width:640px){
+    .mockup-body{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+  }
+  .sidebar{
+    background:#ffffff05;
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    padding:10px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .side-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px;
+    border-radius:9px;
+    font-size:12.5px;
+    color:var(--text-2);
+  }
+  .side-item .ic{width:16px; text-align:center; font-size:13px;}
+  .side-item.active{
+    background:linear-gradient(90deg,#6a4bff2e,#4f8dff1c);
+    color:var(--text-0);
+    font-weight:600;
+  }
+  .side-user{
+    margin-top:10px; padding-top:10px;
+    border-top:1px solid var(--border-soft);
+    display:flex; align-items:center; gap:8px;
+    font-size:11.5px;
+    color:var(--text-2);
+  }
+  .avatar{
+    width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(135deg,#e08a3c,#e05a9c);
+    flex-shrink:0;
+  }
+
+  .main-panel-title{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .main-panel-title h4{margin:0; font-size:15px; font-weight:700;}
+  .date-chip{
+    font-size:11px; color:var(--text-2);
+    border:1px solid var(--border-soft);
+    padding:5px 10px; border-radius:8px;
+  }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:12px;
+  }
+  @media (max-width:520px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+  .stat-card{
+    background:#ffffff05;
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:12px;
+  }
+  .stat-label{font-size:10.5px; color:var(--text-2); margin-bottom:6px;}
+  .stat-value{font-size:17px; font-weight:700;}
+  .stat-delta{font-size:10.5px; color:var(--green); margin-left:4px;}
+  .live-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10.5px; color:var(--green); margin-top:4px;
+  }
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green); box-shadow:0 0 8px var(--green);}
+
+  .panels-row{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:10px;
+  }
+  @media (max-width:640px){ .panels-row{grid-template-columns:1fr;} }
+  .panel-box{
+    background:#ffffff05;
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:12px;
+  }
+  .panel-box h5{margin:0 0 10px; font-size:11.5px; color:var(--text-1); font-weight:600;}
+  .prov-item{
+    display:flex; align-items:center; gap:9px;
+    padding:6px 0;
+    font-size:11.5px;
+  }
+  .prov-ic{
+    width:26px; height:26px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; flex-shrink:0;
+  }
+  .prov-main{flex:1; min-width:0;}
+  .prov-title{font-weight:600; color:var(--text-0); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .prov-sub{color:var(--text-2); font-size:10px;}
+  .prov-time{color:var(--text-2); font-size:10px; flex-shrink:0;}
+
+  .chart-wrap{height:120px; position:relative;}
+  .chart-legend{display:flex; gap:14px; font-size:10px; color:var(--text-2); margin-bottom:6px; justify-content:flex-end;}
+  .legend-dot{width:6px;height:6px;border-radius:50%; display:inline-block; margin-right:4px;}
+
+  /* ---------- SERVICES SECTION ---------- */
+  .services-section{
+    padding:110px 0 60px;
+    text-align:center;
+  }
+  .services-section h2{
+    font-size:32px; margin:0 0 14px; letter-spacing:-0.02em; font-weight:700;
+  }
+  .services-section .sub{
+    color:var(--text-2); font-size:15px; max-width:640px; margin:0 auto 56px; line-height:1.6;
+  }
+
+  .service-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--border-soft);
+    border:1px solid var(--border-soft);
+    border-radius:18px;
+    overflow:hidden;
+    text-align:left;
+  }
+  @media (max-width:920px){ .service-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:600px){ .service-grid{grid-template-columns:1fr;} }
+
+  .service-card{
+    background:var(--bg-1);
+    padding:32px 28px;
+    transition:background .2s ease;
+  }
+  .service-card:hover{background:#12142e;}
+  .service-icon{
+    width:46px; height:46px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+    margin-bottom:20px;
+  }
+  .service-card h3{margin:0 0 8px; font-size:17px; font-weight:700;}
+  .service-tagline{color:var(--text-2); font-size:12.5px; margin:0 0 14px; font-weight:600; letter-spacing:.02em;}
+  .service-desc{color:var(--text-1); font-size:13.5px; line-height:1.65; margin:0 0 18px;}
+  .learn-more{
+    color:#8fa4ff; font-size:13px; font-weight:600;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .learn-more .arrow{transition:transform .15s ease;}
+  .service-card:hover .learn-more .arrow{transform:translateX(3px);}
+
+  /* ---------- COVERAGE ---------- */
+  .coverage{
+    border-top:1px solid var(--border-soft);
+    padding:34px 0 60px;
+  }
+  .coverage-row{
+    display:flex; align-items:center; gap:44px; flex-wrap:wrap;
+  }
+  .coverage-lead{display:flex; gap:14px; align-items:flex-start; max-width:260px;}
+  .coverage-lead .ic{
+    width:38px; height:38px; border-radius:10px;
+    background:#ffffff08; border:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .coverage-lead strong{display:block; font-size:14px; margin-bottom:3px;}
+  .coverage-lead p{margin:0; font-size:12px; color:var(--text-2); line-height:1.5;}
+
+  .coverage-flags{display:flex; gap:34px; flex-wrap:wrap; align-items:flex-start;}
+  .flag-item{display:flex; gap:10px; align-items:flex-start;}
+  .flag{
+    width:26px; height:26px; border-radius:50%;
+    flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; overflow:hidden;
+  }
+  .flag-item strong{display:block; font-size:13.5px;}
+  .flag-item span.note{display:block; font-size:11.5px; color:var(--text-2); max-width:150px; line-height:1.4;}
+
+  footer{
+    border-top:1px solid var(--border-soft);
+    padding:28px 0;
+    text-align:center;
+    color:var(--text-2);
+    font-size:12.5px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none !important;}
+  }
+</style>
 </head>
 <body>
 
-<div class="nav">
-  <div class="brand"><span class="dot"></span> CommHub</div>
-  <div class="links">
-    <a href="#capabilities">Capabilities</a>
-    <a href="#countries">Coverage</a>
-    <a href="login.html">Log in</a>
-    <a class="cta" href="login.html">Get started</a>
-  </div>
-</div>
-
-<div class="hero">
-  <div class="eyebrow">Reseller platform · Email · Voice · Domains · Development</div>
-  <h1>One panel to provision inboxes, phone lines, domains, and calling infrastructure for every customer you sign up.</h1>
-  <p class="sub">CommHub sits on top of established infrastructure — email delivery, telecom carriers, domain registries — it doesn't replace them, so what you provision is real, deliverable, and callable from day one.</p>
-  <div class="hero-ctas">
-    <a class="btn btn-primary" href="login.html">Create an account</a>
-    <a class="btn btn-ghost" href="#capabilities">See how routing works</a>
-  </div>
-
-  <div class="rail">
-    <svg viewBox="0 0 1000 210" xmlns="http://www.w3.org/2000/svg">
-      <!-- mail path -->
-      <line x1="70" y1="55" x2="930" y2="55" stroke="#253148" stroke-width="2"/>
-      <line x1="70" y1="55" x2="480" y2="55" stroke="#3EC1B3" stroke-width="2" stroke-dasharray="4 5"/>
-      <circle cx="70" cy="55" r="6" fill="#3EC1B3"/>
-      <circle cx="300" cy="55" r="6" fill="#3EC1B3"/>
-      <circle cx="480" cy="55" r="6" fill="#3EC1B3"/>
-      <circle cx="700" cy="55" r="6" fill="#253148" stroke="#3EC1B3" stroke-width="1.5"/>
-      <circle cx="930" cy="55" r="6" fill="#253148" stroke="#3EC1B3" stroke-width="1.5"/>
-      <text x="70" y="35" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">sales@yourbrand.com</text>
-      <text x="300" y="35" fill="#8291AC" font-family="JetBrains Mono" font-size="11">MX / SPF / DKIM</text>
-      <text x="480" y="35" fill="#8291AC" font-family="JetBrains Mono" font-size="11">route</text>
-      <text x="700" y="35" fill="#8291AC" font-family="JetBrains Mono" font-size="11">IMAP</text>
-      <text x="890" y="35" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">Outlook</text>
-
-      <!-- voice path -->
-      <line x1="70" y1="150" x2="930" y2="150" stroke="#253148" stroke-width="2"/>
-      <line x1="70" y1="150" x2="480" y2="150" stroke="#F2A65A" stroke-width="2" stroke-dasharray="4 5"/>
-      <circle cx="70" cy="150" r="6" fill="#F2A65A"/>
-      <circle cx="300" cy="150" r="6" fill="#F2A65A"/>
-      <circle cx="480" cy="150" r="6" fill="#F2A65A"/>
-      <circle cx="700" cy="150" r="6" fill="#253148" stroke="#F2A65A" stroke-width="1.5"/>
-      <circle cx="930" cy="150" r="6" fill="#253148" stroke="#F2A65A" stroke-width="1.5"/>
-      <text x="70" y="130" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">+1 415 555 0134</text>
-      <text x="300" y="130" fill="#8291AC" font-family="JetBrains Mono" font-size="11">carrier trunk</text>
-      <text x="480" y="130" fill="#8291AC" font-family="JetBrains Mono" font-size="11">SIP</text>
-      <text x="700" y="130" fill="#8291AC" font-family="JetBrains Mono" font-size="11">registrar</text>
-      <text x="890" y="130" fill="#E8ECF4" font-family="JetBrains Mono" font-size="12">IP phone</text>
-    </svg>
-  </div>
-</div>
-
-<div class="section" id="capabilities">
-  <h2>Six services, one panel</h2>
-  <p class="lede">Each service is a thin, opinionated layer over infrastructure that already handles deliverability, routing, and registration at scale — not a rebuild of any of it.</p>
-  <div class="grid-2">
-    <div class="card">
-      <span class="tag mail">Email</span>
-      <h3>Mailboxes customers can drop into Outlook</h3>
-      <p>Create an address, and the panel hands back host, port, and security settings for standard IMAP/SMTP setup — plus inbound mail capture and sending, right from the dashboard.</p>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand">
+      <span class="brand-mark">💬</span>
+      CommHub
     </div>
-    <div class="card">
-      <span class="tag voice">Voice</span>
-      <h3>Numbers registered straight to a SIP endpoint</h3>
-      <p>Search by country and area code, provision a number, and get SIP credentials your customer enters into any IP phone or softphone — via a dedicated trunk per account.</p>
-    </div>
-    <div class="card">
-      <span class="tag voice">Voice</span>
-      <h3>A call centre on top of your numbers</h3>
-      <p>Build IVR menus, route callers into queues, and ring your agents' real phones — "press 1 for sales" without a separate PBX to run.</p>
-    </div>
-    <div class="card">
-      <span class="tag platform">Private network</span>
-      <h3>Self-hosted calling, zero carrier</h3>
-      <p>A private SIP registrar for your own team's IP phones — internal calling with no telecom carrier involved, managed from the same dashboard.</p>
-    </div>
-    <div class="card">
-      <span class="tag platform">Domains</span>
-      <h3>Search, price, and register domains</h3>
-      <p>Real-time availability and locked pricing, a deliberate multi-step confirmation before anything is charged, and DNS record management once a domain is live.</p>
-    </div>
-    <div class="card">
-      <span class="tag platform">Development</span>
-      <h3>Website &amp; software requests, tracked</h3>
-      <p>Submit a project, follow it from Requested through Delivered — a clear pipeline for work a real person still designs and builds.</p>
+    <nav class="links">
+      <a href="#services">Platform <span class="chev">▾</span></a>
+      <a href="#services">Solutions <span class="chev">▾</span></a>
+      <a href="#">Pricing</a>
+      <a href="#">Resources <span class="chev">▾</span></a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost">Log in</a>
+      <a href="login.html" class="btn btn-primary">Create an account</a>
     </div>
   </div>
-</div>
+</header>
 
-<div class="section" id="countries">
-  <h2>Coverage</h2>
-  <p class="lede">Number availability depends on local carrier and regulatory relationships in each market.</p>
-  <div class="countries">
-    <span class="pill live">United States</span>
-    <span class="pill live">Canada</span>
-    <span class="pill live">United Kingdom</span>
-    <span class="pill live">South Africa</span>
-    <span class="pill live">Zambia</span>
-    <span class="pill blocked">China — requires local licensing, not yet available</span>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="pill">Reseller platform <span class="dot"></span> <b>Email</b> <span class="dot"></span> <b>Voice</b> <span class="dot"></span> <b>Domains</b> <span class="dot"></span> <b>Development</b></div>
+      <h1 class="hero-title">One panel.<br><span class="grad">Every connection.</span></h1>
+      <p class="lede">Provision inboxes, phone lines, domains, and calling infrastructure for every customer you sign up — all from a single, powerful panel.</p>
+      <p class="sub-lede">CommHub sits on top of proven infrastructure — email delivery, telecom carriers, and domain registries. We don't replace them. We connect you to what's real, deliverable, and callable from day one.</p>
+      <div class="hero-cta">
+        <a href="login.html" class="btn btn-primary btn-row">Create an account <span class="arrow">→</span></a>
+        <a href="#services" class="btn btn-outline btn-row">See how routing works <span class="arrow">▸</span></a>
+      </div>
+      <div class="trust-row">
+        <div class="trust-item">
+          <span class="trust-icon">🛡️</span>
+          <span><strong>Enterprise grade</strong>Built for scale</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">☁️</span>
+          <span><strong>99.99% uptime</strong>Reliable infrastructure</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">🌐</span>
+          <span><strong>Global coverage</strong>Trusted by resellers</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup-frame">
+      <div class="mockup">
+        <div class="mockup-top">
+          <div class="mockup-brand"><span style="font-size:16px;">💬</span> CommHub</div>
+          <span style="font-size:15px; color:var(--text-2);">🔔</span>
+        </div>
+
+        <div class="mockup-body">
+          <div class="sidebar">
+            <div class="side-item active"><span class="ic">▦</span> Overview</div>
+            <div class="side-item"><span class="ic">✉️</span> Email</div>
+            <div class="side-item"><span class="ic">📞</span> Voice</div>
+            <div class="side-item"><span class="ic">🎧</span> Call Center</div>
+            <div class="side-item"><span class="ic">🕸️</span> Private Network</div>
+            <div class="side-item"><span class="ic">🌐</span> Domains</div>
+            <div class="side-item"><span class="ic">⌥</span> Development</div>
+            <div class="side-item"><span class="ic">👤</span> Customers</div>
+            <div class="side-item"><span class="ic">🧾</span> Billing</div>
+            <div class="side-item"><span class="ic">📊</span> Reports</div>
+            <div class="side-item"><span class="ic">⚙️</span> Settings</div>
+            <div class="side-user">
+              <span class="avatar"></span>
+              <span>Adam Reseller<br><span style="opacity:.6;">Administrator</span></span>
+            </div>
+          </div>
+
+          <div class="main">
+            <div class="main-panel-title">
+              <h4>Overview</h4>
+              <span class="date-chip">May 02 – May 08 📅</span>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Customers</div>
+                <div class="stat-value">1,248<span class="stat-delta">↑ 12.4%</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Email Accounts</div>
+                <div class="stat-value">5,832<span class="stat-delta">↑ 18.6%</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Phone Numbers</div>
+                <div class="stat-value">2,941<span class="stat-delta">↑ 9.7%</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Active Calls</div>
+                <div class="stat-value">32</div>
+                <div class="live-chip"><span class="live-dot"></span> Live</div>
+              </div>
+            </div>
+
+            <div class="panels-row">
+              <div class="panel-box">
+                <h5>RECENT PROVISIONS</h5>
+                <div class="prov-item">
+                  <div class="prov-ic" style="background:#4f8dff22;">✉️</div>
+                  <div class="prov-main"><div class="prov-title">sales@acme.co.za</div><div class="prov-sub">Email Account</div></div>
+                  <div class="prov-time">2m ago</div>
+                </div>
+                <div class="prov-item">
+                  <div class="prov-ic" style="background:#33c28122;">📞</div>
+                  <div class="prov-main"><div class="prov-title">+27 10 123 4567</div><div class="prov-sub">Voice Number</div></div>
+                  <div class="prov-time">5m ago</div>
+                </div>
+                <div class="prov-item">
+                  <div class="prov-ic" style="background:#e08a3c22;">🌐</div>
+                  <div class="prov-main"><div class="prov-title">acmebusiness.co.za</div><div class="prov-sub">Domain</div></div>
+                  <div class="prov-time">15m ago</div>
+                </div>
+                <div class="prov-item">
+                  <div class="prov-ic" style="background:#e05a9c22;">🎧</div>
+                  <div class="prov-main"><div class="prov-title">Support Queue IVR</div><div class="prov-sub">Call Center</div></div>
+                  <div class="prov-time">28m ago</div>
+                </div>
+                <div class="prov-item">
+                  <div class="prov-ic" style="background:#7c5cff22;">📠</div>
+                  <div class="prov-main"><div class="prov-title">IP Phone – 201</div><div class="prov-sub">Private Network</div></div>
+                  <div class="prov-time">40m ago</div>
+                </div>
+                <div style="margin-top:6px;"><a href="#" style="font-size:11px; color:#8fa4ff; font-weight:600;">View all →</a></div>
+              </div>
+
+              <div class="panel-box">
+                <h5 style="display:flex; justify-content:space-between; align-items:center;">USAGE ACTIVITY <span style="font-weight:400; color:var(--text-2);">7 days ▾</span></h5>
+                <div class="chart-legend">
+                  <span><span class="legend-dot" style="background:var(--blue);"></span>Calls</span>
+                  <span><span class="legend-dot" style="background:var(--violet);"></span>Emails</span>
+                </div>
+                <div class="chart-wrap">
+                  <svg viewBox="0 0 300 120" width="100%" height="100%" preserveAspectRatio="none">
+                    <polyline fill="none" stroke="#4f8dff" stroke-width="2"
+                      points="0,80 40,55 80,90 120,40 160,70 200,30 240,60 280,20 300,35"/>
+                    <polyline fill="none" stroke="#7c5cff" stroke-width="2" opacity="0.7"
+                      points="0,100 40,85 80,60 120,95 160,50 200,75 240,45 280,65 300,55"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<footer class="foot">
-  CommHub starter panel · connect your own Mailgun, Twilio, and GoDaddy credentials in <code>server/.env</code>
+<section class="services-section" id="services">
+  <div class="wrap">
+    <h2>Six services, one panel</h2>
+    <p class="sub">Each service is a thin, opinionated layer over infrastructure that already handles deliverability, routing, and registration at scale — not a rebuild of any of it.</p>
+
+    <div class="service-grid">
+      <div class="service-card">
+        <div class="service-icon" style="background:#4f8dff22; color:#7aa3ff;">✉️</div>
+        <h3>Email</h3>
+        <p class="service-tagline">Mailboxes that just work</p>
+        <p class="service-desc">Create an address and get IMAP/SMTP settings, inbound mail capture, and sending — ready for Outlook and any standard client.</p>
+        <a class="learn-more" href="login.html">Learn more <span class="arrow">→</span></a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#33c28122; color:#5fe0a5;">📞</div>
+        <h3>Voice</h3>
+        <p class="service-tagline">Numbers. Connected.</p>
+        <p class="service-desc">Search by country and area code, provision a number, and get SIP credentials for any IP phone or softphone via a dedicated trunk.</p>
+        <a class="learn-more" href="login.html">Learn more <span class="arrow">→</span></a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#7c5cff22; color:#ab97ff;">🎧</div>
+        <h3>Call Center</h3>
+        <p class="service-tagline">Route. Queue. Connect.</p>
+        <p class="service-desc">Build IVR menus, route callers into queues, and ring your agents' phones — "press 1 for sales" without running your own PBX.</p>
+        <a class="learn-more" href="login.html">Learn more <span class="arrow">→</span></a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#e08a3c22; color:#f0a862;">🕸️</div>
+        <h3>Private Network</h3>
+        <p class="service-tagline">Your network. Your rules.</p>
+        <p class="service-desc">Self-hosted SIP registrar for your team's IP phones. Internal calling, zero carrier dependency, managed from the same dashboard.</p>
+        <a class="learn-more" href="login.html">Learn more <span class="arrow">→</span></a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#31c4d822; color:#6fdcea;">🌐</div>
+        <h3>Domains</h3>
+        <p class="service-tagline">Search. Register. Manage.</p>
+        <p class="service-desc">Real-time availability, locked pricing, multi-step confirmation, and DNS management once your domain is live and ready.</p>
+        <a class="learn-more" href="login.html">Learn more <span class="arrow">→</span></a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#e05a9c22; color:#f18fc0;">⌥</div>
+        <h3>Development</h3>
+        <p class="service-tagline">Requests. Tracked. Delivered.</p>
+        <p class="service-desc">Submit website & software projects and track progress from Requested to Delivered — clear pipeline, real people, real results.</p>
+        <a class="learn-more" href="login.html">Learn more <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="coverage" id="coverage">
+  <div class="wrap coverage-row">
+    <div class="coverage-lead">
+      <div class="ic">🌐</div>
+      <div>
+        <strong>Coverage</strong>
+        <p>Number availability depends on local carrier and regulatory relationships in each market.</p>
+      </div>
+    </div>
+
+    <div class="coverage-flags">
+      <div class="flag-item">
+        <span class="flag">🇺🇸</span>
+        <div><strong>United States</strong></div>
+      </div>
+      <div class="flag-item">
+        <span class="flag">🇨🇦</span>
+        <div><strong>Canada</strong></div>
+      </div>
+      <div class="flag-item">
+        <span class="flag">🇬🇧</span>
+        <div><strong>United Kingdom</strong></div>
+      </div>
+      <div class="flag-item">
+        <span class="flag">🇿🇦</span>
+        <div><strong>South Africa</strong></div>
+      </div>
+      <div class="flag-item">
+        <span class="flag">🇿🇲</span>
+        <div><strong>Zambia</strong></div>
+      </div>
+      <div class="flag-item">
+        <span class="flag">🇨🇳</span>
+        <div><strong>China</strong><span class="note">Requires local licensing, not yet available.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 CommHub. All rights reserved. · Connect your own Mailgun, Twilio, and GoDaddy credentials in <code>server/.env</code>
 </footer>
 
 </body>
