@@ -16,6 +16,8 @@
       <a href="#" data-view="voice">☎ Phone numbers</a>
       <a href="#" data-view="sipnet">🔒 Private SIP network</a>
       <a href="#" data-view="callcentre">📞 Call centre</a>
+      <a href="#" data-view="domains">🌐 Domains</a>
+      <a href="#" data-view="projects">🛠 Website &amp; software</a>
       <a href="index.html">← Back to site</a>
     </nav>
   </div>
@@ -245,6 +247,72 @@
         <table>
           <thead><tr><th>Number</th><th>Assigned menu</th><th></th></tr></thead>
           <tbody id="ccNumberTable"><tr class="empty-row"><td colspan="3">No numbers yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DOMAINS VIEW -->
+    <div id="view-domains" style="display:none">
+      <h1>Domain registration</h1>
+      <p class="subtitle">
+        Search, price, and register domains through GoDaddy. Registering a
+        domain charges the connected GoDaddy account's payment method and
+        cannot be undone — review the price and every listed agreement
+        before confirming.
+      </p>
+      <div id="domainsStatus" class="status-banner warn">Checking connection…</div>
+
+      <div class="panel-box">
+        <h2>Search</h2>
+        <div class="form-row">
+          <input id="domainSearchInput" placeholder="example.com" style="flex:1;min-width:200px" />
+          <button class="primary" onclick="searchDomain()">Check availability</button>
+        </div>
+        <div id="domainSearchResult"></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Your domains</h2>
+        <table>
+          <thead><tr><th>Domain</th><th>Status</th><th></th></tr></thead>
+          <tbody id="domainsTable"><tr class="empty-row"><td colspan="3">No domains yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PROJECTS VIEW -->
+    <div id="view-projects" style="display:none">
+      <h1>Website &amp; software development</h1>
+      <p class="subtitle">
+        Submit a project request and track it through to delivery. This is
+        a request tracker, not an automated build service — a real person
+        still designs and builds the work.
+      </p>
+
+      <div class="panel-box">
+        <h2>New request</h2>
+        <div class="form-row">
+          <select id="projectType">
+            <option value="website">Website</option>
+            <option value="software">Software development</option>
+          </select>
+          <input id="projectTitle" placeholder="Project title" style="flex:1;min-width:180px" />
+        </div>
+        <div class="form-row">
+          <textarea id="projectDescription" rows="3" placeholder="Describe what you need" style="flex:1;min-width:260px;background:var(--panel-raised);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:8px;font-family:inherit;font-size:14px"></textarea>
+        </div>
+        <div class="form-row">
+          <input id="projectBudget" placeholder="Budget (optional), e.g. R15,000" style="flex:1;min-width:180px" />
+        </div>
+        <button class="primary" onclick="createProject()">Submit request</button>
+        <div id="projectResult"></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Your requests</h2>
+        <table>
+          <thead><tr><th>Title</th><th>Type</th><th>Budget</th><th>Status</th><th></th></tr></thead>
+          <tbody id="projectsTable"><tr class="empty-row"><td colspan="5">No requests yet</td></tr></tbody>
         </table>
       </div>
     </div>

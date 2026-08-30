@@ -25,7 +25,9 @@ const DEFAULT_DATA = {
   messages: [],
   ivrMenus: [],
   callQueues: [],
-  callAgents: []
+  callAgents: [],
+  domains: [],
+  projects: []
 };
 
 function ensureStore() {
@@ -108,5 +110,7 @@ module.exports = {
   messages: collection('messages'),
   ivrMenus: collection('ivrMenus'),
   callQueues: collection('callQueues'),
-  callAgents: collection('callAgents')
+  callAgents: collection('callAgents'),
+  domains: collection('domains'),
+  projects: collection('projects')
 };

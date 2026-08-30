@@ -10,8 +10,11 @@ const webhookRoutes = require('./routes/webhooks');
 const sipNetworkRoutes = require('./routes/sipNetwork');
 const callCentreRoutes = require('./routes/callCentre');
 const callCentreWebhookRoutes = require('./routes/callCentreWebhooks');
+const domainRoutes = require('./routes/domains');
+const projectRoutes = require('./routes/projects');
 const { isMailgunConfigured, isInboundCaptureConfigured, PUBLIC_BASE_URL } = require('./mailgunClient');
 const { isTwilioConfigured } = require('./twilioClient');
+const { isGoDaddyConfigured } = require('./godaddyClient');
 
 const app = express();
 app.use(cors());
@@ -34,6 +37,8 @@ app.use('/api/mailboxes', mailboxRoutes);
 app.use('/api/numbers', numberRoutes);
 app.use('/api/sip-network', sipNetworkRoutes);
 app.use('/api/call-centre', callCentreRoutes);
+app.use('/api/domains', domainRoutes);
+app.use('/api/projects', projectRoutes);
 // Not behind requireAuth — Twilio calls this directly. Authenticity comes
 // from verifying Twilio's own X-Twilio-Signature header inside the route.
 app.use('/api/webhooks/twilio', callCentreWebhookRoutes);
@@ -50,6 +55,7 @@ app.get('/api/health', (req, res) => {
     twilioConfigured: isTwilioConfigured(),
     sipNetworkConfigured: Boolean(process.env.SIP_NETWORK_API_URL && process.env.SIP_NETWORK_API_KEY),
     callCentreConfigured: isTwilioConfigured() && Boolean(PUBLIC_BASE_URL),
+    domainsConfigured: isGoDaddyConfigured(),
     supportedCountries: (process.env.SUPPORTED_NUMBER_COUNTRIES || 'US,CA,GB').split(',')
   });
 });

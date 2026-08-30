@@ -18,6 +18,8 @@ document.querySelectorAll('.sidebar nav a[data-view]').forEach(a => {
     document.getElementById('view-voice').style.display = view === 'voice' ? 'block' : 'none';
     document.getElementById('view-sipnet').style.display = view === 'sipnet' ? 'block' : 'none';
     document.getElementById('view-callcentre').style.display = view === 'callcentre' ? 'block' : 'none';
+    document.getElementById('view-domains').style.display = view === 'domains' ? 'block' : 'none';
+    document.getElementById('view-projects').style.display = view === 'projects' ? 'block' : 'none';
   });
 });
 
@@ -55,6 +57,16 @@ async function checkHealth() {
       } else {
         ccEl.className = 'status-banner warn';
         ccEl.textContent = 'Not configured — set TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / PUBLIC_BASE_URL in server/.env.';
+      }
+    }
+    const domainsEl = document.getElementById('domainsStatus');
+    if (domainsEl) {
+      if (data.domainsConfigured) {
+        domainsEl.className = 'status-banner ok';
+        domainsEl.textContent = 'Connected to GoDaddy.';
+      } else {
+        domainsEl.className = 'status-banner warn';
+        domainsEl.textContent = 'Not configured — set GODADDY_PAT in server/.env.';
       }
     }
   } catch (err) {
@@ -708,3 +720,202 @@ loadMenus();
 loadQueues();
 loadAgents();
 loadCallCentreNumbers();
+
+// ---- domains ----
+async function searchDomain() {
+  const domain = document.getElementById('domainSearchInput').value.trim();
+  const resultEl = document.getElementById('domainSearchResult');
+  if (!domain) { resultEl.innerHTML = '<p style="color:var(--danger)">Enter a domain name.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Checking…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/domains/search?domain=${encodeURIComponent(domain)}`);
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+
+    if (!data.available) {
+      resultEl.innerHTML = `<p style="color:var(--danger)">${domain} is not available.</p>`;
+      return;
+    }
+    const price = data.prices && data.prices[0] ? `$${(data.prices[0].price.value / 100).toFixed(2)}/${data.prices[0].period}yr` : '';
+    resultEl.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>${domain}</span><span class="value">Available ${price}</span></div>
+      </div>
+      <button class="primary" style="margin-top:10px" onclick="getDomainQuote('${domain}')">Get a price quote</button>
+      <div id="domainQuoteResult"></div>`;
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function getDomainQuote(domain) {
+  const resultEl = document.getElementById('domainQuoteResult');
+  resultEl.innerHTML = '<p style="color:var(--muted)">Getting quote…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/domains/quote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain, period: 1 })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+
+    const agreements = data.requiredAgreements || [];
+    const checkboxes = agreements.map((a, i) => `
+      <label style="display:block;font-size:13px;color:var(--muted);margin:6px 0">
+        <input type="checkbox" class="domain-agreement-cb" data-type="${a.agreementType}" />
+        I agree to ${a.title ? a.title : a.agreementType}${a.url ? ` (<a href="${a.url}" target="_blank" rel="noopener" style="color:var(--mail)">read</a>)` : ''}
+      </label>`).join('');
+
+    resultEl.innerHTML = `
+      <div class="credential" style="margin-top:10px">
+        <div class="row"><span>Locked price</span><span class="value">$${(data.price.value / 100).toFixed(2)}</span></div>
+        <div class="row"><span>Renewal price</span><span class="value">$${(data.renewalPrice.value / 100).toFixed(2)}/yr</span></div>
+        <div class="row"><span>Quote expires</span><span class="value">${new Date(data.expiresAt).toLocaleTimeString()}</span></div>
+      </div>
+      ${checkboxes}
+      <button class="danger" style="margin-top:10px" onclick='confirmDomainRegister(${JSON.stringify(domain)}, ${JSON.stringify(data.quoteToken)})'>Register this domain now</button>
+      <p class="hint" style="color:var(--muted);font-size:12px;margin-top:6px">This charges your connected GoDaddy account and cannot be undone.</p>`;
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function confirmDomainRegister(domain, quoteToken) {
+  const checkboxes = Array.from(document.querySelectorAll('.domain-agreement-cb'));
+  const unchecked = checkboxes.filter(cb => !cb.checked);
+  if (unchecked.length > 0) {
+    alert('Please agree to every listed agreement before registering.');
+    return;
+  }
+  if (!confirm(`Register ${domain} now? This charges your GoDaddy account and cannot be undone.`)) return;
+
+  const agreedAgreementTypes = checkboxes.map(cb => cb.dataset.type);
+  const resultEl = document.getElementById('domainQuoteResult');
+  resultEl.innerHTML = '<p style="color:var(--muted)">Registering…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/domains/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain, quoteToken, period: 1, agreedAgreementTypes })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = `<p style="color:var(--mail)">Registration submitted — status: ${data.status}.</p>`;
+    loadDomains();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function refreshDomainStatus(id) {
+  try {
+    await authedFetch(`${API}/api/domains/${id}/status`);
+    loadDomains();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadDomains() {
+  const tbody = document.getElementById('domainsTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/domains`);
+    const data = await res.json();
+    if (!data.domains || data.domains.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No domains yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.domains.map(d => `
+      <tr>
+        <td class="mono">${d.domain}</td>
+        <td>${d.status}</td>
+        <td><button class="link-btn" onclick="refreshDomainStatus('${d.id}')">Refresh status</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+// ---- website & software projects ----
+async function createProject() {
+  const type = document.getElementById('projectType').value;
+  const title = document.getElementById('projectTitle').value.trim();
+  const description = document.getElementById('projectDescription').value.trim();
+  const budget = document.getElementById('projectBudget').value.trim();
+  const resultEl = document.getElementById('projectResult');
+  if (!title || !description) { resultEl.innerHTML = '<p style="color:var(--danger)">Title and description are required.</p>'; return; }
+
+  resultEl.innerHTML = '<p style="color:var(--muted)">Submitting…</p>';
+  try {
+    const res = await authedFetch(`${API}/api/projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, title, description, budget: budget || undefined })
+    });
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+    resultEl.innerHTML = '<p style="color:var(--mail)">Request submitted.</p>';
+    document.getElementById('projectTitle').value = '';
+    document.getElementById('projectDescription').value = '';
+    document.getElementById('projectBudget').value = '';
+    loadProjects();
+  } catch (err) {
+    resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function updateProjectStatus(id, status) {
+  try {
+    const res = await authedFetch(`${API}/api/projects/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to update status');
+    }
+    loadProjects();
+  } catch (err) { alert(err.message); }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this request?')) return;
+  try {
+    const res = await authedFetch(`${API}/api/projects/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to delete');
+      return;
+    }
+    loadProjects();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadProjects() {
+  const tbody = document.getElementById('projectsTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/projects`);
+    const data = await res.json();
+    if (!data.projects || data.projects.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No requests yet</td></tr>';
+      return;
+    }
+    const statuses = ['Requested', 'In Progress', 'Delivered', 'Cancelled'];
+    tbody.innerHTML = data.projects.map(p => `
+      <tr>
+        <td>${p.title}</td>
+        <td>${p.type}</td>
+        <td>${p.budget || '—'}</td>
+        <td>
+          <select onchange="updateProjectStatus('${p.id}', this.value)">
+            ${statuses.map(s => `<option value="${s}" ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td><button class="danger" onclick="deleteProject('${p.id}')">Delete</button></td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+loadDomains();
+loadProjects();

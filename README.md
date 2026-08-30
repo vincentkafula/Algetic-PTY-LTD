@@ -244,6 +244,51 @@ scope decision — a browser-based softphone (Twilio Voice SDK, WebRTC,
 microphone permissions, a token-issuing endpoint) is a materially larger,
 separate feature that wasn't built here.
 
+## Domain registration (GoDaddy)
+
+`routes/domains.js` integrates GoDaddy's v3 "quote-execute" Domains API:
+search availability, get a locked price quote, then execute the
+registration. Scoped per CommHub account like mailboxes and numbers.
+
+**Registering a domain charges the connected GoDaddy account's payment
+method and is not reversible** — this is GoDaddy's own characterization of
+the operation, not caution added here for effect. The flow is deliberately
+three separate steps (search → quote → register), never one:
+
+- `POST /api/domains/register` **refuses to proceed** unless the request
+  includes `agreedAgreementTypes` as a non-empty array — a server-side
+  backstop against a frontend bug skipping the consent step, tested
+  directly (both a missing field and an empty array are rejected before
+  any network call to GoDaddy is made).
+- The dashboard shows the locked price, the renewal price, and every
+  agreement GoDaddy requires (with a checkbox per agreement) before the
+  "Register this domain now" button does anything, then asks for one more
+  explicit browser confirmation before submitting.
+- An `Idempotency-Key` header is sent on every registration attempt, so a
+  network retry can't double-charge.
+
+**Verified for real:** the full request/response shape, auth enforcement,
+input validation, and — critically — the consent backstop were all tested
+against a running server. **Not verified:** an actual domain registration
+against a live GoDaddy account, since that means real, non-refundable
+money — there was no GoDaddy account available to test against during
+development. The search/quote endpoints (read-only, free, no account
+interaction) are the safe first things to try once `GODADDY_PAT` is set.
+
+## Website & software development requests
+
+`routes/projects.js` — a lightweight request tracker (`Requested` → `In
+Progress` → `Delivered`/`Cancelled`), not an automated build service.
+There's no API that produces a website or custom software on demand; a
+real person still designs and builds the work. This just gives that work a
+visible pipeline inside the same dashboard, scoped per account like
+everything else.
+
+No staff/customer role distinction exists yet — any logged-in account can
+update any of its own requests' status. If the real workflow needs "the
+customer requests, your team updates status," that's a role system to add
+on top of this data model, not a rebuild of it.
+
 ## South Africa and Zambia
 
 Both are included in `SUPPORTED_NUMBER_COUNTRIES` and the dashboard's country
