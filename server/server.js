@@ -12,6 +12,7 @@ const callCentreRoutes = require('./routes/callCentre');
 const callCentreWebhookRoutes = require('./routes/callCentreWebhooks');
 const domainRoutes = require('./routes/domains');
 const projectRoutes = require('./routes/projects');
+const mvnoRoutes = require('./routes/mvno');
 const { isMailgunConfigured, isInboundCaptureConfigured, PUBLIC_BASE_URL } = require('./mailgunClient');
 const { isTwilioConfigured } = require('./twilioClient');
 const { isGoDaddyConfigured } = require('./godaddyClient');
@@ -39,6 +40,7 @@ app.use('/api/sip-network', sipNetworkRoutes);
 app.use('/api/call-centre', callCentreRoutes);
 app.use('/api/domains', domainRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/mvno', mvnoRoutes);
 // Not behind requireAuth — Twilio calls this directly. Authenticity comes
 // from verifying Twilio's own X-Twilio-Signature header inside the route.
 app.use('/api/webhooks/twilio', callCentreWebhookRoutes);

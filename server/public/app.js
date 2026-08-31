@@ -20,6 +20,7 @@ document.querySelectorAll('.sidebar nav a[data-view]').forEach(a => {
     document.getElementById('view-callcentre').style.display = view === 'callcentre' ? 'block' : 'none';
     document.getElementById('view-domains').style.display = view === 'domains' ? 'block' : 'none';
     document.getElementById('view-projects').style.display = view === 'projects' ? 'block' : 'none';
+    document.getElementById('view-mvno').style.display = view === 'mvno' ? 'block' : 'none';
   });
 });
 
@@ -1007,3 +1008,143 @@ async function loadProjects() {
 
 loadDomains();
 loadProjects();
+
+// ---- MVNO demo dashboard ----
+function fmtNum(n) {
+  return typeof n === 'number' ? n.toLocaleString() : n;
+}
+
+async function loadMvnoKpis() {
+  const grid = document.getElementById('mvnoKpiGrid');
+  if (!grid) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/kpis`);
+    const { data } = await res.json();
+    const cells = [
+      ['Total subscribers', fmtNum(data.totalSubscribers)],
+      ['Active subscribers', fmtNum(data.activeSubscribers)],
+      ['Network uptime', data.networkUptimePct + '%'],
+      ['Active data sessions', fmtNum(data.activeDataSessions)],
+      ['Active voice calls', fmtNum(data.activeVoiceCalls)],
+      ['Revenue today (ZAR)', 'R' + fmtNum(data.revenueTodayZAR)],
+      ['Fraud alerts active', data.fraudAlertsActive],
+      ['Towers online', `${data.towersOnline} / ${data.totalTowerCount}`],
+    ];
+    grid.innerHTML = cells.map(([lbl, num]) => `<div class="cell"><div class="num">${num}</div><div class="lbl">${lbl}</div></div>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+async function loadMvnoTowers() {
+  const tbody = document.getElementById('mvnoTowersTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/towers`);
+    const { data } = await res.json();
+    tbody.innerHTML = data.map(t => `
+      <tr>
+        <td class="mono">${t.name}</td>
+        <td>${t.region}</td>
+        <td>${t.technology}</td>
+        <td><span class="status-pill ${t.status}">${t.status}</span></td>
+        <td>${t.loadPercent}%</td>
+        <td>${fmtNum(t.connectedSubscribers)}</td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+async function loadMvnoSubscribers() {
+  const tbody = document.getElementById('mvnoSubsTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/subscribers`);
+    const { data } = await res.json();
+    tbody.innerHTML = data.map(s => `
+      <tr>
+        <td class="mono">${s.msisdn}</td>
+        <td><span class="status-pill ${s.status}">${s.status}</span></td>
+        <td>${s.plan}</td>
+        <td>${fmtNum(s.dataBalanceMB)} MB</td>
+        <td>${s.roaming ? 'Yes' : '—'}</td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+async function loadMvnoFraud() {
+  const tbody = document.getElementById('mvnoFraudTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/fraud-alerts`);
+    const { data } = await res.json();
+    tbody.innerHTML = data.map(f => `
+      <tr>
+        <td class="mono">${f.id}</td>
+        <td>${f.type.replace('_', ' ')}</td>
+        <td><span class="status-pill ${f.severity}">${f.severity}</span></td>
+        <td class="mono">${f.msisdn}</td>
+        <td>${f.riskScore}/10</td>
+        <td>${new Date(f.detectedAt).toLocaleString()}</td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+async function loadMvnoBilling() {
+  const el = document.getElementById('mvnoBillingResult');
+  if (!el) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/billing-summary`);
+    const { data } = await res.json();
+    el.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>Revenue today</span><span class="value">R${fmtNum(data.revenueTodayZAR)}</span></div>
+        <div class="row"><span>Revenue month-to-date</span><span class="value">R${fmtNum(data.revenueMTDZAR)}</span></div>
+        <div class="row"><span>Invoices overdue</span><span class="value">${fmtNum(data.invoicesOverdue)}</span></div>
+        <div class="row"><span>Invoices paid</span><span class="value">${fmtNum(data.invoicesPaid)}</span></div>
+        <div class="row"><span>Avg revenue per user</span><span class="value">R${data.avgRevenuePerUserZAR}</span></div>
+      </div>`;
+  } catch (err) { /* server not running yet */ }
+}
+
+async function loadMvnoSupport() {
+  const el = document.getElementById('mvnoSupportResult');
+  if (!el) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/support-summary`);
+    const { data } = await res.json();
+    const cats = Object.entries(data.categories).map(([k, v]) => `${k}: ${v}`).join(' · ');
+    el.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>Open tickets</span><span class="value">${fmtNum(data.openTickets)}</span></div>
+        <div class="row"><span>Avg resolution time</span><span class="value">${data.avgResolutionHours}h</span></div>
+        <div class="row"><span>CSAT score</span><span class="value">${data.csatScore}/5</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">${cats}</p>`;
+  } catch (err) { /* server not running yet */ }
+}
+
+async function loadMvnoRoaming() {
+  const tbody = document.getElementById('mvnoRoamingTable');
+  if (!tbody) return;
+  try {
+    const res = await authedFetch(`${API}/api/mvno/roaming`);
+    const { data } = await res.json();
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td>${p.networkName}</td>
+        <td>${p.country}</td>
+        <td><span class="status-pill ${p.status}">${p.status}</span></td>
+        <td>${fmtNum(p.activeRoamers)}</td>
+        <td>$${fmtNum(p.revenue30dUSD)}</td>
+      </tr>`).join('');
+  } catch (err) { /* server not running yet */ }
+}
+
+function loadMvnoAll() {
+  loadMvnoKpis();
+  loadMvnoTowers();
+  loadMvnoSubscribers();
+  loadMvnoFraud();
+  loadMvnoBilling();
+  loadMvnoSupport();
+  loadMvnoRoaming();
+}
+loadMvnoAll();

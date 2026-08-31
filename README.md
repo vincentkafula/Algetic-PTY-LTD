@@ -244,6 +244,40 @@ scope decision — a browser-based softphone (Twilio Voice SDK, WebRTC,
 microphone permissions, a token-issuing endpoint) is a materially larger,
 separate feature that wasn't built here.
 
+## MVNO operations (demo dashboard)
+
+`routes/mvno.js` — a network operations center (NOC) style dashboard: subscribers,
+cell towers, fraud alerts, billing, support tickets, and roaming partners.
+**Every number is simulated.** There's no real telecom core network behind
+this — no real HLR/HSS, no real cell towers, no real subscribers. The
+dashboard says so directly, with a persistent demo banner, not a small-print
+footnote.
+
+This mirrors the reference implementation at
+[github.com/vincentkafula/VINK-GRUP-LIMITED](https://github.com/vincentkafula/VINK-GRUP-LIMITED),
+which runs the identical NOC-style dashboard on generated demo data whenever
+its real backend isn't reachable. The difference here: Altegic has no real
+backend to fall back *from* — this is demo-only by design, not a fallback
+mode.
+
+**Why this can't become "real" the way the other six services did:** Email,
+voice, and domains all work because Mailgun/Twilio/GoDaddy already operate
+the underlying infrastructure and sell API access to it. There is no
+equivalent "MVNO-as-an-API" product — running a real mobile network requires
+an actual MVNE/MNO wholesale relationship (spectrum access, HLR/HSS
+integration), which is a telecom licensing and commercial negotiation, not
+an integration this codebase can add. If that relationship exists someday,
+this dashboard is the right shape to wire real data into — the seeded
+demo-data generator (`makeRng` in `routes/mvno.js`) is deliberately isolated
+in one function so swapping it for real API calls doesn't touch the routes,
+the response shapes, or the frontend at all.
+
+**Verified for real:** every endpoint tested end-to-end — auth enforcement,
+correct response shapes, and the seeded random generator confirmed to
+produce stable numbers across repeated requests within the same day (so the
+dashboard doesn't visibly re-randomize on every page load, without needing
+to persist anything).
+
 ## Domain registration (GoDaddy)
 
 `routes/domains.js` integrates GoDaddy's v3 "quote-execute" Domains API:

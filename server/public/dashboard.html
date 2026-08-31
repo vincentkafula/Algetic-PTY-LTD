@@ -16,6 +16,7 @@
       <a href="#" data-view="voice">☎ Phone numbers</a>
       <a href="#" data-view="sipnet">🔒 Private SIP network</a>
       <a href="#" data-view="callcentre">📞 Call centre</a>
+      <a href="#" data-view="mvno">📡 MVNO (demo)</a>
       <a href="#" data-view="domains">🌐 Domains</a>
       <a href="#" data-view="projects">🛠 Website &amp; software</a>
       <a href="index.html">← Back to site</a>
@@ -346,6 +347,66 @@
         <table>
           <thead><tr><th>Title</th><th>Type</th><th>Budget</th><th>Status</th><th></th></tr></thead>
           <tbody id="projectsTable"><tr class="empty-row"><td colspan="5">No requests yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MVNO DEMO DASHBOARD VIEW -->
+    <div id="view-mvno" style="display:none">
+      <h1>MVNO operations</h1>
+      <p class="subtitle">
+        A network operations center preview for a Mobile Virtual Network Operator business —
+        subscriber base, towers, fraud, billing, and support, at a glance.
+      </p>
+      <div class="demo-banner">
+        ⚠ DEMO DATA — every number on this page is simulated. There is no real telecom
+        core network, no real subscribers, and no real cell towers behind this yet.
+        Building the real thing requires an actual MVNE/MNO wholesale relationship.
+      </div>
+
+      <div class="stat-grid" id="mvnoKpiGrid">
+        <div class="cell"><div class="num">—</div><div class="lbl">Loading…</div></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Cell towers</h2>
+        <table>
+          <thead><tr><th>Tower</th><th>Region</th><th>Tech</th><th>Status</th><th>Load</th><th>Subscribers</th></tr></thead>
+          <tbody id="mvnoTowersTable"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Subscribers (sample)</h2>
+        <table>
+          <thead><tr><th>MSISDN</th><th>Status</th><th>Plan</th><th>Data balance</th><th>Roaming</th></tr></thead>
+          <tbody id="mvnoSubsTable"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Fraud alerts</h2>
+        <table>
+          <thead><tr><th>ID</th><th>Type</th><th>Severity</th><th>MSISDN</th><th>Risk score</th><th>Detected</th></tr></thead>
+          <tbody id="mvnoFraudTable"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <h2>Billing summary</h2>
+        <div id="mvnoBillingResult"><p style="color:var(--muted)">Loading…</p></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Support summary</h2>
+        <div id="mvnoSupportResult"><p style="color:var(--muted)">Loading…</p></div>
+      </div>
+
+      <div class="panel-box">
+        <h2>Roaming partners</h2>
+        <table>
+          <thead><tr><th>Network</th><th>Country</th><th>Status</th><th>Active roamers</th><th>30d revenue (USD)</th></tr></thead>
+          <tbody id="mvnoRoamingTable"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
