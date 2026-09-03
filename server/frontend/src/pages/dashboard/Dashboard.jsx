@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { view: 'callcentre', icon: '📞', label: 'Call centre' },
   { view: 'mvno', icon: '📡', label: 'MVNO (demo)' },
   { view: 'domains', icon: '🌐', label: 'Domains' },
-  { view: 'projects', icon: '🛠', label: 'Website, software & internet' }
+  { view: 'projects', icon: '🛠', label: 'Website, software & more' }
 ];
 
 export default function Dashboard() {

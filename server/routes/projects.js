@@ -6,16 +6,17 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 // ---------------------------------------------------------------------------
-// Website, software development, and internet connectivity requests,
-// tracked through a simple status pipeline: Requested -> In Progress ->
-// Delivered (or Cancelled).
+// Website, software development, internet connectivity, and IP phone
+// hardware requests, tracked through a simple status pipeline: Requested
+// -> In Progress -> Delivered (or Cancelled).
 //
-// There's no API that produces a website, custom software, or an internet
-// connection on demand — unlike domains/numbers/mailboxes, real delivery
-// happens outside this platform (your own team, or a real ISP partner like
-// Rain, does the actual work). This is honestly a lightweight request
-// tracker, not a resold service, and is presented that way rather than
-// pretending otherwise — same reasoning as the MVNO demo dashboard, just a
+// There's no API that produces a website, custom software, an internet
+// connection, or a physical phone on demand — unlike domains/numbers/
+// mailboxes, real delivery happens outside this platform (your own team,
+// a real ISP partner like Rain, or a hardware supplier like Yealink does
+// the actual work). This is honestly a lightweight request tracker, not
+// a resold service, and is presented that way rather than pretending
+// otherwise — same reasoning as the MVNO demo dashboard, just a
 // different honest shape (a tracker instead of a labeled-demo dashboard,
 // since a request-and-fulfill workflow is a genuine, deliverable thing,
 // unlike a simulated telecom network).
@@ -29,7 +30,7 @@ const { requireAuth } = require('../middleware/auth');
 // endpoint.
 // ---------------------------------------------------------------------------
 
-const VALID_TYPES = ['website', 'software', 'internet'];
+const VALID_TYPES = ['website', 'software', 'internet', 'ip-phone'];
 const VALID_STATUSES = ['Requested', 'In Progress', 'Delivered', 'Cancelled'];
 
 router.use(requireAuth);
@@ -44,7 +45,7 @@ router.get('/', (req, res) => {
 
 /**
  * POST /api/projects
- * body: { type: "website"|"software"|"internet", title, description, budget? }
+ * body: { type: "website"|"software"|"internet"|"ip-phone", title, description, budget? }
  * budget is a free-text field (e.g. "R15,000" or "$2,000-3,000") — not
  * parsed or validated as a number, just carried through as the customer
  * wrote it.

@@ -422,25 +422,46 @@ same reason as registration above — no live account to test against.
 
 interaction) are the safe first things to try once `GODADDY_PAT` is set.
 
-## Website, software & internet service requests
+## Website, software, internet & IP phone hardware requests
 
 `routes/projects.js` — a lightweight request tracker (`Requested` → `In
-Progress` → `Delivered`/`Cancelled`), not an automated build or
-provisioning service. There's no API that produces a website, custom
-software, or an internet connection on demand; a real person — or a real
-ISP partner (Rain, a fibre provider, fixed wireless) for the internet type
-— still does the actual work. This just gives that work a visible pipeline
-inside the same dashboard, scoped per account like everything else.
+Progress` → `Delivered`/`Cancelled`), not an automated build,
+provisioning, or ordering service. There's no API that produces a
+website, custom software, an internet connection, or a physical phone on
+demand; a real person — or a real supplier (an ISP like Rain for the
+internet type, Yealink for the ip-phone type) — still does the actual
+work. This just gives that work a visible pipeline inside the same
+dashboard, scoped per account like everything else.
 
-Three request types share this one system: `website`, `software`, and
-`internet`. All three use the exact same fields (`title`, `description`,
-`budget`) — the dashboard's description placeholder just changes wording
-per type (e.g. prompting for an installation address and preferred
-provider for internet requests) to nudge better-quality requests, but
-nothing is structurally different between them. Same reasoning as the
-MVNO dashboard's honesty, applied to a different shape: a request-and-
-fulfill workflow is a real, deliverable thing (unlike a simulated telecom
-network), so it's built as a real tracker rather than a labeled demo.
+Four request types share this one system: `website`, `software`,
+`internet`, and `ip-phone`. All four use the exact same fields (`title`,
+`description`, `budget`) — the dashboard's description placeholder just
+changes wording per type (e.g. prompting for an installation address and
+preferred provider for internet requests, or model/quantity for IP phone
+requests) to nudge better-quality requests, but nothing is structurally
+different between them. Same reasoning as the MVNO dashboard's honesty,
+applied to a different shape: a request-and-fulfill workflow is a real,
+deliverable thing (unlike a simulated telecom network), so it's built as
+a real tracker rather than a labeled demo.
+
+**`ip-phone` specifically:** Altegic plans to resell Yealink IP phones —
+a real, intended business relationship, not a fabricated one. But there's
+no public reseller/dropship API for Yealink hardware the way there is for
+Twilio numbers or GoDaddy domains, so this is built the same honest way
+as the `internet` type: a request tracker, not a live product catalog
+with checkout. Worth naming directly: Yealink's own site (yealink.com)
+has an extensive footer of its own — About/Products/Solutions/Support/
+Partners — almost none of which belongs on Altegic's footer. Its
+"Partners" links (Become an Online Reseller, Opportunity Registration,
+Partner Center) are Yealink's *own* signup pages for companies like
+Altegic to become a partner, not something an Altegic customer would
+ever need; its "About"/Company Profile pages are Yealink's own corporate
+identity, not Altegic's. Only two of Yealink's product-catalog links
+(DECT Phone, DECT Wireless Headset) are actually relevant to "reselling
+IP phones" — the rest of Yealink's catalog (Zoom Rooms Kits, Microsoft
+Teams Room Systems, MeetingEye Series, healthcare/room-design solutions)
+is a different business (enterprise video-conferencing hardware) that
+Altegic isn't entering.
 
 No staff/customer role distinction exists yet — any logged-in account can
 update any of its own requests' status. If the real workflow needs "the

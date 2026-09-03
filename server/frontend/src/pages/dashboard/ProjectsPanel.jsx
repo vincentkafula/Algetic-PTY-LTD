@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 const HINTS = {
   website: 'Describe what you need — pages, purpose, examples you like',
   software: 'Describe what you need — the problem it solves, who uses it',
-  internet: 'Describe what you need — installation address, preferred provider (e.g. Rain), current connection if any'
+  internet: 'Describe what you need — installation address, preferred provider (e.g. Rain), current connection if any',
+  'ip-phone': 'Describe what you need — model preference (e.g. Yealink DECT phone or wireless headset), quantity, delivery address'
 };
 
 const STATUSES = ['Requested', 'In Progress', 'Delivered', 'Cancelled'];
@@ -75,12 +76,12 @@ export default function ProjectsPanel({ authedFetch }) {
 
   return (
     <div>
-      <h1>Website, software &amp; internet services</h1>
+      <h1>Website, software, internet &amp; hardware requests</h1>
       <p className="subtitle">
         Submit a request and track it through to delivery. This is a request
-        tracker, not an automated build or provisioning service — a real
-        person (or a real ISP partner, for internet connectivity) handles
-        the actual work.
+        tracker, not an automated build, provisioning, or ordering service —
+        a real person (or a real supplier, for internet connectivity or IP
+        phone hardware) handles the actual work.
       </p>
 
       <div className="panel-box">
@@ -90,6 +91,7 @@ export default function ProjectsPanel({ authedFetch }) {
             <option value="website">Website</option>
             <option value="software">Software development</option>
             <option value="internet">Internet service (e.g. Rain, fibre, fixed wireless)</option>
+            <option value="ip-phone">IP Phones (e.g. Yealink DECT phone, wireless headset)</option>
           </select>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Project title" style={{ flex: 1, minWidth: 180 }} />
         </div>

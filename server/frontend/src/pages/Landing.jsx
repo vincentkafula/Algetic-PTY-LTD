@@ -54,6 +54,13 @@ const services = [
     title: 'Internet Service',
     desc: 'Need connectivity at your business address? Tell us the address and your preferred provider — Rain, fibre, or fixed wireless — and we\'ll get it sorted with a real ISP partner.',
     status: 'Request tracker live'
+  },
+  {
+    id: 'svc-ipphone',
+    icon: <svg className="icon" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2" /><circle cx="12" cy="18" r="1" fill="currentColor" stroke="none" /><path d="M9 6h6" /></svg>,
+    title: 'IP Phones',
+    desc: 'Need real desk phones for your office? Tell us how many and what you need — Yealink DECT phones and wireless headsets — and we\'ll get them sourced and delivered.',
+    status: 'Request tracker live'
   }
 ];
 
@@ -142,7 +149,7 @@ export default function Landing() {
 
         <div className="wrap">
           <div className="stat-strip">
-            <div className="stat-cell hud"><div className="stat-num">7</div><div className="stat-lbl">Things your business needs, one login</div></div>
+            <div className="stat-cell hud"><div className="stat-num">8</div><div className="stat-lbl">Things your business needs, one login</div></div>
             <div className="stat-cell hud"><div className="stat-num">5</div><div className="stat-lbl">Countries for a business number</div></div>
             <div className="stat-cell hud"><div className="stat-num">24/7</div><div className="stat-lbl">Monitored and kept online</div></div>
             <div className="stat-cell hud"><div className="stat-num">Minutes</div><div className="stat-lbl">From signup to your first mailbox</div></div>
@@ -174,7 +181,7 @@ export default function Landing() {
         <div className="wrap">
           <div className="section-head-row">
             <div>
-              <div className="eyebrow-label"><span className="bar"></span> THE SEVEN SERVICES</div>
+              <div className="eyebrow-label"><span className="bar"></span> THE EIGHT SERVICES</div>
               <h2 className="h2">Everything your business needs<br />to communicate, professionally</h2>
             </div>
           </div>
