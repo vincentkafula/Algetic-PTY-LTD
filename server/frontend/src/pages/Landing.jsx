@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { cloneElement } from 'react';
 import '../styles/landing.css';
 
 const CHECK_ICON = (
@@ -299,44 +298,93 @@ export default function Landing() {
               <img src="/logo-icon.png" alt="Altegic" style={{ height: 20, width: 'auto' }} />
               Altegic
             </div>
+            <p className="foot-tagline">Powering Communication, Simplifying Business.</p>
             <p>Business email, phone, domains, and website help — everything your business needs to communicate, in one account.</p>
+            <div className="foot-follow">
+              <span className="lbl">Follow Us</span>
+              <div className="foot-social">
+                <a href="#" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5.001A2.5 2.5 0 014.98 3.5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.77V21h-4v-5.7c0-1.36-.02-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.8H9z"/></svg></a>
+                <a href="#" aria-label="YouTube"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.2-.4-4.7c-.24-.87-.93-1.55-1.8-1.79C18.2 5 12 5 12 5s-6.2 0-7.8.5c-.87.24-1.56.92-1.8 1.8C2 9.8 2 12 2 12s0 3.2.4 4.7c.24.87.93 1.55 1.8 1.79C5.8 19 12 19 12 19s6.2 0 7.8-.5c.87-.24 1.56-.92 1.8-1.8.4-1.5.4-4.7.4-4.7zM10 15.5v-7l6 3.5z"/></svg></a>
+                <a href="#" aria-label="X"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22H16.6l-5.2-6.8L5.4 22H2.3l8.1-9.3L1.4 2h6.9l4.7 6.2zm-1.2 18h1.7L7.4 4h-1.8z"/></svg></a>
+                <a href="#" aria-label="Facebook"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.25-1.5 1.55-1.5H17V3.7C16.7 3.65 15.7 3.5 14.5 3.5c-2.4 0-4 1.47-4 4.15V10H7.8v3.1h2.7v8z"/></svg></a>
+                <a href="#" aria-label="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></a>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h5>About Altegic</h5>
+            <hr className="foot-heading-rule" />
+            <ul>
+              <li><FootLink href="#about">About</FootLink></li>
+              <li><FootLink href="#pricing">Pricing</FootLink></li>
+              <li><FootLink href="#team">Team</FootLink></li>
+              <li><FootLink href="#coverage">Coverage</FootLink></li>
+            </ul>
           </div>
           <div>
             <h5>Services</h5>
+            <hr className="foot-heading-rule" />
             <ul>
               {footerServices.map((s) => (
-                <li key={s.id}>
-                  <a href={`#${s.id}`}>
-                    {cloneElement(s.icon, { className: undefined, width: 15, height: 15, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6 })}
-                    {' '}{s.title}
-                  </a>
-                </li>
+                <li key={s.id}><FootLink href={`#${s.id}`}>{s.title}</FootLink></li>
               ))}
             </ul>
           </div>
           <div>
-            <h5>Platform</h5>
-            <ul>
-              <li><a href="#about">About</a></li>
-              <li><a href="#services">Services</a></li>
-              <li><a href="#pricing">Pricing</a></li>
-              <li><a href="#team">Team</a></li>
-              <li><a href="#coverage">Coverage</a></li>
-            </ul>
-          </div>
-          <div>
             <h5>Account</h5>
+            <hr className="foot-heading-rule" />
             <ul>
-              <li><Link to="/login">Log in</Link></li>
-              <li><Link to="/login">Create an account</Link></li>
-              <li><Link to="/webmail-login">Webmail</Link></li>
+              <li><FootLinkTo to="/login">Log in</FootLinkTo></li>
+              <li><FootLinkTo to="/login">Create an account</FootLinkTo></li>
+              <li><FootLinkTo to="/webmail-login">Webmail</FootLinkTo></li>
             </ul>
           </div>
         </div>
+
+        <div className="wrap foot-trust">
+          <div className="foot-trust-item">
+            <div className="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+            <div className="txt"><strong>24/7</strong>Monitored and kept online</div>
+          </div>
+          <div className="foot-trust-item">
+            <div className="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 010 18M12 3a13 13 0 000 18"/></svg></div>
+            <div className="txt"><strong>5 Countries</strong>For a business number</div>
+          </div>
+          <div className="foot-trust-item">
+            <div className="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+            <div className="txt"><strong>Real infrastructure</strong>Not a startup's approximation</div>
+          </div>
+        </div>
+
         <div className="wrap foot-bottom">
-          <div>© 2026 ALTEGIC · CONNECT YOUR OWN MAILGUN, TWILIO, AND GODADDY CREDENTIALS IN SERVER/.ENV</div>
+          <div>© 2026 Altegic. All rights reserved.</div>
+          <div className="legal">
+            <a href="#">Privacy Policy</a>
+            <span>|</span>
+            <a href="#">Terms of Use</a>
+            <span>|</span>
+            <a href="#">Cookie Settings</a>
+          </div>
         </div>
       </footer>
     </>
+  );
+}
+
+function FootLink({ href, children }) {
+  return (
+    <a href={href}>
+      {children}
+      <svg className="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+  );
+}
+
+function FootLinkTo({ to, children }) {
+  return (
+    <Link to={to}>
+      {children}
+      <svg className="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 6l6 6-6 6"/></svg>
+    </Link>
   );
 }
