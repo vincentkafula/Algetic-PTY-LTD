@@ -22,7 +22,7 @@ It's still a starter, not a finished, audited product — see
 
 ## Run it locally
 
-The frontend is React (`frontend/`, built with Vite), the backend is
+The frontend is React (`server/frontend/`, built with Vite), the backend is
 Node/Express (`server/`). The build outputs straight into `server/public`,
 which Express serves as static files — one deployable service, not two.
 
@@ -42,7 +42,7 @@ JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(48).toString('he
 and start the server:
 
 ```bash
-npm run build   # builds frontend/ into server/public — do this first
+npm run build   # builds server/frontend/ into server/public — do this first
 npm start
 ```
 
@@ -54,10 +54,10 @@ mailbox and number you create is tied to that account.
 fresh clone has nothing there until `npm run build` runs once. Railway
 runs this automatically (see `server/package.json`'s `build` script)
 before every deploy, so production always has a fresh build; locally,
-re-run `npm run build` after any change under `frontend/src`, or work
-directly in `frontend/` with `npm run dev` (Vite's dev server, faster
+re-run `npm run build` after any change under `server/frontend/src`, or work
+directly in `server/frontend/` with `npm run dev` (Vite's dev server, faster
 iteration, but talks to the API at whatever `server/` is running on —
-see `frontend/README.md`).
+see `server/frontend/README.md`).
 
 ## Adding your real API keys — do this yourself, not in a chat
 
@@ -91,14 +91,21 @@ and nobody rebuilds them from zero for a new SaaS.
 ## Architecture
 
 ```
-frontend/                 React (Vite) — builds into server/public
-  src/pages/               Landing, Login, Dashboard (7 panels), Webmail
-  src/lib/                 api.js / webmailApi.js — the two independent
-                            auth systems (account vs mailbox), plus their
-                            authedFetch hooks
-  src/styles/               ported design system (same tokens/classes the
-                            original vanilla site used)
 server/
+  frontend/               React (Vite) — builds into ../public. Lives
+                          INSIDE server/, not as a sibling — Railway's
+                          rootDirectory is scoped to server/, so a
+                          sibling directory would be invisible to the
+                          build entirely (this broke the very first
+                          deploy of this integration; fixed by moving
+                          frontend/ in here instead of changing Railway's
+                          project config)
+    src/pages/             Landing, Login, Dashboard (7 panels), Webmail
+    src/lib/               api.js / webmailApi.js — the two independent
+                          auth systems (account vs mailbox), plus their
+                          authedFetch hooks
+    src/styles/            ported design system (same tokens/classes the
+                          original vanilla site used)
   server.js              Express app, mounts routes, health check, SPA
                           fallback (serves index.html for any non-/api
                           path so React Router handles client routing)
@@ -168,7 +175,7 @@ This starter now does both send and receive for real:
 
 What used to be missing here — a real "type in your email and password and
 log in" experience — now exists, just not as IMAP. `/webmail-login` and
-`/webmail` (React pages, `frontend/src/pages/webmail/`) are a genuinely
+`/webmail` (React pages, `server/frontend/src/pages/webmail/`) are a genuinely
 separate webmail product: a
 mailbox owner logs in with their own email + a mailbox-specific password
 (generated once at mailbox creation, shown once, resettable by the Altegic
