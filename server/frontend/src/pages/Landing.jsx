@@ -93,8 +93,7 @@ export default function Landing() {
       <header className="nav">
         <div className="wrap nav-inner">
           <div className="brand">
-            <img src="/logo-icon.png" alt="Altegic" style={{ height: 22, width: 'auto' }} />
-            Altegic
+            <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 52, width: 'auto' }} />
           </div>
           <nav className="links">
             <a href="#home">HOME</a>
