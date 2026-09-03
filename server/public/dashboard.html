@@ -18,7 +18,7 @@
       <a href="#" data-view="callcentre">📞 Call centre</a>
       <a href="#" data-view="mvno">📡 MVNO (demo)</a>
       <a href="#" data-view="domains">🌐 Domains</a>
-      <a href="#" data-view="projects">🛠 Website &amp; software</a>
+      <a href="#" data-view="projects">🛠 Website, software &amp; internet</a>
       <a href="index.html">← Back to site</a>
     </nav>
   </div>
@@ -316,19 +316,21 @@
 
     <!-- PROJECTS VIEW -->
     <div id="view-projects" style="display:none">
-      <h1>Website &amp; software development</h1>
+      <h1>Website, software &amp; internet services</h1>
       <p class="subtitle">
-        Submit a project request and track it through to delivery. This is
-        a request tracker, not an automated build service — a real person
-        still designs and builds the work.
+        Submit a request and track it through to delivery. This is a request
+        tracker, not an automated build or provisioning service — a real
+        person (or a real ISP partner, for internet connectivity) handles
+        the actual work.
       </p>
 
       <div class="panel-box">
         <h2>New request</h2>
         <div class="form-row">
-          <select id="projectType">
+          <select id="projectType" onchange="updateProjectFormHints()">
             <option value="website">Website</option>
             <option value="software">Software development</option>
+            <option value="internet">Internet service (e.g. Rain, fibre, fixed wireless)</option>
           </select>
           <input id="projectTitle" placeholder="Project title" style="flex:1;min-width:180px" />
         </div>

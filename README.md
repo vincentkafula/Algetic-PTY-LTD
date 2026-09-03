@@ -333,14 +333,25 @@ same reason as registration above — no live account to test against.
 
 interaction) are the safe first things to try once `GODADDY_PAT` is set.
 
-## Website & software development requests
+## Website, software & internet service requests
 
 `routes/projects.js` — a lightweight request tracker (`Requested` → `In
-Progress` → `Delivered`/`Cancelled`), not an automated build service.
-There's no API that produces a website or custom software on demand; a
-real person still designs and builds the work. This just gives that work a
-visible pipeline inside the same dashboard, scoped per account like
-everything else.
+Progress` → `Delivered`/`Cancelled`), not an automated build or
+provisioning service. There's no API that produces a website, custom
+software, or an internet connection on demand; a real person — or a real
+ISP partner (Rain, a fibre provider, fixed wireless) for the internet type
+— still does the actual work. This just gives that work a visible pipeline
+inside the same dashboard, scoped per account like everything else.
+
+Three request types share this one system: `website`, `software`, and
+`internet`. All three use the exact same fields (`title`, `description`,
+`budget`) — the dashboard's description placeholder just changes wording
+per type (e.g. prompting for an installation address and preferred
+provider for internet requests) to nudge better-quality requests, but
+nothing is structurally different between them. Same reasoning as the
+MVNO dashboard's honesty, applied to a different shape: a request-and-
+fulfill workflow is a real, deliverable thing (unlike a simulated telecom
+network), so it's built as a real tracker rather than a labeled demo.
 
 No staff/customer role distinction exists yet — any logged-in account can
 update any of its own requests' status. If the real workflow needs "the

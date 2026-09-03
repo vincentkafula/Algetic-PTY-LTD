@@ -6,14 +6,19 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 // ---------------------------------------------------------------------------
-// Website and software development requests, tracked through a simple
-// status pipeline: Requested -> In Progress -> Delivered (or Cancelled).
+// Website, software development, and internet connectivity requests,
+// tracked through a simple status pipeline: Requested -> In Progress ->
+// Delivered (or Cancelled).
 //
-// There's no API that produces a website or custom software on demand —
-// unlike domains/numbers/mailboxes, real delivery happens outside this
-// platform (your own team does the actual work). This is honestly a
-// lightweight project tracker, not a resold service, and is presented
-// that way rather than pretending otherwise.
+// There's no API that produces a website, custom software, or an internet
+// connection on demand — unlike domains/numbers/mailboxes, real delivery
+// happens outside this platform (your own team, or a real ISP partner like
+// Rain, does the actual work). This is honestly a lightweight request
+// tracker, not a resold service, and is presented that way rather than
+// pretending otherwise — same reasoning as the MVNO demo dashboard, just a
+// different honest shape (a tracker instead of a labeled-demo dashboard,
+// since a request-and-fulfill workflow is a genuine, deliverable thing,
+// unlike a simulated telecom network).
 //
 // SCOPING NOTE, same shape as the call centre and private SIP network
 // features: this app has no staff/admin role distinct from a regular
@@ -24,7 +29,7 @@ const { requireAuth } = require('../middleware/auth');
 // endpoint.
 // ---------------------------------------------------------------------------
 
-const VALID_TYPES = ['website', 'software'];
+const VALID_TYPES = ['website', 'software', 'internet'];
 const VALID_STATUSES = ['Requested', 'In Progress', 'Delivered', 'Cancelled'];
 
 router.use(requireAuth);
@@ -39,7 +44,7 @@ router.get('/', (req, res) => {
 
 /**
  * POST /api/projects
- * body: { type: "website"|"software", title, description, budget? }
+ * body: { type: "website"|"software"|"internet", title, description, budget? }
  * budget is a free-text field (e.g. "R15,000" or "$2,000-3,000") — not
  * parsed or validated as a number, just carried through as the customer
  * wrote it.

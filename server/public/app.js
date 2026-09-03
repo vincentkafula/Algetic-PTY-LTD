@@ -924,7 +924,19 @@ async function deleteDnsRecord(domainId, type, name) {
   } catch (err) { alert(err.message); }
 }
 
-// ---- website & software projects ----
+// ---- website, software & internet projects ----
+function updateProjectFormHints() {
+  const type = document.getElementById('projectType').value;
+  const descEl = document.getElementById('projectDescription');
+  if (!descEl) return;
+  const hints = {
+    website: 'Describe what you need — pages, purpose, examples you like',
+    software: 'Describe what you need — the problem it solves, who uses it',
+    internet: 'Describe what you need — installation address, preferred provider (e.g. Rain), current connection if any'
+  };
+  descEl.placeholder = hints[type] || 'Describe what you need';
+}
+
 async function createProject() {
   const type = document.getElementById('projectType').value;
   const title = document.getElementById('projectTitle').value.trim();
@@ -1008,6 +1020,7 @@ async function loadProjects() {
 
 loadDomains();
 loadProjects();
+updateProjectFormHints();
 
 // ---- MVNO demo dashboard ----
 function fmtNum(n) {
