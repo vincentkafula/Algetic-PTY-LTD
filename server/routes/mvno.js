@@ -22,8 +22,7 @@ const { requireAuth } = require('../middleware/auth');
 // relationship (spectrum access, HLR/HSS integration), which is a telecom
 // licensing and commercial relationship, not something an API integration
 // like Twilio's provides. See README for the same category of caveat
-// already documented for the private SIP network and domain registration
-// features.
+// already documented for the domain registration feature.
 // ---------------------------------------------------------------------------
 
 router.use(requireAuth);

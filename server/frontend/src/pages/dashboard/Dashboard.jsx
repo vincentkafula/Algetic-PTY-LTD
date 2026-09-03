@@ -6,7 +6,7 @@ import { useRequireAuth, useAuthedFetch } from '../../lib/useAuthedFetch';
 
 import MailboxesPanel from './MailboxesPanel.jsx';
 import VoicePanel from './VoicePanel.jsx';
-import SipNetworkPanel from './SipNetworkPanel.jsx';
+import TeamCallingPanel from './TeamCallingPanel.jsx';
 import CallCentrePanel from './CallCentrePanel.jsx';
 import DomainsPanel from './DomainsPanel.jsx';
 import ProjectsPanel from './ProjectsPanel.jsx';
@@ -15,7 +15,7 @@ import MvnoPanel from './MvnoPanel.jsx';
 const NAV_ITEMS = [
   { view: 'mail', icon: '✉', label: 'Mailboxes' },
   { view: 'voice', icon: '☎', label: 'Phone numbers' },
-  { view: 'sipnet', icon: '🔒', label: 'Private SIP network' },
+  { view: 'sipnet', icon: '📶', label: 'Team calling' },
   { view: 'callcentre', icon: '📞', label: 'Call centre' },
   { view: 'mvno', icon: '📡', label: 'MVNO (demo)' },
   { view: 'domains', icon: '🌐', label: 'Domains' },
@@ -82,7 +82,7 @@ export default function Dashboard() {
 
         {view === 'mail' && <MailboxesPanel authedFetch={authedFetch} />}
         {view === 'voice' && <VoicePanel authedFetch={authedFetch} />}
-        {view === 'sipnet' && <SipNetworkPanel authedFetch={authedFetch} health={health} />}
+        {view === 'sipnet' && <TeamCallingPanel authedFetch={authedFetch} health={health} />}
         {view === 'callcentre' && <CallCentrePanel authedFetch={authedFetch} health={health} />}
         {view === 'mvno' && <MvnoPanel authedFetch={authedFetch} />}
         {view === 'domains' && <DomainsPanel authedFetch={authedFetch} health={health} />}

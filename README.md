@@ -116,6 +116,7 @@ server/
   routes/mailboxes.js    CRUD over Mailgun routes, scoped to req.user
   routes/webmail.js      Mailbox-scoped inbox: login, folders, send, star
   routes/numbers.js      CRUD over Twilio numbers, scoped to req.user
+  routes/teamCalling.js  Twilio SIP Domain: team members, number assignment
   data/db.json           created on first run — your actual data lives here
   public/                BUILD OUTPUT ONLY — gitignored, not source. See
                           "Run it locally" above; `npm run build` (which
@@ -268,10 +269,9 @@ uses the exact same functions).
   address "just work" using this trunk-based approach.
   - If the product needs literal registration-based softphones (no static
     address required), that's a different Twilio product — Programmable
-    Voice **SIP Domains** with registration-based credential auth, plus a
-    TwiML voice handler that dials the currently-registered contact. That's
-    a legitimate separate feature to build, not an extension of the trunk
-    code here.
+    Voice **SIP Domains** with registration-based credential auth. That's
+    now built — see "Team calling" below, which uses exactly this and is
+    not an extension of the trunk code here.
 - SIP passwords are generated with `crypto.randomBytes` and are never
   stored — Twilio holds the credential, and this app only shows the
   password once, at creation or reset time (`POST
@@ -326,12 +326,11 @@ your first real inbound call is the actual test of that piece.
 
 **Agents answer on a real phone, not a browser.** When someone reaches a
 queue, Altegic places outbound calls to every available agent's registered
-phone number (their cell, a desk phone, or a private-SIP-network extension
-if you've made it independently reachable — the private SIP network has no
-PSTN connectivity by default, see its own README). This was a deliberate
-scope decision — a browser-based softphone (Twilio Voice SDK, WebRTC,
-microphone permissions, a token-issuing endpoint) is a materially larger,
-separate feature that wasn't built here.
+phone number (their cell, a desk phone, or a Team Calling SIP address —
+see below — given as a full `sip:username@domain` URI). This was a
+deliberate scope decision — a browser-based softphone (Twilio Voice SDK,
+WebRTC, microphone permissions, a token-issuing endpoint) is a materially
+larger, separate feature that wasn't built here.
 
 ## MVNO operations (demo dashboard)
 
@@ -486,14 +485,55 @@ list. Before relying on them:
   requested through Twilio support rather than bought directly — in that
   case, remove `ZM` from `SUPPORTED_NUMBER_COUNTRIES` until confirmed.
 
-## Private SIP network (no telecom carrier)
+## Team calling (real Twilio SIP Domain, no self-hosted server)
 
-`sip-network/` is a separate, self-hosted alternative to the Twilio-based
-voice piece above — a SIP registrar and call router (Kamailio + rtpengine)
-that lets registered users call each other with zero carrier involvement.
-It cannot reach or be reached by real phone numbers, and it runs on its own
-VPS, not on Railway — see `sip-network/README.md` for the full scope,
-what's been verified vs. not, and deployment steps.
+Replaces what used to be here: a separate, self-hosted SIP registrar
+(Kamailio + rtpengine, `sip-network/`, its own VPS deployment) with zero
+carrier involvement and no PSTN reachability at all. That system is gone —
+deleted, not just deprecated — in favor of `services/sipDomain.js`, which
+creates a real Twilio **SIP Domain** per account instead.
+
+**Why this is a strictly better fit than what it replaced:** the old
+system couldn't reach or be reached by real phone numbers by design (no
+carrier involved at all), needed its own VPS with public UDP ports and NAT
+traversal correctly configured, and every credential lived in a local
+password file this app's own server had no visibility into. A Twilio SIP
+Domain does everything the old system did — register a username/password
+directly into a softphone, team members call each other — plus what it
+couldn't: registered members can dial out to any real phone number
+(`auth.calls.credentialListMappings`), and a purchased number can be
+assigned to ring a specific member (`routes/teamCalling.js`'s number
+assignment, mutually exclusive with SIP trunking and Call Centre, same
+one-job-per-number rule as the rest of the numbers feature). No VPS, no
+Docker, no self-hosted infrastructure to keep patched.
+
+**How it works:** one Domain + one CredentialList per account (same
+per-account isolation as SIP trunking above — a leaked credential on one
+account can never place calls billed to another). `routes/
+teamCallingWebhooks.js` handles two request shapes: a real PSTN caller
+reaching a number assigned to a member (`<Dial><Sip>`), and any SIP
+request that touches the account's Domain directly — which itself splits
+into a registered member dialing out to a phone number (bridged to the
+PSTN, honestly documented below) versus one member dialing another
+directly by username (no phone number involved at all).
+
+**A real, stated limitation, not papered over:** outbound PSTN dial-out
+needs a valid Twilio caller ID. The webhook uses the account's first
+provisioned phone number for this if one exists; an account with no
+numbers yet will have outbound dial-out fail at Twilio's end with an
+invalid-caller-ID error. Mapping a *specific* number to a *specific*
+member's outbound caller ID (rather than "whichever number the account
+provisioned first") is a reasonable next step, not built here.
+
+**Verified for real:** the exact Twilio API shape (`sip.domains.create`,
+credential list mapping for both registration and calls auth) was
+confirmed against Twilio's own current documentation before writing any
+code — not guessed from memory or pattern-matched from the trunk code
+above, which uses a genuinely different Twilio product. **Not verified:**
+an actual SIP client registering and placing a real call — that needs a
+live Twilio account and a real softphone, neither available in the
+development sandbox this was built in, same limitation as the rest of the
+Twilio-dependent features in this project.
 
 ## China
 

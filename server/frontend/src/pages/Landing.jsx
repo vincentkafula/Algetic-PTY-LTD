@@ -30,9 +30,9 @@ const services = [
   {
     id: 'svc-network',
     icon: <svg className="icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2" /><circle cx="5" cy="17" r="2.2" /><circle cx="19" cy="17" r="2.2" /><path d="M12 7.2V13M12 13L6.5 15.5M12 13l5.5 2.5" /></svg>,
-    title: 'Private Network',
-    desc: 'Free calling between your own team, anywhere. If your team already has IP phones or softphones, connect them directly — no per-minute charges for calls that never leave your company.',
-    status: 'Deploy-your-own'
+    title: 'Team Calling',
+    desc: 'Real softphones, registered directly to a real carrier — no self-hosted server to run. Your team calls each other and dials out to any real phone number, and a real business number can ring a specific person.',
+    status: 'Real Twilio network'
   },
   {
     id: 'svc-domains',
@@ -82,7 +82,7 @@ const countries = [
 const pricingTiers = [
   { tier: 'Starter', price: 99, features: ['5 mailboxes', '2 phone numbers', '1 domain', 'Email support'] },
   { tier: 'Growing Business', price: 199, featured: true, features: ['25 mailboxes', '10 phone numbers', 'Call centre included', '5 domains', 'Priority support'] },
-  { tier: 'Established Business', price: 299, features: ['Unlimited mailboxes', 'Unlimited numbers', 'Private SIP network', 'Unlimited domains', 'Dedicated support'] }
+  { tier: 'Established Business', price: 299, features: ['Unlimited mailboxes', 'Unlimited numbers', 'Team calling', 'Unlimited domains', 'Dedicated support'] }
 ];
 
 const team = [

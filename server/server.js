@@ -8,7 +8,8 @@ const mailboxRoutes = require('./routes/mailboxes');
 const webmailRoutes = require('./routes/webmail');
 const numberRoutes = require('./routes/numbers');
 const webhookRoutes = require('./routes/webhooks');
-const sipNetworkRoutes = require('./routes/sipNetwork');
+const teamCallingRoutes = require('./routes/teamCalling');
+const teamCallingWebhookRoutes = require('./routes/teamCallingWebhooks');
 const callCentreRoutes = require('./routes/callCentre');
 const callCentreWebhookRoutes = require('./routes/callCentreWebhooks');
 const domainRoutes = require('./routes/domains');
@@ -38,14 +39,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/mailboxes', mailboxRoutes);
 app.use('/api/webmail', webmailRoutes);
 app.use('/api/numbers', numberRoutes);
-app.use('/api/sip-network', sipNetworkRoutes);
+app.use('/api/team-calling', teamCallingRoutes);
 app.use('/api/call-centre', callCentreRoutes);
 app.use('/api/domains', domainRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/mvno', mvnoRoutes);
-// Not behind requireAuth — Twilio calls this directly. Authenticity comes
-// from verifying Twilio's own X-Twilio-Signature header inside the route.
+// Not behind requireAuth — Twilio calls these directly. Authenticity comes
+// from verifying Twilio's own X-Twilio-Signature header inside each route.
 app.use('/api/webhooks/twilio', callCentreWebhookRoutes);
+app.use('/api/webhooks/twilio', teamCallingWebhookRoutes);
 // Not behind requireAuth — Mailgun calls this directly. Authenticity comes
 // from verifying Mailgun's own signature inside the route, not a session.
 app.use('/api/webhooks', webhookRoutes);
@@ -57,7 +59,7 @@ app.get('/api/health', (req, res) => {
     mailgunConfigured: isMailgunConfigured(),
     mailgunInboundCaptureConfigured: isInboundCaptureConfigured(),
     twilioConfigured: isTwilioConfigured(),
-    sipNetworkConfigured: Boolean(process.env.SIP_NETWORK_API_URL && process.env.SIP_NETWORK_API_KEY),
+    teamCallingConfigured: isTwilioConfigured() && Boolean(PUBLIC_BASE_URL),
     callCentreConfigured: isTwilioConfigured() && Boolean(PUBLIC_BASE_URL),
     domainsConfigured: isGoDaddyConfigured(),
     supportedCountries: (process.env.SUPPORTED_NUMBER_COUNTRIES || 'US,CA,GB').split(',')

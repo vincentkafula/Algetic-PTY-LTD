@@ -21,8 +21,7 @@ const { requireAuth } = require('../middleware/auth');
 // since a request-and-fulfill workflow is a genuine, deliverable thing,
 // unlike a simulated telecom network).
 //
-// SCOPING NOTE, same shape as the call centre and private SIP network
-// features: this app has no staff/admin role distinct from a regular
+// SCOPING NOTE, same shape as the call centre feature: this app has no staff/admin role distinct from a regular
 // account, so any logged-in user can update any of their own project's
 // status. If this needs to become "customers request, your team updates
 // status," that's a role system to add on top of this, not a rebuild of

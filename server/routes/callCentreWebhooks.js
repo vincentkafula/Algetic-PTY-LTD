@@ -184,10 +184,10 @@ router.post('/agent-connect', (req, res) => {
  * has one waiting caller to bridge to, so only one agent leg actually
  * connects — the rest hit the timeout above and hang up gracefully. This
  * is Twilio's own documented pattern for ring-multiple-agents queueing
- * (see sip-network and this project's README for what's been verified vs
- * not — this specific flow has NOT been tested against live calls, only
- * reasoned through against Twilio's official docs, since placing real
- * phone calls isn't possible from a development sandbox).
+ * (see this project's README for what's been verified vs not — this
+ * specific flow has NOT been tested against live calls, only reasoned
+ * through against Twilio's official docs, since placing real phone calls
+ * isn't possible from a development sandbox).
  */
 async function notifyAgents(queue, fromNumber) {
   if (!isTwilioConfigured() || !PUBLIC_BASE_URL) return;

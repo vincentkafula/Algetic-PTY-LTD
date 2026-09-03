@@ -9,8 +9,7 @@ const { PUBLIC_BASE_URL } = require('../mailgunClient'); // shared env var, not 
 
 // ---------------------------------------------------------------------------
 // Call centre: IVR menus, queues, and agents, scoped per Altegic account
-// (unlike the private SIP network, this one DOES follow the normal
-// per-account isolation every other Altegic resource uses).
+// like every other Altegic resource.
 //
 // IMPORTANT — how this relates to the SIP trunk feature: a Twilio phone
 // number can be attached to a SIP trunk (for direct-dial IP phones, see
@@ -190,11 +189,11 @@ router.get('/agents', (req, res) => {
  * POST /api/call-centre/agents
  * body: { name, phoneNumber, queueId }
  * phoneNumber is whatever number Twilio should ring to reach this agent —
- * their cell, a desk phone, or a number on the private SIP network (if
- * that's been set up to accept inbound PSTN-style calls some other way;
- * by default the private SIP network has no PSTN connectivity — see its
- * README — so a private-SIP-network number only works here if you've
- * separately made it reachable, e.g. by dialing through the trunk system).
+ * their cell, a desk phone, or a registered Team Calling SIP address
+ * given as a full `sip:username@domain` URI (see routes/teamCalling.js) —
+ * Twilio's Calls API accepts a SIP URI in the `to` field the same as a
+ * phone number, but the `sip:` prefix is required, a bare username@domain
+ * is not enough on its own.
  */
 router.post('/agents', async (req, res) => {
   const { name, phoneNumber, queueId } = req.body || {};
@@ -281,7 +280,7 @@ router.post('/numbers/:numberId/assign', async (req, res) => {
     const voiceUrl = `${PUBLIC_BASE_URL}/api/webhooks/twilio/voice?menuId=${menu.id}`;
     await twilioClient.incomingPhoneNumbers(number.twilioSid).update({ voiceUrl, voiceMethod: 'POST' });
 
-    const updated = await db.numbers.update((n) => n.id === number.id, { callCentreMenuId: menu.id, trunkId: null });
+    const updated = await db.numbers.update((n) => n.id === number.id, { callCentreMenuId: menu.id, trunkId: null, teamCallingMember: null });
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
