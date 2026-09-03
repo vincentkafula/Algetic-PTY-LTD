@@ -56,6 +56,8 @@ router.post('/mailgun/inbound', upload.any(), async (req, res) => {
     ownerId: mailbox.ownerId,
     mailboxId: mailbox.id,
     direction: 'inbound',
+    folder: 'inbox',
+    starred: false,
     from: body.from || body.sender || 'unknown',
     to: body.recipient || mailbox.address,
     subject: body.subject || '(no subject)',

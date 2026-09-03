@@ -1,6 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 const db = require('../db');
@@ -11,7 +12,8 @@ const {
   PUBLIC_BASE_URL,
   isMailgunConfigured,
   isInboundCaptureConfigured,
-  authHeader
+  authHeader,
+  sendMailAs
 } = require('../mailgunClient');
 
 // Every route below requires a logged-in account; mailboxes are always
@@ -109,6 +111,14 @@ router.post('/', async (req, res) => {
       return res.status(response.status).json({ error: data.message || 'Mailgun error', data });
     }
 
+    // Generates the credential for this mailbox's OWN webmail login — a
+    // separate authentication system from the Altegic account that just
+    // created it (see middleware/mailboxAuth.js). Shown once, right here;
+    // never stored or retrievable in plaintext again, same discipline as
+    // every other credential this app issues.
+    const webmailPassword = crypto.randomBytes(9).toString('base64url');
+    const webmailPasswordHash = await bcrypt.hash(webmailPassword, 10);
+
     const record = {
       id: mailboxId,
       ownerId: req.user.id,
@@ -120,10 +130,15 @@ router.post('/', async (req, res) => {
       inboundCaptureEnabled,
       inboundNote: inboundCaptureEnabled
         ? 'Inbound mail is captured and shown in this dashboard (GET /api/mailboxes/:id/messages).'
-        : 'PUBLIC_BASE_URL / MAILGUN_WEBHOOK_SIGNING_KEY are not set, so inbound mail only plain-forwards and will not appear in this dashboard — see server/.env.example.'
+        : 'PUBLIC_BASE_URL / MAILGUN_WEBHOOK_SIGNING_KEY are not set, so inbound mail only plain-forwards and will not appear in this dashboard — see server/.env.example.',
+      webmailPasswordHash
     };
     await db.mailboxes.insert(record);
-    res.status(201).json(record);
+    res.status(201).json({
+      ...record,
+      webmailPassword,
+      webmailPasswordNote: 'Save this now — it will not be shown again. This is the password for this mailbox\'s OWN webmail login (a separate login from your Altegic account) — give it to whoever owns this address. Use the reset endpoint to issue a new one later.'
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -164,32 +179,9 @@ router.post('/:id/send', async (req, res) => {
   }
 
   try {
-    const params = new URLSearchParams();
-    params.append('from', mailbox.address);
-    params.append('to', to);
-    params.append('subject', subject);
-    params.append('text', text);
-
-    const response = await fetch(`${MAILGUN_BASE_URL}/${MAILGUN_DOMAIN}/messages`, {
-      method: 'POST',
-      headers: {
-        Authorization: authHeader(),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: params
-    });
-
-    const rawBody = await response.text();
-    let data;
-    try {
-      data = JSON.parse(rawBody);
-    } catch {
-      return res.status(response.status || 502).json({
-        error: 'Mailgun did not return a valid response when sending. Check MAILGUN_DOMAIN and MAILGUN_BASE_URL in .env.'
-      });
-    }
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data.message || 'Mailgun error', data });
+    const result = await sendMailAs({ from: mailbox.address, to, subject, text });
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error });
     }
 
     const record = {
@@ -197,11 +189,13 @@ router.post('/:id/send', async (req, res) => {
       ownerId: req.user.id,
       mailboxId: mailbox.id,
       direction: 'outbound',
+      folder: 'sent',
+      starred: false,
       from: mailbox.address,
       to,
       subject,
       bodyText: text.slice(0, 5000),
-      mailgunMessageId: data.id || null,
+      mailgunMessageId: result.mailgunMessageId,
       at: new Date().toISOString()
     };
     await db.messages.insert(record);
@@ -209,6 +203,28 @@ router.post('/:id/send', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+/**
+ * POST /api/mailboxes/:id/webmail-password/reset
+ * Regenerates this mailbox's OWN webmail login password (a separate
+ * credential from the Altegic account, see routes/webmail.js). Returns
+ * the new password once — there is no way to retrieve the old one, by
+ * design, same as every other credential this app issues.
+ */
+router.post('/:id/webmail-password/reset', async (req, res) => {
+  const mailbox = db.mailboxes.find((m) => m.id === req.params.id && m.ownerId === req.user.id);
+  if (!mailbox) return res.status(404).json({ error: 'Mailbox not found' });
+
+  const webmailPassword = crypto.randomBytes(9).toString('base64url');
+  const webmailPasswordHash = await bcrypt.hash(webmailPassword, 10);
+  await db.mailboxes.update((m) => m.id === mailbox.id, { webmailPasswordHash });
+
+  res.json({
+    address: mailbox.address,
+    webmailPassword,
+    webmailPasswordNote: 'Save this now — it will not be shown again.'
+  });
 });
 
 /**

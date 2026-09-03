@@ -5,6 +5,7 @@ const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const mailboxRoutes = require('./routes/mailboxes');
+const webmailRoutes = require('./routes/webmail');
 const numberRoutes = require('./routes/numbers');
 const webhookRoutes = require('./routes/webhooks');
 const sipNetworkRoutes = require('./routes/sipNetwork');
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/mailboxes', mailboxRoutes);
+app.use('/api/webmail', webmailRoutes);
 app.use('/api/numbers', numberRoutes);
 app.use('/api/sip-network', sipNetworkRoutes);
 app.use('/api/call-centre', callCentreRoutes);

@@ -143,9 +143,20 @@ This starter now does both send and receive for real:
   live in the same JSON file as everything else in this starter — fine for
   development, not for real mail volume. See the database section above.
 
-What's still missing — a real Outlook-style "type in your email and
-password" login — needs actual IMAP, which Mailgun doesn't provide. Two
-realistic paths if you need that:
+What used to be missing here — a real "type in your email and password and
+log in" experience — now exists, just not as IMAP. `public/webmail-login.html`
+and `public/webmail.html` are a genuinely separate webmail product: a
+mailbox owner logs in with their own email + a mailbox-specific password
+(generated once at mailbox creation, shown once, resettable by the Altegic
+account that owns the mailbox), completely independent from the Altegic
+reseller account itself. See "Webmail: a second, independent login system"
+below for the full detail — including exactly why this still isn't IMAP,
+and why that's fine for most people who just want to check mail in a
+browser.
+
+If actual IMAP (so Outlook/Apple Mail can "just log in" with a password
+too, not only via manually-entered SMTP settings) is ever needed, two
+realistic paths:
 
 1. **Pair Mailgun's inbound routing with your own mail store** — run
    Dovecot (IMAP server) behind the scenes, have Mailgun forward incoming
@@ -158,6 +169,53 @@ realistic paths if you need that:
 
 `routes/mailboxes.js` also supports deleting a mailbox (removes the Mailgun
 route, the local record, and that mailbox's captured message history).
+
+## Webmail: a second, independent login system
+
+`middleware/mailboxAuth.js` + `routes/webmail.js` — the actual product a
+mailbox owner uses day to day, completely separate from the Altegic
+account system in `middleware/auth.js` + `routes/auth.js`. This was a
+deliberate architecture decision, not an oversight: the person who owns
+`sales@theirdomain.com` is not the same person as the Altegic reseller
+account that provisioned it, and should have no access to — or knowledge
+of — that account at all.
+
+**How the two systems stay separated:** both token types are signed with
+the same `JWT_SECRET` (no reason to manage two secrets), but every token
+carries a `typ` claim (`"account"` or `"mailbox"`), checked explicitly by
+each middleware. A stolen mailbox token can't be used against the Altegic
+dashboard API, and an Altegic session token can't be used against the
+webmail API. **Verified for real, in both directions** — this was the
+single most important thing to get right, tested directly rather than
+assumed correct from reading the code.
+
+**Password lifecycle:** generated once at mailbox creation (`crypto.
+randomBytes` + bcrypt, same discipline as every other credential this app
+issues), shown once in the creation response, never stored or retrievable
+in plaintext again. The Altegic account that owns a mailbox can reset its
+webmail password (`POST /api/mailboxes/:id/webmail-password/reset`) if the
+end customer loses it — there's no self-service "forgot password" flow yet.
+
+**Folders (Inbox/Sent/Spam/Trash) are real, user-driven states, not
+automated filtering.** There is no spam detection anywhere in this
+codebase. A message ends up in Spam because someone clicked "Mark as
+spam," the same as Trash. Starred is a separate boolean flag, independent
+of folder — a starred message stays starred even after being moved to
+Spam or Trash, matching how Gmail's star works. Verified directly: starred
+a message, moved it to Spam, confirmed it still showed up under the
+virtual "Starred" filter.
+
+**Verified for real:** the full login flow (including that a wrong
+password and a nonexistent address return the identical generic error, so
+login can't be used to enumerate valid addresses), cross-mailbox message
+isolation, every folder transition, star toggling, permanent delete, and
+the password reset flow — all tested against the real endpoints, not
+assumed from code review. **Not verified:** the actual mailbox-creation
+password-generation code path through a real Mailgun success response —
+no live Mailgun key was available to test that specific branch, though the
+underlying crypto/bcrypt logic was unit-tested in isolation and is
+identical to logic already proven correct elsewhere (the login/reset flow
+uses the exact same functions).
 
 ## Voice: SIP trunking
 

@@ -99,12 +99,34 @@ async function createMailbox() {
         <div class="row"><span>Address</span><span class="value">${data.address}</span></div>
         <div class="row"><span>SMTP host</span><span class="value">${data.smtp.host}</span></div>
         <div class="row"><span>Port</span><span class="value">${data.smtp.port} (${data.smtp.security})</span></div>
-      </div>`;
+        <div class="row"><span>Webmail login</span><span class="value">${window.location.origin}/webmail-login.html</span></div>
+        <div class="row"><span>Webmail password</span><span class="value">${data.webmailPassword}</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">${data.webmailPasswordNote}</p>`;
     document.getElementById('mailLocalPart').value = '';
     document.getElementById('mailForwardTo').value = '';
     loadMailboxes();
   } catch (err) {
     resultEl.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function resetWebmailPassword(id) {
+  if (!confirm('Reset this mailbox\'s webmail password? Anyone using the old password will be signed out.')) return;
+  try {
+    const res = await authedFetch(`${API}/api/mailboxes/${id}/webmail-password/reset`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Failed to reset password'); return; }
+    const resultEl = document.getElementById('mailResult');
+    resultEl.innerHTML = `
+      <div class="credential">
+        <div class="row"><span>Address</span><span class="value">${data.address}</span></div>
+        <div class="row"><span>Webmail login</span><span class="value">${window.location.origin}/webmail-login.html</span></div>
+        <div class="row"><span>New webmail password</span><span class="value">${data.webmailPassword}</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">${data.webmailPasswordNote}</p>`;
+  } catch (err) {
+    alert(err.message);
   }
 }
 
@@ -140,7 +162,7 @@ async function loadMailboxes() {
         <td class="mono">${m.smtp.host}</td>
         <td>${m.inboundCaptureEnabled ? '<span style="color:var(--mail)">Captured</span>' : '<span style="color:var(--muted)">Forward only</span>'}</td>
         <td>${new Date(m.createdAt).toLocaleString()}</td>
-        <td><button class="danger" onclick="deleteMailbox('${m.id}')">Delete</button></td>
+        <td><button class="link-btn" onclick="resetWebmailPassword('${m.id}')">Reset webmail password</button> <button class="danger" onclick="deleteMailbox('${m.id}')">Delete</button></td>
       </tr>`).join('');
 
     const previousSelection = select.value;

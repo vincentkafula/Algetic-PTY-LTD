@@ -29,6 +29,54 @@ function authHeader() {
 }
 
 /**
+ * Sends an email via the Mailgun Messages API. Shared between the
+ * account-scoped mailbox send route (routes/mailboxes.js) and the
+ * mailbox-scoped webmail send route (routes/webmail.js) — same operation,
+ * two different callers with two different auth models.
+ *
+ * Returns { ok: true, mailgunMessageId } on success, or
+ * { ok: false, status, error } on failure — never throws, so callers
+ * don't need their own try/catch just to turn a rejection into a response.
+ */
+async function sendMailAs({ from, to, subject, text }) {
+  const fetch = require('node-fetch');
+  try {
+    const params = new URLSearchParams();
+    params.append('from', from);
+    params.append('to', to);
+    params.append('subject', subject);
+    params.append('text', text);
+
+    const response = await fetch(`${MAILGUN_BASE_URL}/${MAILGUN_DOMAIN}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader(),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    });
+
+    const rawBody = await response.text();
+    let data;
+    try {
+      data = JSON.parse(rawBody);
+    } catch {
+      return {
+        ok: false,
+        status: response.status || 502,
+        error: 'Mailgun did not return a valid response when sending. Check MAILGUN_DOMAIN and MAILGUN_BASE_URL in .env.'
+      };
+    }
+    if (!response.ok) {
+      return { ok: false, status: response.status, error: data.message || 'Mailgun error' };
+    }
+    return { ok: true, mailgunMessageId: data.id || null };
+  } catch (err) {
+    return { ok: false, status: 500, error: err.message };
+  }
+}
+
+/**
  * Verifies Mailgun's inbound-route webhook signature: HMAC-SHA256 over
  * timestamp+token, keyed with the HTTP webhook signing key (Settings ->
  * API Keys -> HTTP webhook signing key in the Mailgun dashboard). This is
@@ -57,5 +105,6 @@ module.exports = {
   isMailgunConfigured,
   isInboundCaptureConfigured,
   authHeader,
-  verifyWebhookSignature
+  verifyWebhookSignature,
+  sendMailAs
 };

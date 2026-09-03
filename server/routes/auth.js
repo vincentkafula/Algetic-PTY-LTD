@@ -15,7 +15,7 @@ function isValidEmail(email) {
 }
 
 function issueToken(user) {
-  return jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: TOKEN_TTL });
+  return jwt.sign({ sub: user.id, email: user.email, typ: 'account' }, JWT_SECRET, { expiresIn: TOKEN_TTL });
 }
 
 function publicUser(user) {

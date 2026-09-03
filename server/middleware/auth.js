@@ -20,6 +20,14 @@ function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
+    // typ === undefined is accepted for backward compatibility with
+    // sessions issued before this check existed — only an explicit,
+    // different typ (e.g. "mailbox") is rejected. Anyone with an old
+    // token keeps working until they next log in; a mailbox token can
+    // never pass this check, old or new.
+    if (payload.typ && payload.typ !== 'account') {
+      return res.status(401).json({ error: 'This session is not an account session' });
+    }
     req.user = { id: payload.sub, email: payload.email };
     next();
   } catch (err) {
