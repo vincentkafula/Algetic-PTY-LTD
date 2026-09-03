@@ -294,11 +294,10 @@ export default function Landing() {
         <div className="wrap foot-grid">
           <div className="foot-about">
             <div className="brand">
-              <img src="/logo-icon.png" alt="Altegic" style={{ height: 20, width: 'auto' }} />
-              Altegic
+              <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 44, width: 'auto' }} />
             </div>
-            <p className="foot-tagline">Powering Communication, Simplifying Business.</p>
-            <p>Business email, phone, domains, and website help — everything your business needs to communicate, in one account.</p>
+            <p className="foot-tagline">Powering Communication, Empowering Connections.</p>
+            <p>Altegic helps small businesses set up business email, phone, domains, and more — all from one account, without the vendor sprawl.</p>
             <div className="foot-follow">
               <span className="lbl">Follow Us</span>
               <div className="foot-social">
