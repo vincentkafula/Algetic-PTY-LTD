@@ -64,12 +64,33 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve the static dashboard/landing frontend.
-// This lives at server/public (not a sibling ../public) so it's included
-// when a host's build is scoped to the server/ directory (e.g. Railway's
-// "root directory" setting) — a sibling folder outside that root would be
-// left out of the build entirely, which is what caused earlier 404s.
+// Serve the built React frontend (built by `npm run build` in frontend/,
+// output straight into server/public — see server/package.json's build
+// script). This lives at server/public (not a sibling ../public) so it's
+// included when a host's build is scoped to the server/ directory (e.g.
+// Railway's "root directory" setting) — a sibling folder outside that
+// root would be left out of the build entirely, which is what caused
+// earlier 404s.
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Anything under /api/* that reached here didn't match any router above —
+// respond with a proper JSON 404, not the SPA shell below, so API
+// clients get a sane error instead of an HTML page.
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// SPA fallback: React Router owns client-side routing (/, /login,
+// /dashboard, /webmail-login, /webmail), but the server still needs to
+// hand back index.html for a direct link or a hard refresh on any of
+// those paths — otherwise Express would 404 on a URL React Router would
+// have handled fine via client-side navigation. Must come after
+// express.static and the /api 404 handler above, so real static files
+// (JS/CSS bundles, favicon) and real API 404s aren't swallowed by this
+// catch-all.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // JSON error handler for anything that slips past individual routes
 // (e.g. malformed JSON bodies), so clients always get JSON back, not an

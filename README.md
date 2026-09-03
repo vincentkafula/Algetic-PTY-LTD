@@ -22,6 +22,10 @@ It's still a starter, not a finished, audited product — see
 
 ## Run it locally
 
+The frontend is React (`frontend/`, built with Vite), the backend is
+Node/Express (`server/`). The build outputs straight into `server/public`,
+which Express serves as static files — one deployable service, not two.
+
 ```bash
 cd server
 npm install
@@ -34,16 +38,26 @@ Open `server/.env` and set at minimum:
 JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(48).toString('hex'))")
 ```
 
-(or just paste a long random string in directly). Then:
+(or just paste a long random string in directly). Then build the frontend
+and start the server:
 
 ```bash
+npm run build   # builds frontend/ into server/public — do this first
 npm start
 ```
 
-Open **http://localhost:4000** for the landing page. Click **Get started**
-to create an account, which drops you into the dashboard at
-`/dashboard.html`. Every mailbox and number you create is tied to that
-account.
+Open **http://localhost:4000** for the landing page. Click **Create an
+account**, which drops you into the dashboard at `/dashboard`. Every
+mailbox and number you create is tied to that account.
+
+**`server/public` is build output, not source — it's gitignored.** A
+fresh clone has nothing there until `npm run build` runs once. Railway
+runs this automatically (see `server/package.json`'s `build` script)
+before every deploy, so production always has a fresh build; locally,
+re-run `npm run build` after any change under `frontend/src`, or work
+directly in `frontend/` with `npm run dev` (Vite's dev server, faster
+iteration, but talks to the API at whatever `server/` is running on —
+see `frontend/README.md`).
 
 ## Adding your real API keys — do this yourself, not in a chat
 
@@ -77,20 +91,29 @@ and nobody rebuilds them from zero for a new SaaS.
 ## Architecture
 
 ```
+frontend/                 React (Vite) — builds into server/public
+  src/pages/               Landing, Login, Dashboard (7 panels), Webmail
+  src/lib/                 api.js / webmailApi.js — the two independent
+                            auth systems (account vs mailbox), plus their
+                            authedFetch hooks
+  src/styles/               ported design system (same tokens/classes the
+                            original vanilla site used)
 server/
-  server.js              Express app, mounts routes, health check
+  server.js              Express app, mounts routes, health check, SPA
+                          fallback (serves index.html for any non-/api
+                          path so React Router handles client routing)
   db.js                  JSON-file persistence (users, mailboxes, numbers)
-  middleware/auth.js     JWT verification, attaches req.user
+  middleware/auth.js     JWT verification (account sessions), attaches req.user
+  middleware/mailboxAuth.js  JWT verification (mailbox/webmail sessions)
   routes/auth.js         POST /signup, /login, GET /me
   routes/mailboxes.js    CRUD over Mailgun routes, scoped to req.user
+  routes/webmail.js      Mailbox-scoped inbox: login, folders, send, star
   routes/numbers.js      CRUD over Twilio numbers, scoped to req.user
   data/db.json           created on first run — your actual data lives here
-public/
-  index.html             marketing/landing page
-  login.html             combined login + signup form
-  dashboard.html         the panel itself (requires a session)
-  auth.js                shared frontend session helper (authedFetch, etc.)
-  app.js                 dashboard behaviour: create/list/delete mailboxes & numbers
+  public/                BUILD OUTPUT ONLY — gitignored, not source. See
+                          "Run it locally" above; `npm run build` (which
+                          Railway also runs automatically) generates this
+                          from frontend/. Never hand-edit anything in here.
 ```
 
 Every `/api/mailboxes/*` and `/api/numbers/*` route requires a bearer token
@@ -144,8 +167,9 @@ This starter now does both send and receive for real:
   development, not for real mail volume. See the database section above.
 
 What used to be missing here — a real "type in your email and password and
-log in" experience — now exists, just not as IMAP. `public/webmail-login.html`
-and `public/webmail.html` are a genuinely separate webmail product: a
+log in" experience — now exists, just not as IMAP. `/webmail-login` and
+`/webmail` (React pages, `frontend/src/pages/webmail/`) are a genuinely
+separate webmail product: a
 mailbox owner logs in with their own email + a mailbox-specific password
 (generated once at mailbox creation, shown once, resettable by the Altegic
 account that owns the mailbox), completely independent from the Altegic
