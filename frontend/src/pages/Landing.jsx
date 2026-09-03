@@ -332,7 +332,7 @@ export default function Landing() {
             <ul>
               <li><Link to="/login">Log in</Link></li>
               <li><Link to="/login">Create an account</Link></li>
-              <li><a href="/webmail-login.html">Webmail</a></li>
+              <li><Link to="/webmail-login">Webmail</Link></li>
             </ul>
           </div>
         </div>

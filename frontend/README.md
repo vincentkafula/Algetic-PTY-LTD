@@ -34,19 +34,30 @@ converted incrementally, rather than one giant unverified rewrite.**
   assignment — the largest single panel), Domains (search → quote
   with agreement checkboxes → register, + DNS records), Website/
   software/internet request tracker, and the MVNO demo dashboard
+- **Webmail — login page and full inbox**, the separate mailbox-owner
+  product with its own independent session system (`src/lib/
+  webmailApi.js`, distinct localStorage keys from the account system —
+  confirmed both key sets present and distinct in the compiled bundle).
+  Login page includes the illustration mockup and show/hide password
+  (React state, not DOM manipulation). Inbox has all five folders,
+  starring (independent of folder), read view, reply, move to spam/
+  trash, permanent delete, and compose — all view-switching done via
+  React state instead of the original's show/hide DOM panels.
+
+**All frontend page conversion is now complete** — every page from the
+original vanilla site has a React equivalent, all five routes wired up
+in `App.jsx`.
 
 **Verified for real:** `npm run build` succeeds with zero errors across
-all three routes (`/`, `/login`, `/dashboard`); every one of the ~40
-distinct API endpoint calls in the original `app.js` was cross-checked
-line-by-line against the React source and confirmed present with correct
-parameterization — full 1:1 API coverage, not just "it builds." All
-three routes confirmed to serve the correct app shell via Vite preview.
-**Not verified:** actual in-browser rendering/click-through — no
-headless browser available in the development sandbox.
-
-**NOT started yet:**
-- `/webmail-login` and `/webmail` — the separate mailbox-owner login and
-  inbox product
+all five routes (`/`, `/login`, `/dashboard`, `/webmail-login`,
+`/webmail`); every API endpoint across both the dashboard (~40 calls)
+and webmail (4 calls) was cross-checked line-by-line against the
+original vanilla JS and confirmed present with correct parameterization
+— full 1:1 API coverage, not just "it builds." All five routes confirmed
+to serve the correct app shell via Vite preview. **Not verified:**
+actual in-browser rendering/click-through — no headless browser
+available in the development sandbox, stated plainly rather than
+assumed working.
 
 ## Deployment — deliberately NOT wired up yet
 

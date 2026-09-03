@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/dashboard/Dashboard.jsx';
+import WebmailLogin from './pages/webmail/WebmailLogin.jsx';
+import WebmailInbox from './pages/webmail/WebmailInbox.jsx';
 
 export default function App() {
   return (
@@ -9,8 +11,8 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      {/* /webmail-login, /webmail are the next phase of this conversion —
-          not wired up yet, see README/conversation notes. */}
+      <Route path="/webmail-login" element={<WebmailLogin />} />
+      <Route path="/webmail" element={<WebmailInbox />} />
     </Routes>
   );
 }

@@ -227,7 +227,7 @@ function CreateResultView({ result }) {
               <div className="row"><span>Port</span><span className="value">{data.smtp.port} ({data.smtp.security})</span></div>
             </>
           )}
-          <div className="row"><span>Webmail login</span><span className="value">{window.location.origin}/webmail-login.html</span></div>
+          <div className="row"><span>Webmail login</span><span className="value">{window.location.origin}/webmail-login</span></div>
           <div className="row"><span>{result.isReset ? 'New webmail password' : 'Webmail password'}</span><span className="value">{data.webmailPassword}</span></div>
         </div>
         <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 8 }}>{data.webmailPasswordNote}</p>
