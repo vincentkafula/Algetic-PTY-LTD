@@ -27,21 +27,24 @@ converted incrementally, rather than one giant unverified rewrite.**
   team, and footer — built data-driven (arrays mapped to JSX) for the
   repetitive card grids rather than hand-transcribed markup, to reduce
   transcription errors across ~300 lines of near-identical structure
+- **The full Dashboard — all seven panels**, each a real React
+  component with its own state (not one giant file): Mailboxes
+  (+ per-mailbox messages/compose), Phone numbers (+ SIP trunk),
+  Private SIP network, Call Centre (menus/queues/agents/number
+  assignment — the largest single panel), Domains (search → quote
+  with agreement checkboxes → register, + DNS records), Website/
+  software/internet request tracker, and the MVNO demo dashboard
 
-**Verified for real:** `npm run build` succeeds with zero errors; both
-`/` and `/login` correctly serve the app shell (confirmed via Vite
-preview's SPA fallback); the compiled JS bundle was checked to contain
-the exact correct API endpoint strings (`/api/auth/login`,
-`/api/auth/signup`) matching the backend routes already tested
-extensively elsewhere in this project. **Not verified:** actual
-in-browser rendering/click-through — no headless browser is available in
-the development sandbox, so this needs a real browser check before
-trusting it fully.
+**Verified for real:** `npm run build` succeeds with zero errors across
+all three routes (`/`, `/login`, `/dashboard`); every one of the ~40
+distinct API endpoint calls in the original `app.js` was cross-checked
+line-by-line against the React source and confirmed present with correct
+parameterization — full 1:1 API coverage, not just "it builds." All
+three routes confirmed to serve the correct app shell via Vite preview.
+**Not verified:** actual in-browser rendering/click-through — no
+headless browser available in the development sandbox.
 
 **NOT started yet:**
-- `/dashboard` — the seven-panel authenticated app (Mailboxes, Phone
-  numbers, Private SIP network, Call centre, Domains, Website/software/
-  internet requests, MVNO demo) — by far the largest remaining piece
 - `/webmail-login` and `/webmail` — the separate mailbox-owner login and
   inbox product
 
