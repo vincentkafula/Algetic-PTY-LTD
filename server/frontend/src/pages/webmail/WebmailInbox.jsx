@@ -148,7 +148,7 @@ export default function WebmailInbox() {
     <div className="wm-app">
       <div className="wm-sidebar">
         <div className="wm-brand">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--mail)" strokeWidth="1.8"><path d="M12 2.5l7.5 3.2v5.1c0 4.6-3.2 8.4-7.5 9.7-4.3-1.3-7.5-5.1-7.5-9.7V5.7L12 2.5z" /></svg>
+          <img src="/logo-icon.png" alt="Altegic" style={{ height: 16, width: 'auto' }} />
           Altegic Mail
         </div>
         <button className="wm-compose-btn" onClick={openCompose}>✎ Compose</button>

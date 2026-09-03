@@ -94,10 +94,7 @@ export default function Landing() {
       <header className="nav">
         <div className="wrap nav-inner">
           <div className="brand">
-            <svg width="26" height="26" viewBox="0 0 24 24" className="icon" style={{ color: 'var(--blue)' }}>
-              <path d="M12 2.5l7.5 3.2v5.1c0 4.6-3.2 8.4-7.5 9.7-4.3-1.3-7.5-5.1-7.5-9.7V5.7L12 2.5z" />
-              <path d="M9 12l2 2 4-4.5" stroke="var(--amber)" />
-            </svg>
+            <img src="/logo-icon.png" alt="Altegic" style={{ height: 22, width: 'auto' }} />
             Altegic
           </div>
           <nav className="links">
@@ -299,7 +296,7 @@ export default function Landing() {
         <div className="wrap foot-grid">
           <div className="foot-about">
             <div className="brand">
-              <svg width="24" height="24" viewBox="0 0 24 24" className="icon" style={{ color: 'var(--blue)' }}><path d="M12 2.5l7.5 3.2v5.1c0 4.6-3.2 8.4-7.5 9.7-4.3-1.3-7.5-5.1-7.5-9.7V5.7L12 2.5z" /></svg>
+              <img src="/logo-icon.png" alt="Altegic" style={{ height: 20, width: 'auto' }} />
               Altegic
             </div>
             <p>Business email, phone, domains, and website help — everything your business needs to communicate, in one account.</p>

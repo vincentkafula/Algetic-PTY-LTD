@@ -17,9 +17,7 @@ export default function Login() {
     <>
       <div className="nav">
         <div className="brand">
-          <svg width="20" height="20" viewBox="0 0 24 24" style={{ color: 'var(--mail)', stroke: 'currentColor', fill: 'none', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-            <path d="M12 2.5l7.5 3.2v5.1c0 4.6-3.2 8.4-7.5 9.7-4.3-1.3-7.5-5.1-7.5-9.7V5.7L12 2.5z" />
-          </svg>{' '}
+          <img src="/logo-icon.png" alt="Altegic" style={{ height: 18, width: 'auto', marginRight: 6 }} />
           Altegic
         </div>
         <div className="links">

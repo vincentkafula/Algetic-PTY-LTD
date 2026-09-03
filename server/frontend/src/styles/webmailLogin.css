@@ -86,10 +86,10 @@
   }
   .wm-card { width: 100%; max-width: 380px; }
   .wm-logo {
-    width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 20px;
-    background: linear-gradient(135deg, var(--mail), var(--platform));
+    width: auto; height: 52px; margin: 0 auto 16px;
     display: flex; align-items: center; justify-content: center;
   }
+  .wm-logo img { height: 100%; width: auto; }
   .wm-card h1 {
     font-family: 'Space Grotesk', sans-serif;
     text-align: center; font-size: 25px; margin: 0 0 6px;
