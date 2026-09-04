@@ -37,10 +37,19 @@ export default function VoicePanel({ authedFetch }) {
     setSearchResults(null);
     setSearchError(null);
     setProvisionResult(null);
+
+    const trimmedAreaCode = areaCode.trim();
+    if (trimmedAreaCode && !/^\d{2,4}$/.test(trimmedAreaCode)) {
+      setSearchError(
+        `"${trimmedAreaCode}" doesn't look like an area code. An area code is the local code within a country — e.g. 415 for San Francisco — not the country code (that's already set by the Country dropdown above). Leave this blank to search the whole country.`
+      );
+      return;
+    }
+
     setSearchResults('loading');
     try {
       const qs = new URLSearchParams({ country });
-      if (areaCode.trim()) qs.set('areaCode', areaCode.trim());
+      if (trimmedAreaCode) qs.set('areaCode', trimmedAreaCode);
       const res = await authedFetch(`/api/numbers/search?${qs}`);
       const data = await res.json();
       if (!res.ok) { setSearchError(data.error); setSearchResults(null); return; }
@@ -131,9 +140,14 @@ export default function VoicePanel({ authedFetch }) {
             <option value="ZM">Zambia</option>
             <option value="CN" disabled>China — not available (see note below)</option>
           </select>
-          <input value={areaCode} onChange={(e) => setAreaCode(e.target.value)} placeholder="area code, e.g. 415 (optional)" />
+          <input value={areaCode} onChange={(e) => setAreaCode(e.target.value)} placeholder="local area code, e.g. 415 — not the +1 country code" />
           <button className="primary voice" onClick={searchNumbers}>Search</button>
         </div>
+        <p className="hint" style={{ color: 'var(--muted)', fontSize: 12, margin: '4px 0 16px' }}>
+          The Country dropdown above already covers the country code — this
+          field is just the local area code (e.g. 415), and can be left
+          blank to search the whole country.
+        </p>
 
         {searchResults === 'loading' && <p style={{ color: 'var(--muted)' }}>Searching…</p>}
         {searchError && <p style={{ color: 'var(--danger)' }}>{searchError}</p>}
