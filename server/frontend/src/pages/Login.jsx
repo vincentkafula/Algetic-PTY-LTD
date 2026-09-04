@@ -17,8 +17,7 @@ export default function Login() {
     <>
       <div className="nav">
         <div className="brand">
-          <img src="/logo-icon.png" alt="Altegic" style={{ height: 18, width: 'auto', marginRight: 6 }} />
-          Altegic
+          <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 38, width: 'auto', display: 'block' }} />
         </div>
         <div className="links">
           <Link to="/">Home</Link>

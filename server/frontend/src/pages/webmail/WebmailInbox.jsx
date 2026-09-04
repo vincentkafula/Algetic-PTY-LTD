@@ -147,9 +147,9 @@ export default function WebmailInbox() {
   return (
     <div className="wm-app">
       <div className="wm-sidebar">
-        <div className="wm-brand">
-          <img src="/logo-icon.png" alt="Altegic" style={{ height: 16, width: 'auto' }} />
-          Altegic Mail
+        <div className="wm-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <img src="/logo-full.png" alt="Altegic Solutions" style={{ width: 150, height: 'auto', display: 'block' }} />
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Webmail</span>
         </div>
         <button className="wm-compose-btn" onClick={openCompose}>✎ Compose</button>
         {FOLDERS.map((f) => (

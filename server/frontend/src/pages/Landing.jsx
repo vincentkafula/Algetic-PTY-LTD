@@ -100,7 +100,7 @@ export default function Landing() {
       <header className="nav">
         <div className="wrap nav-inner">
           <div className="brand">
-            <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 52, width: 'auto' }} />
+            <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 52, width: 'auto', display: 'block' }} />
           </div>
           <nav className="links">
             <a href="#home">HOME</a>
@@ -301,7 +301,7 @@ export default function Landing() {
         <div className="wrap foot-grid">
           <div className="foot-about">
             <div className="brand">
-              <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 44, width: 'auto' }} />
+              <img src="/logo-full.png" alt="Altegic Solutions" style={{ height: 44, width: 'auto', display: 'block' }} />
             </div>
             <p className="foot-tagline">Powering Communication, Empowering Connections.</p>
             <p>Altegic helps small businesses set up business email, phone, domains, and more — all from one account, without the vendor sprawl.</p>

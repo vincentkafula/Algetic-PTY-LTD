@@ -84,7 +84,7 @@ export default function WebmailLogin() {
       <div className="wm-form-side">
         <div className="wm-card">
           <div className="wm-logo">
-            <img src="/logo-icon.png" alt="Altegic" />
+            <img src="/logo-full.png" alt="Altegic Solutions" />
           </div>
           <div style={{ textAlign: 'center', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, color: 'var(--muted)', marginBottom: 4 }}>Altegic Webmail</div>
           <h1>Welcome Back</h1>

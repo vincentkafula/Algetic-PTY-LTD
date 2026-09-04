@@ -48,9 +48,8 @@ export default function Dashboard() {
   return (
     <div className="app-shell">
       <div className="sidebar">
-        <div className="brand">
-          <img src="/logo-icon.png" alt="Altegic" style={{ height: 16, width: 'auto', verticalAlign: '-3px', marginRight: 6 }} />
-          Altegic
+        <div className="brand" style={{ padding: '0 0 20px' }}>
+          <img src="/logo-full.png" alt="Altegic Solutions" style={{ width: 160, height: 'auto', display: 'block' }} />
         </div>
         <nav>
           {NAV_ITEMS.map((item) => (
