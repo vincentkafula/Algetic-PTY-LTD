@@ -8,6 +8,7 @@ import { useRequireAuth, useAuthedFetch } from '@/lib/useAuthedFetch';
 import MailboxesPanel from '@/components/dashboard/MailboxesPanel';
 import VoicePanel from '@/components/dashboard/VoicePanel';
 import TeamCallingPanel from '@/components/dashboard/TeamCallingPanel';
+import CallCentrePanel from '@/components/dashboard/CallCentrePanel';
 
 // ---------------------------------------------------------------------------
 // Ported from server/frontend/src/pages/dashboard/Dashboard.jsx. Same
@@ -101,7 +102,7 @@ export default function DashboardPage() {
         {view === 'mail' && <MailboxesPanel authedFetch={authedFetch} />}
         {view === 'voice' && <VoicePanel authedFetch={authedFetch} />}
         {view === 'sipnet' && <TeamCallingPanel authedFetch={authedFetch} health={health} />}
-        {view === 'callcentre' && <ComingSoon label="Call centre" />}
+        {view === 'callcentre' && <CallCentrePanel authedFetch={authedFetch} health={health} />}
         {view === 'mvno' && <ComingSoon label="MVNO (demo)" />}
         {view === 'domains' && <ComingSoon label="Domains" />}
         {view === 'projects' && <ComingSoon label="Website, software & more" />}
