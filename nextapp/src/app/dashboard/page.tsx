@@ -6,6 +6,7 @@ import '@/styles/dashboard.css';
 import { getStoredUser, clearSession } from '@/lib/clientAuth';
 import { useRequireAuth, useAuthedFetch } from '@/lib/useAuthedFetch';
 import MailboxesPanel from '@/components/dashboard/MailboxesPanel';
+import VoicePanel from '@/components/dashboard/VoicePanel';
 
 // ---------------------------------------------------------------------------
 // Ported from server/frontend/src/pages/dashboard/Dashboard.jsx. Same
@@ -97,7 +98,7 @@ export default function DashboardPage() {
         <HealthBanner health={health} />
 
         {view === 'mail' && <MailboxesPanel authedFetch={authedFetch} />}
-        {view === 'voice' && <ComingSoon label="Phone numbers" />}
+        {view === 'voice' && <VoicePanel authedFetch={authedFetch} />}
         {view === 'sipnet' && <ComingSoon label="Team calling" />}
         {view === 'callcentre' && <ComingSoon label="Call centre" />}
         {view === 'mvno' && <ComingSoon label="MVNO (demo)" />}
