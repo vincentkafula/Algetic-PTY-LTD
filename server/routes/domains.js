@@ -1,23 +1,29 @@
 const express = require('express');
 const fetch = require('node-fetch');
-const crypto = require('crypto');
 const router = express.Router();
 
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('../godaddyClient');
+const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader, getGoDaddyQuote } = require('../godaddyClient');
+const pricing = require('../services/pricing');
+const { createOrderWithCheckout } = require('../services/orders');
 
 // ---------------------------------------------------------------------------
-// Domain registration via GoDaddy's v3 "quote-execute" API. Scoped per
-// Altegic account, same as mailboxes/numbers.
+// Domain registration via GoDaddy's v3 "quote-execute" API, now gated
+// behind real customer payment (see services/orders.js, services/payfast.js).
+// Scoped per Altegic account, same as mailboxes/numbers.
 //
-// IMPORTANT: registering a domain charges GoDaddy's payment profile on
-// this account and is NOT reversible (GoDaddy's own words, in their
-// developer docs). This is why the flow is deliberately three separate
-// steps rather than one — search, quote, register — with the frontend
-// required to show the price and any required agreements and capture an
-// explicit confirmation before the register step is ever called. There is
-// no "just register it" shortcut route, on purpose.
+// FLOW: search (free, no charge) -> quote (shows the customer's real ZAR
+// price, already converted + marked up — never GoDaddy's raw USD price)
+// -> register (creates a payment order + PayFast checkout; does NOT
+// register anything itself). The actual GoDaddy registration call only
+// happens in routes/paymentWebhooks.js, once PayFast confirms payment —
+// and even then, against a freshly-fetched GoDaddy quote at that moment,
+// not whichever one was shown to the customer earlier. Registering a
+// domain charges Altegic's own GoDaddy payment profile and is NOT
+// reversible (GoDaddy's own words, in their developer docs) — this is
+// why every price used to actually register is fetched fresh, never
+// trusted from an earlier step or from the client.
 // ---------------------------------------------------------------------------
 
 router.use(requireAuth);
@@ -83,78 +89,73 @@ router.get('/suggestions', async (req, res) => {
  * POST /register with this token. This route itself makes no charge and
  * commits to nothing.
  */
+/**
+ * POST /api/domains/quote
+ * body: { domain, period }
+ * Returns what the CUSTOMER would pay — already converted to ZAR and
+ * marked up — never GoDaddy's raw USD price. Deliberately does not
+ * return a quoteToken to the frontend either: the actual order-creation
+ * step below fetches its own fresh quote right before charging anyone,
+ * rather than reusing one that could be stale by then. This endpoint
+ * exists purely to show a price and the required agreements up front.
+ */
 router.post('/quote', async (req, res) => {
   if (!assertConfigured(res)) return;
   const { domain, period } = req.body || {};
   if (!domain) return res.status(400).json({ error: 'domain is required' });
 
   try {
-    const response = await fetch(`${GODADDY_BASE_URL}/domains/registration-quotes`, {
-      method: 'POST',
-      headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ domain, period: period || 1 })
+    const quote = await getGoDaddyQuote(domain, period || 1);
+    const price = await pricing.priceForCustomer(quote.price.value);
+    res.json({
+      domain,
+      period: period || 1,
+      customerPriceCents: price.customerZarCents,
+      customerPriceFormatted: pricing.formatZarCents(price.customerZarCents),
+      expiresAt: quote.expiresAt,
+      requiredAgreements: quote.requiredAgreements || quote.agreements || []
     });
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.message || 'GoDaddy error', data });
-    res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message, data: err.data });
   }
 });
 
 /**
  * POST /api/domains/register
- * body: { quoteToken, domain, period, agreedAgreementTypes }
- * Executes the registration — this is the step that actually charges
- * money and cannot be undone. agreedAgreementTypes must be a non-empty
- * array; this route refuses to proceed without it, as a server-side
- * backstop against a frontend bug skipping the consent step.
+ * body: { domain, period, agreedAgreementTypes }
+ * Does NOT register anything directly anymore — creates a payment order
+ * and returns PayFast checkout details. The actual GoDaddy registration
+ * happens in routes/paymentWebhooks.js once payment is confirmed, using
+ * a freshly-fetched quote at that point (not whatever was quoted here).
+ *
+ * Still refetches its own quote here too, rather than trusting a price
+ * the client might supply — a client-supplied baseUsdCents would let
+ * someone tamper with what they're charged while still receiving a
+ * domain worth more. This is the ONLY price this endpoint trusts: what
+ * GoDaddy itself says, fetched server-side, right now.
  */
 router.post('/register', async (req, res) => {
   if (!assertConfigured(res)) return;
-  const { quoteToken, domain, period, agreedAgreementTypes } = req.body || {};
-  if (!quoteToken || !domain) return res.status(400).json({ error: 'quoteToken and domain are required' });
+  const { domain, period, agreedAgreementTypes } = req.body || {};
+  if (!domain) return res.status(400).json({ error: 'domain is required' });
   if (!Array.isArray(agreedAgreementTypes) || agreedAgreementTypes.length === 0) {
-    return res.status(400).json({ error: 'agreedAgreementTypes must list every agreement the customer confirmed — registration was not attempted' });
+    return res.status(400).json({ error: 'agreedAgreementTypes must list every agreement the customer confirmed — no order was created' });
   }
 
-  const idempotencyKey = crypto.randomUUID();
-
   try {
-    const response = await fetch(`${GODADDY_BASE_URL}/domains/registrations`, {
-      method: 'POST',
-      headers: {
-        Authorization: authHeader(),
-        'Content-Type': 'application/json',
-        'Idempotency-Key': idempotencyKey
-      },
-      body: JSON.stringify({
-        quoteToken,
-        domain,
-        period: period || 1,
-        consent: {
-          agreedAt: new Date().toISOString(),
-          agreementTypes: agreedAgreementTypes
-        }
-      })
-    });
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.message || 'GoDaddy error', data });
-
-    const record = {
-      id: crypto.randomUUID(),
+    const quote = await getGoDaddyQuote(domain, period || 1);
+    const result = await createOrderWithCheckout({
       ownerId: req.user.id,
-      domain,
-      status: data.status || 'PENDING',
-      godaddyRegistrationId: data.registrationId || data.id || null,
-      godaddyPollUrl: data.operationUrl || data.pollUrl || null,
-      period: period || 1,
-      registeredAt: new Date().toISOString()
-    };
-    await db.domains.insert(record);
-    res.status(202).json(record);
+      ownerEmail: req.user.email,
+      fulfillmentType: 'domain',
+      fulfillmentData: { domain, period: period || 1, agreedAgreementTypes },
+      baseUsdCents: quote.price.value,
+      itemName: domain,
+      itemDescription: `Domain registration: ${domain}`
+    });
+    res.status(201).json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message, data: err.data });
   }
 });
 

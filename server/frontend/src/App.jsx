@@ -5,6 +5,8 @@ import Login from './pages/Login.jsx';
 import Dashboard from './pages/dashboard/Dashboard.jsx';
 import WebmailLogin from './pages/webmail/WebmailLogin.jsx';
 import WebmailInbox from './pages/webmail/WebmailInbox.jsx';
+import CheckoutReturn from './pages/checkout/CheckoutReturn.jsx';
+import CheckoutCancel from './pages/checkout/CheckoutCancel.jsx';
 import './styles/global.css';
 
 function NotFound() {
@@ -25,6 +27,8 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/webmail-login" element={<WebmailLogin />} />
       <Route path="/webmail" element={<WebmailInbox />} />
+      <Route path="/checkout/return" element={<CheckoutReturn />} />
+      <Route path="/checkout/cancel" element={<CheckoutCancel />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

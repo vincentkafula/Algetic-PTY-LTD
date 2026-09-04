@@ -1,25 +1,21 @@
 const express = require('express');
-const crypto = require('crypto');
 const router = express.Router();
 
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { PUBLIC_BASE_URL } = require('../mailgunClient');
-const pricing = require('../services/pricing');
-const payfast = require('../services/payfast');
+const { createOrderWithCheckout } = require('../services/orders');
 
 // ---------------------------------------------------------------------------
 // Generic order + checkout creation, shared by every paid service (domain
-// registration, number provisioning, mailbox creation). Each service is
-// responsible for calling POST /orders with its own real USD cost and a
-// `fulfillmentType` + `fulfillmentData` describing what to actually
-// provision once payment clears — the ITN webhook handler (routes/
-// paymentWebhooks.js) reads that back out to know what to do.
+// registration, number provisioning, mailbox creation). The actual
+// pricing/order/PayFast logic lives in services/orders.js — this file is
+// thin HTTP glue. Domain registration calls that same shared function
+// directly (see routes/domains.js) rather than round-tripping through
+// this endpoint, since it needs an extra step first (a fresh GoDaddy
+// quote, fetched server-side rather than trusted from the client).
 //
 // The customer never sees baseUsdCents, the exchange rate, or the markup
-// percentage individually — only the final ZAR price. That breakdown is
-// stored on the order for this app's own records/support use, not shown
-// to the customer through the API responses below by default.
+// percentage individually — only the final ZAR price.
 // ---------------------------------------------------------------------------
 
 router.use(requireAuth);
@@ -27,64 +23,27 @@ router.use(requireAuth);
 /**
  * POST /api/payments/orders
  * body: { fulfillmentType, fulfillmentData, baseUsdCents, itemName, itemDescription }
- * Creates a pending order priced in ZAR (converted + marked up from the
- * provider's real USD cost) and returns everything needed to render a
- * PayFast checkout form.
  */
 router.post('/orders', async (req, res) => {
   const { fulfillmentType, fulfillmentData, baseUsdCents, itemName, itemDescription } = req.body || {};
   if (!fulfillmentType || !itemName || typeof baseUsdCents !== 'number') {
     return res.status(400).json({ error: 'fulfillmentType, itemName, and baseUsdCents are required' });
   }
-  if (!payfast.isConfigured()) {
-    return res.status(500).json({ error: 'Payments are not configured on this server yet' });
-  }
-  if (!PUBLIC_BASE_URL) {
-    return res.status(500).json({ error: 'Server is missing PUBLIC_BASE_URL — required for PayFast to reach this server' });
-  }
 
-  let price;
   try {
-    price = await pricing.priceForCustomer(baseUsdCents);
+    const result = await createOrderWithCheckout({
+      ownerId: req.user.id,
+      ownerEmail: req.user.email,
+      fulfillmentType,
+      fulfillmentData,
+      baseUsdCents,
+      itemName,
+      itemDescription
+    });
+    res.status(201).json(result);
   } catch (err) {
-    return res.status(502).json({ error: `Could not price this order: ${err.message}` });
+    res.status(err.status || 502).json({ error: err.message });
   }
-
-  const order = {
-    id: crypto.randomUUID(),
-    ownerId: req.user.id,
-    status: 'pending', // pending -> paid -> fulfilled, or failed/fulfillment_failed
-    fulfillmentType, // 'domain' | 'number' | 'mailbox'
-    fulfillmentData: fulfillmentData || {},
-    itemName,
-    itemDescription: itemDescription || '',
-    baseUsdCents: price.baseUsdCents,
-    exchangeRate: price.exchangeRate,
-    markupPercent: price.markupPercent,
-    customerZarCents: price.customerZarCents,
-    payfastPaymentId: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  await db.orders.insert(order);
-
-  const checkoutFields = payfast.buildCheckoutFields({
-    orderId: order.id,
-    amountZarCents: order.customerZarCents,
-    itemName: order.itemName,
-    itemDescription: order.itemDescription,
-    returnUrl: `${PUBLIC_BASE_URL}/checkout/return?order=${order.id}`,
-    cancelUrl: `${PUBLIC_BASE_URL}/checkout/cancel?order=${order.id}`,
-    notifyUrl: `${PUBLIC_BASE_URL}/api/webhooks/payfast/notify`,
-    email: req.user.email
-  });
-
-  res.status(201).json({
-    orderId: order.id,
-    amount: checkoutFields.amount,
-    payfastUrl: payfast.PROCESS_URL,
-    checkoutFields
-  });
 });
 
 /**
@@ -114,3 +73,4 @@ router.get('/orders', (req, res) => {
 });
 
 module.exports = router;
+

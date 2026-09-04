@@ -1,5 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 
+/**
+ * Builds a hidden HTML form from PayFast's checkout fields and submits
+ * it, redirecting the browser to PayFast's hosted checkout page. This is
+ * PayFast's documented integration pattern — a real form POST, not an
+ * API call — so the browser actually navigates there.
+ */
+function redirectToPayfastCheckout(payfastUrl, checkoutFields) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = payfastUrl;
+  for (const [key, value] of Object.entries(checkoutFields)) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
+
 export default function DomainsPanel({ authedFetch, health }) {
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState(null);
@@ -57,7 +78,7 @@ export default function DomainsPanel({ authedFetch, health }) {
       const data = await res.json();
       if (!res.ok) { setSearchResult({ error: data.error }); return; }
       if (!data.available) { setSearchResult({ unavailable: true, domain: trimmed }); return; }
-      setSearchResult({ available: true, domain: trimmed, prices: data.prices });
+      setSearchResult({ available: true, domain: trimmed });
     } catch (err) {
       setSearchResult({ error: err.message });
     }
@@ -78,28 +99,26 @@ export default function DomainsPanel({ authedFetch, health }) {
     } catch (err) {
       setQuote({ error: err.message });
     }
-  }
-
-  async function confirmDomainRegister() {
+  }  async function confirmDomainRegister() {
     const requiredTypes = (quote.data.requiredAgreements || []).map((a) => a.agreementType);
     const uncheckedExists = requiredTypes.some((t) => !agreed[t]);
     if (uncheckedExists) {
-      alert('Please agree to every listed agreement before registering.');
+      alert('Please agree to every listed agreement before continuing.');
       return;
     }
-    if (!confirm(`Register ${quote.domain} now? This charges your GoDaddy account and cannot be undone.`)) return;
+    if (!confirm(`Continue to payment for ${quote.domain}? You'll be redirected to complete checkout.`)) return;
 
     setRegisterResult({ loading: true });
     try {
       const res = await authedFetch('/api/domains/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: quote.domain, quoteToken: quote.data.quoteToken, period: 1, agreedAgreementTypes: requiredTypes })
+        body: JSON.stringify({ domain: quote.domain, period: 1, agreedAgreementTypes: requiredTypes })
       });
       const data = await res.json();
       if (!res.ok) { setRegisterResult({ error: data.error }); return; }
-      setRegisterResult({ success: `Registration submitted — status: ${data.status}.` });
-      loadDomains();
+      setRegisterResult({ redirecting: true });
+      redirectToPayfastCheckout(data.payfastUrl, data.checkoutFields);
     } catch (err) {
       setRegisterResult({ error: err.message });
     }
@@ -176,9 +195,7 @@ export default function DomainsPanel({ authedFetch, health }) {
             <div className="credential">
               <div className="row">
                 <span>{searchResult.domain}</span>
-                <span className="value">
-                  Available {searchResult.prices?.[0] ? `$${(searchResult.prices[0].price.value / 100).toFixed(2)}/${searchResult.prices[0].period}yr` : ''}
-                </span>
+                <span className="value">Available</span>
               </div>
             </div>
             <button className="primary" style={{ marginTop: 10 }} onClick={() => getDomainQuote(searchResult.domain)}>Get a price quote</button>
@@ -190,8 +207,7 @@ export default function DomainsPanel({ authedFetch, health }) {
         {quote?.data && (
           <>
             <div className="credential" style={{ marginTop: 10 }}>
-              <div className="row"><span>Locked price</span><span className="value">${(quote.data.price.value / 100).toFixed(2)}</span></div>
-              <div className="row"><span>Renewal price</span><span className="value">${(quote.data.renewalPrice.value / 100).toFixed(2)}/yr</span></div>
+              <div className="row"><span>Price</span><span className="value">{quote.data.customerPriceFormatted}</span></div>
               <div className="row"><span>Quote expires</span><span className="value">{new Date(quote.data.expiresAt).toLocaleTimeString()}</span></div>
             </div>
             {(quote.data.requiredAgreements || []).map((a) => (
@@ -205,12 +221,12 @@ export default function DomainsPanel({ authedFetch, health }) {
                 {a.url && <> (<a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--mail)' }}>read</a>)</>}
               </label>
             ))}
-            <button className="danger" style={{ marginTop: 10 }} onClick={confirmDomainRegister}>Register this domain now</button>
-            <p className="hint" style={{ color: 'var(--muted)', fontSize: 12, marginTop: 6 }}>This charges your connected GoDaddy account and cannot be undone.</p>
+            <button className="danger" style={{ marginTop: 10 }} onClick={confirmDomainRegister}>Continue to payment</button>
+            <p className="hint" style={{ color: 'var(--muted)', fontSize: 12, marginTop: 6 }}>You'll be redirected to complete payment securely.</p>
 
-            {registerResult?.loading && <p style={{ color: 'var(--muted)' }}>Registering…</p>}
+            {registerResult?.loading && <p style={{ color: 'var(--muted)' }}>Preparing checkout…</p>}
+            {registerResult?.redirecting && <p style={{ color: 'var(--muted)' }}>Redirecting to payment…</p>}
             {registerResult?.error && <p style={{ color: 'var(--danger)' }}>{registerResult.error}</p>}
-            {registerResult?.success && <p style={{ color: 'var(--mail)' }}>{registerResult.success}</p>}
           </>
         )}
       </div>

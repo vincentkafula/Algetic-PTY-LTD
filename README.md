@@ -366,36 +366,52 @@ produce stable numbers across repeated requests within the same day (so the
 dashboard doesn't visibly re-randomize on every page load, without needing
 to persist anything).
 
-## Domain registration (GoDaddy)
+## Domain registration (GoDaddy, gated behind real customer payment)
 
 `routes/domains.js` integrates GoDaddy's v3 "quote-execute" Domains API:
-search availability, get a locked price quote, then execute the
-registration. Scoped per Altegic account like mailboxes and numbers.
+search availability, get a real price (converted to ZAR and marked up —
+see "Customer billing" below), then create a payment order. Scoped per
+Altegic account like mailboxes and numbers.
 
-**Registering a domain charges the connected GoDaddy account's payment
-method and is not reversible** — this is GoDaddy's own characterization of
-the operation, not caution added here for effect. The flow is deliberately
-three separate steps (search → quote → register), never one:
+**Registering a domain charges Altegic's own GoDaddy payment method and
+is not reversible** — this is GoDaddy's own characterization of the
+operation, not caution added here for effect. That's exactly why the
+actual registration doesn't happen until PayFast confirms the customer
+has paid — search → quote (shows the customer's real ZAR price, never
+GoDaddy's raw USD price) → register (creates a payment order + PayFast
+checkout; registers nothing itself) → PayFast ITN webhook (only now does
+the real GoDaddy registration call happen, against a completely fresh
+quote fetched right at that moment — not whatever was quoted to the
+customer earlier, since a GoDaddy quoteToken is time-limited and an
+unknown amount of time may pass while the customer completes payment).
 
-- `POST /api/domains/register` **refuses to proceed** unless the request
-  includes `agreedAgreementTypes` as a non-empty array — a server-side
-  backstop against a frontend bug skipping the consent step, tested
-  directly (both a missing field and an empty array are rejected before
-  any network call to GoDaddy is made).
-- The dashboard shows the locked price, the renewal price, and every
-  agreement GoDaddy requires (with a checkbox per agreement) before the
-  "Register this domain now" button does anything, then asks for one more
-  explicit browser confirmation before submitting.
-- An `Idempotency-Key` header is sent on every registration attempt, so a
-  network retry can't double-charge.
+- `POST /api/domains/register` **refuses to create an order** unless the
+  request includes `agreedAgreementTypes` as a non-empty array — same
+  server-side backstop as before, still tested directly.
+- Every price actually used to charge GoDaddy is fetched fresh,
+  server-side, right before it's used — never trusted from the client
+  (closes a real tampering risk: a client that could supply its own
+  price could get a domain worth more than what it pays) and never
+  reused from an earlier, possibly-stale quote.
+- **The hard case, handled explicitly:** if GoDaddy's registration call
+  fails *after* the customer has already paid (an unlikely but real
+  possibility — the domain could be taken by someone else in the
+  interim, GoDaddy's API could be down), the order is marked
+  `fulfillment_failed`, not silently indistinguishable from a normal
+  completed order. This needs a human to notice and either retry or
+  refund — there is no automatic retry or refund built here.
+- An `Idempotency-Key` header is sent on the actual GoDaddy registration
+  call, so a retry can't double-charge Altegic's own GoDaddy account.
 
-**Verified for real:** the full request/response shape, auth enforcement,
-input validation, and — critically — the consent backstop were all tested
-against a running server. **Not verified:** an actual domain registration
-against a live GoDaddy account, since that means real, non-refundable
-money — there was no GoDaddy account available to test against during
-development. The search/quote endpoints (read-only, free, no account
-interaction) are the safe first things to try once `GODADDY_PAT` is set.
+**Verified for real:** input validation, the consent backstop, and the
+full order-creation flow up to (but not including) the actual external
+GoDaddy call — which correctly reaches the expected network boundary and
+fails cleanly rather than crashing, confirmed against a running server.
+**Not verified:** an actual domain registration against a live GoDaddy
+account (no GoDaddy account available during development) or an actual
+PayFast payment completing end-to-end (no PayFast merchant credentials
+available either) — see "Customer billing" below for what payment-side
+testing was possible without live credentials.
 
 ### DNS record management
 
@@ -418,6 +434,53 @@ to fix.
 **Verified for real:** the ownership check itself, and all input
 validation. **Not verified:** an actual DNS write against a live zone,
 same reason as registration above — no live account to test against.
+
+## Customer billing (PayFast + markup pricing)
+
+Customers pay Altegic directly — through PayFast, a South African payment
+gateway — rather than ever touching GoDaddy, Twilio, or Mailgun. Two
+services make this work, both in `server/services/`:
+
+- `exchangeRate.js` — USD → ZAR conversion via Frankfurter (ECB reference
+  rates, no API key). Rates update once per working day, not live
+  tick-by-tick — a reasonable tradeoff for retail pricing with a markup
+  already built in, but a real limitation if the Rand moves sharply
+  intraday. Throws rather than silently using a stale rate.
+- `pricing.js` — the one place markup math happens. Takes a provider's
+  real USD cost, returns the ZAR price the customer actually pays.
+  `MARKUP_PERCENT` in `.env` controls the margin (default 25%).
+- `payfast.js` + `orders.js` — checkout generation, MD5 signature
+  (independently hand-verified against PayFast's own documented
+  algorithm), ITN (Instant Transaction Notification) webhook handling,
+  and the order lifecycle: `pending` → `paid` → `fulfilled`, or
+  `failed`/`amount_mismatch`/`fulfillment_failed` along the way.
+
+**A real bug was found and fixed during testing, not just a sandbox
+quirk:** the PayFast source-IP verification did a DNS lookup with no
+timeout — in any environment where that lookup is slow or unresponsive
+(this app's own development sandbox included), it would hang the entire
+payment-confirmation pipeline indefinitely. Fixed with a bounded,
+parallel 2-second timeout. Source-IP checking itself is advisory, not
+the primary security control — PayFast's signature verification is what
+actually gates whether an ITN is trusted.
+
+**Verified for real, extensively, given the stakes:** exchange rate
+parsing/caching/error-handling against Frankfurter's confirmed real
+response shape; pricing math across default markup, custom markup,
+invalid input, and invalid config fallback; the PayFast signature
+algorithm independently hand-verified (not just self-consistent — checked
+against a separately-computed hash); the full ITN webhook lifecycle with
+real signed test payloads covering valid payment, tampered signature,
+tampered amount, failed payment status, and duplicate-notification
+idempotency — all confirmed to produce the correct order state.
+
+**Not verified, honestly: this could not be tested against PayFast's
+actual sandbox** — no live PayFast merchant credentials were available
+during development. Run real test transactions against PayFast's sandbox
+before trusting this with a single real customer; PayFast's signature
+algorithm specifically has caused real production payment failures for
+other developers over exactly this kind of untested detail.
+
 
 interaction) are the safe first things to try once `GODADDY_PAT` is set.
 
