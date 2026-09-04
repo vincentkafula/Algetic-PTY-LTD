@@ -5,6 +5,7 @@ const db = require('@/lib/db');
 const payfast = require('@/lib/services/payfast');
 const { getGoDaddyQuote, registerGoDaddyDomain } = require('@/lib/godaddyClient');
 const { provisionNumberForAccount } = require('@/lib/services/trunking');
+const { createMailboxForAccount } = require('@/lib/mailgunClient');
 
 // ---------------------------------------------------------------------------
 // Ported from server/routes/paymentWebhooks.js. PayFast's Instant
@@ -127,7 +128,7 @@ async function processItn(posted, remoteIp) {
       await fulfillNumberOrder(order);
       break;
     case 'mailbox':
-      console.log(`PayFast ITN: order ${order.id} paid, fulfillmentType "${order.fulfillmentType}" not wired to real provisioning yet in the Next.js version`);
+      await fulfillMailboxOrder(order);
       break;
     default:
       console.error('PayFast ITN: unknown fulfillmentType, cannot fulfill', { orderId, fulfillmentType: order.fulfillmentType });
@@ -208,6 +209,35 @@ async function fulfillNumberOrder(order) {
   } catch (err) {
     console.error('PayFast ITN: number provisioning FAILED after payment — needs manual follow-up', {
       orderId: order.id, phoneNumber, error: err.message
+    });
+    await db.orders.update((o) => o.id === order.id, {
+      status: 'fulfillment_failed',
+      fulfillmentError: err.message,
+      updatedAt: new Date().toISOString()
+    });
+  }
+}
+
+/**
+ * Actually creates the mailbox with Mailgun, now that payment has
+ * cleared. Note the webmail password createMailboxForAccount generates
+ * is effectively unused here — there's no synchronous response to a
+ * paying customer's browser at this point, since they've already been
+ * redirected to PayFast and back. The customer gets it via the
+ * dashboard's "Reset webmail password" action once their order shows as
+ * fulfilled, same resolution already used for numbers' SIP passwords.
+ */
+async function fulfillMailboxOrder(order) {
+  const { localPart, forwardTo } = order.fulfillmentData;
+  try {
+    await createMailboxForAccount(order.ownerId, localPart, forwardTo);
+    await db.orders.update((o) => o.id === order.id, {
+      status: 'fulfilled',
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('PayFast ITN: mailbox creation FAILED after payment — needs manual follow-up', {
+      orderId: order.id, localPart, error: err.message
     });
     await db.orders.update((o) => o.id === order.id, {
       status: 'fulfillment_failed',

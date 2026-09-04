@@ -5,6 +5,7 @@ import Link from 'next/link';
 import '@/styles/dashboard.css';
 import { getStoredUser, clearSession } from '@/lib/clientAuth';
 import { useRequireAuth, useAuthedFetch } from '@/lib/useAuthedFetch';
+import MailboxesPanel from '@/components/dashboard/MailboxesPanel';
 
 // ---------------------------------------------------------------------------
 // Ported from server/frontend/src/pages/dashboard/Dashboard.jsx. Same
@@ -95,7 +96,7 @@ export default function DashboardPage() {
 
         <HealthBanner health={health} />
 
-        {view === 'mail' && <ComingSoon label="Mailboxes" />}
+        {view === 'mail' && <MailboxesPanel authedFetch={authedFetch} />}
         {view === 'voice' && <ComingSoon label="Phone numbers" />}
         {view === 'sipnet' && <ComingSoon label="Team calling" />}
         {view === 'callcentre' && <ComingSoon label="Call centre" />}
