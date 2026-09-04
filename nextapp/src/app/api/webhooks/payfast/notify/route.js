@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 
+const crypto = require('crypto');
 const db = require('@/lib/db');
 const payfast = require('@/lib/services/payfast');
+const { getGoDaddyQuote, registerGoDaddyDomain } = require('@/lib/godaddyClient');
 
 // ---------------------------------------------------------------------------
 // Ported from server/routes/paymentWebhooks.js. PayFast's Instant
@@ -118,11 +120,66 @@ async function processItn(posted, remoteIp) {
   // service (domain/number/mailbox) is ported in a later phase.
   switch (order.fulfillmentType) {
     case 'domain':
+      await fulfillDomainOrder(order);
+      break;
     case 'number':
     case 'mailbox':
       console.log(`PayFast ITN: order ${order.id} paid, fulfillmentType "${order.fulfillmentType}" not wired to real provisioning yet in the Next.js version`);
       break;
     default:
       console.error('PayFast ITN: unknown fulfillmentType, cannot fulfill', { orderId, fulfillmentType: order.fulfillmentType });
+  }
+}
+
+/**
+ * Actually registers the domain with GoDaddy, now that payment has
+ * cleared. Fetches a completely fresh quote right here rather than
+ * reusing anything from checkout time — a GoDaddy quoteToken is
+ * time-limited, and an unknown amount of time may have passed while the
+ * customer completed payment.
+ *
+ * The hard case this handles explicitly: the customer has ALREADY PAID
+ * by the time this runs. If GoDaddy's registration call fails now, that
+ * money has still been taken with nothing delivered. Marked as a
+ * distinct 'fulfillment_failed' order status specifically so it's
+ * visible and actionable (refund or manual registration) rather than
+ * indistinguishable from a normal paid-and-done order.
+ */
+async function fulfillDomainOrder(order) {
+  const { domain, period, agreedAgreementTypes } = order.fulfillmentData;
+  try {
+    const quote = await getGoDaddyQuote(domain, period);
+    const registration = await registerGoDaddyDomain({
+      quoteToken: quote.quoteToken,
+      domain,
+      period,
+      agreedAgreementTypes
+    });
+
+    await db.domains.insert({
+      id: crypto.randomUUID(),
+      ownerId: order.ownerId,
+      domain,
+      status: registration.status || 'PENDING',
+      godaddyRegistrationId: registration.registrationId || registration.id || null,
+      godaddyPollUrl: registration.operationUrl || registration.pollUrl || null,
+      period,
+      registeredAt: new Date().toISOString(),
+      orderId: order.id
+    });
+
+    await db.orders.update((o) => o.id === order.id, {
+      status: 'fulfilled',
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('PayFast ITN: domain registration FAILED after payment — needs manual follow-up', {
+      orderId: order.id, domain, error: err.message
+    });
+    await db.orders.update((o) => o.id === order.id, {
+      status: 'fulfillment_failed',
+      fulfillmentError: err.message,
+      updatedAt: new Date().toISOString()
+    });
   }
 }
