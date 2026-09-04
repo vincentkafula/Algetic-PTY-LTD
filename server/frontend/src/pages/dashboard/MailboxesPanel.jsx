@@ -122,7 +122,7 @@ export default function MailboxesPanel({ authedFetch }) {
         <h2>Create a mailbox</h2>
         <div className="form-row">
           <input value={localPart} onChange={(e) => setLocalPart(e.target.value)} placeholder="local part, e.g. sales" />
-          <span style={{ alignSelf: 'center', color: 'var(--muted)' }}>@ your Mailgun domain</span>
+          <span style={{ alignSelf: 'center', color: 'var(--muted)' }}>@ your business domain</span>
         </div>
         <div className="form-row">
           <input value={forwardTo} onChange={(e) => setForwardTo(e.target.value)} placeholder="forward/store to (optional)" style={{ flex: 1, minWidth: 220 }} />

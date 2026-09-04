@@ -248,9 +248,9 @@ export default function CallCentrePanel({ authedFetch, health }) {
       </p>
 
       {health?.callCentreConfigured ? (
-        <div className="status-banner ok">Connected — Twilio and PUBLIC_BASE_URL are configured.</div>
+        <div className="status-banner ok">Connected and ready.</div>
       ) : (
-        <div className="status-banner warn">Not configured — set TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / PUBLIC_BASE_URL in server/.env.</div>
+        <div className="status-banner warn">Not configured yet — contact support to get this feature enabled on your account.</div>
       )}
 
       <div className="panel-box">

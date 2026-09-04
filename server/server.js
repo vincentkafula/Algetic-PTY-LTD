@@ -19,6 +19,7 @@ const paymentRoutes = require('./routes/payments');
 const paymentWebhookRoutes = require('./routes/paymentWebhooks');
 const { isMailgunConfigured, isInboundCaptureConfigured, PUBLIC_BASE_URL } = require('./mailgunClient');
 const { isConfigured: isPayfastConfigured } = require('./services/payfast');
+const { sanitizeErrorMiddleware } = require('./middleware/sanitizeError');
 const { isTwilioConfigured } = require('./twilioClient');
 const { isGoDaddyConfigured } = require('./godaddyClient');
 
@@ -36,6 +37,13 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
   next();
 });
+
+// Strips provider names (GoDaddy/Twilio/Mailgun) from any outgoing error
+// response before it reaches a customer's browser — see middleware/
+// sanitizeError.js for why this is a global wrapper rather than manually
+// rewriting error text at each of the ~20+ individual call sites that
+// forward a provider SDK's own error message.
+app.use(sanitizeErrorMiddleware);
 
 // API routes
 app.use('/api/auth', authRoutes);

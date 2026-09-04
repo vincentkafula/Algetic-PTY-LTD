@@ -148,16 +148,16 @@ export default function DomainsPanel({ authedFetch, health }) {
     <div>
       <h1>Domain registration</h1>
       <p className="subtitle">
-        Search, price, and register domains through GoDaddy. Registering a
-        domain charges the connected GoDaddy account's payment method and
-        cannot be undone — review the price and every listed agreement
-        before confirming.
+        Search, price, and register a domain. Once you complete payment,
+        registration is submitted immediately and cannot be undone or
+        refunded — review the price and every listed agreement before
+        confirming.
       </p>
 
       {health?.domainsConfigured ? (
-        <div className="status-banner ok">Connected to GoDaddy.</div>
+        <div className="status-banner ok">Connected and ready.</div>
       ) : (
-        <div className="status-banner warn">Not configured — set GODADDY_PAT in server/.env.</div>
+        <div className="status-banner warn">Not configured yet — contact support to get this feature enabled on your account.</div>
       )}
 
       <div className="panel-box">
@@ -254,7 +254,7 @@ export default function DomainsPanel({ authedFetch, health }) {
             </div>
             <button className="primary voice" onClick={addDnsRecord}>Add record</button>
             <p className="hint" style={{ color: 'var(--muted)', fontSize: 12, margin: '6px 0 0' }}>
-              Adding a record that already exists (same type/name/value) will be rejected by GoDaddy —
+              Adding a record that already exists (same type/name/value) will be rejected —
               use Delete then Add to change an existing record's value.
             </p>
           </div>

@@ -92,15 +92,12 @@ export default function Dashboard() {
 }
 
 function HealthBanner({ health }) {
-  if (!health) return <div className="status-banner warn">Checking connection to Mailgun / Twilio…</div>;
+  if (!health) return <div className="status-banner warn">Checking connection…</div>;
   if (health.error) {
-    return <div className="status-banner warn">Could not reach the Altegic server. Is `npm start` running in /server?</div>;
+    return <div className="status-banner warn">Could not reach the server. Please try again shortly.</div>;
   }
   if (health.mailgunConfigured && health.twilioConfigured) {
     return <div className="status-banner ok">Connected — supported number countries: {health.supportedCountries.join(', ')}</div>;
   }
-  const missing = [];
-  if (!health.mailgunConfigured) missing.push('Mailgun');
-  if (!health.twilioConfigured) missing.push('Twilio');
-  return <div className="status-banner warn">Demo mode — add real {missing.join(' and ')} credentials to server/.env to go live.</div>;
+  return <div className="status-banner warn">Some services are still being set up on this account — a few features below may not be available yet.</div>;
 }

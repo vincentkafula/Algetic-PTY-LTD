@@ -104,7 +104,7 @@ export default function TeamCallingPanel({ authedFetch, health }) {
     <div>
       <h1>Team calling</h1>
       <p className="subtitle">
-        A real Twilio SIP Domain for your team — register a softphone
+        A real calling network for your team — register a softphone
         directly with a username and password, no VPS or self-hosted
         server involved. Registered members can call each other directly,
         dial out to any real phone number, and a purchased number can be
@@ -116,7 +116,7 @@ export default function TeamCallingPanel({ authedFetch, health }) {
           Connected — your team's calling domain is <span className="mono">{domainName || '…'}</span>
         </div>
       ) : (
-        <div className="status-banner warn">Not configured — set TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / PUBLIC_BASE_URL in server/.env.</div>
+        <div className="status-banner warn">Not configured yet — contact support to get this feature enabled on your account.</div>
       )}
 
       <div className="panel-box">

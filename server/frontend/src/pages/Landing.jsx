@@ -32,7 +32,7 @@ const services = [
     icon: <svg className="icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2" /><circle cx="5" cy="17" r="2.2" /><circle cx="19" cy="17" r="2.2" /><path d="M12 7.2V13M12 13L6.5 15.5M12 13l5.5 2.5" /></svg>,
     title: 'Team Calling',
     desc: 'Real softphones, registered directly to a real carrier — no self-hosted server to run. Your team calls each other and dials out to any real phone number, and a real business number can ring a specific person.',
-    status: 'Real Twilio network'
+    status: 'Real public network'
   },
   {
     id: 'svc-domains',

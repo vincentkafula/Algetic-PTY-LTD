@@ -212,7 +212,7 @@ export default function VoicePanel({ authedFetch }) {
         </div>
         <p className="hint" style={{ color: 'var(--muted)', fontSize: 12, margin: '4px 0 16px' }}>
           This must be the public SIP address of a PBX, session border controller,
-          or a softphone with a stable, reachable address — Twilio's trunk API
+          or a softphone with a stable, reachable address — this trunk
           cannot accept a plain SIP REGISTER from an arbitrary device.
         </p>
 

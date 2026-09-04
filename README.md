@@ -509,6 +509,68 @@ before trusting this with a single real customer; PayFast's signature
 algorithm specifically has caused real production payment failures for
 other developers over exactly this kind of untested detail.
 
+## Keeping providers invisible to customers
+
+Customers buy domains, email, and phone numbers, but shouldn't need to
+know GoDaddy, Twilio, or Mailgun are involved — they're paying Altegic,
+through PayFast.
+
+- **Dashboard copy:** every customer-facing label, status banner, and
+  hint that used to name a provider directly ("Connected to GoDaddy",
+  "set TWILIO_ACCOUNT_SID in server/.env") was rewritten to describe the
+  *feature's* status, not the vendor behind it.
+- **Error messages — the less obvious leak:** most error text in this app
+  isn't copy this app wrote; it's forwarded straight from a provider's own
+  SDK or API response (`err.message`, or a raw provider error body). A
+  provider's own wording could name itself even where this app's code
+  never does. `middleware/sanitizeError.js` wraps every API response
+  globally (not a manual rewrite at each of the ~20+ individual call
+  sites that forward a provider error) — any outgoing `error` field gets
+  provider names replaced with generic terms, and a raw provider error
+  body is dropped rather than passed through.
+
+  **Two real bugs were caught and fixed while testing this against a
+  running server, not just written and assumed correct:**
+  1. Naively substituting a vendor name inside a message that also
+     contains a raw URL (e.g. a low-level fetch failure mentioning
+     `https://api.godaddy.com/...`) produced garbled, worse text than the
+     original (`https://api.the domain registry.com/...`). Fixed by
+     replacing the whole message with a clean generic one whenever a URL
+     is present, rather than surgically editing it — the URL itself is a
+     leak independent of the vendor name. The same fix was applied to
+     the single most common message a newly-configured account would
+     actually see: `"Server is missing GODADDY_PAT in .env"` has the
+     identical substring-mangling problem (`GODADDY` matches and gets
+     replaced, leaving a dangling `_PAT`) and gets the same clean
+     full-message replacement instead.
+  2. The first version of the `data`-field stripping had no scope check —
+     it deleted *any* `data` field, not just ones from an actual error
+     response. This broke the MVNO dashboard outright (its real payload
+     lives in a `data` field on a *successful* response), caught only by
+     running the full regression pass against a live server rather than
+     trusting the logic on paper. Fixed by scoping the strip to responses
+     that also have an `error` field.
+- **One genuine, unavoidable exception:** a Team Calling member's SIP
+  address is a real hostname a customer's softphone must be configured
+  with (`username@altegic-team-xxxxx.sip.twilio.com`) — Twilio's SIP
+  Domain API requires domain names to end in `sip.twilio.com`. This
+  can't be cosmetically hidden without breaking the actual configuration
+  the customer needs to type in, so it's left as-is; the surrounding
+  dashboard copy was still scrubbed of any redundant "Twilio" mentions.
+
+**Verified for real:** every dashboard page was searched (case-
+insensitively, catching `ALL_CAPS` env var names too, not just the
+capitalized brand name) for provider mentions and each one addressed;
+the compiled production JS bundle was checked afterward and confirmed to
+contain zero customer-facing mentions of any provider name. The sanitizer
+itself was tested directly against a running server across every rule —
+confirmed to correctly generalize a raw GoDaddy-error response, a
+`"Server is missing ... in .env"` config error, and a URL-containing
+fetch failure into clean messages with no leaked vendor name, credential
+terminology, or URL — while leaving unrelated successful API responses
+(signup, mailbox listing, project creation, and specifically the MVNO
+dashboard's own `data` field) completely unaffected.
+
 
 interaction) are the safe first things to try once `GODADDY_PAT` is set.
 
