@@ -9,6 +9,7 @@ import MailboxesPanel from '@/components/dashboard/MailboxesPanel';
 import VoicePanel from '@/components/dashboard/VoicePanel';
 import TeamCallingPanel from '@/components/dashboard/TeamCallingPanel';
 import CallCentrePanel from '@/components/dashboard/CallCentrePanel';
+import DomainsPanel from '@/components/dashboard/DomainsPanel';
 
 // ---------------------------------------------------------------------------
 // Ported from server/frontend/src/pages/dashboard/Dashboard.jsx. Same
@@ -104,7 +105,7 @@ export default function DashboardPage() {
         {view === 'sipnet' && <TeamCallingPanel authedFetch={authedFetch} health={health} />}
         {view === 'callcentre' && <CallCentrePanel authedFetch={authedFetch} health={health} />}
         {view === 'mvno' && <ComingSoon label="MVNO (demo)" />}
-        {view === 'domains' && <ComingSoon label="Domains" />}
+        {view === 'domains' && <DomainsPanel authedFetch={authedFetch} health={health} />}
         {view === 'projects' && <ComingSoon label="Website, software & more" />}
       </div>
     </div>
