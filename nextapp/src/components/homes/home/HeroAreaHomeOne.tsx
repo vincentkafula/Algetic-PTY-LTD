@@ -1,10 +1,9 @@
 
 'use client'
 
-import VideoPopup from '@/modals/VideoPopup';
-import Link from 'next/link'; 
+import Link from 'next/link';
 
-const HeroAreaHomeOne = () => { 
+const HeroAreaHomeOne = () => {
 
   return (
     <>
@@ -14,23 +13,19 @@ const HeroAreaHomeOne = () => {
           <div className="row">
             <div className="col-lg-7 col-sm-12 col-xs-12">
               <div className="hero-text ht_top">
-                <h1>We're a best cyber security problem solution team</h1>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, consectetur adipiscing elit tempor ut labore</p>
+                <h1>Business email, phone, and a website — set up today, not next quarter</h1>
+                <p>Most small businesses juggle five different logins to get online — one for email, one for phone, one for their domain, one for a developer. Altegic puts all of it behind one login, so setting up how your business communicates takes an afternoon, not a month of vendor calls.</p>
               </div>
               <div className="home_btns" style={{display: 'flex'}}>
-                <Link href="/about" className="btn_one">Discover More</Link>
-                <VideoPopup>
-                <a className="video-play"  
-                href="https://www.youtube.com/watch?v=zE_WFiHnSlY" 
-                ><i className="ti-image"></i> <span className="video-title">Video Tour</span></a>
-                </VideoPopup>
+                <Link href="/login" className="btn_one">Create an account</Link>
+                <a href="#service" className="video-play"><i className="ti-arrow-right"></i> <span className="video-title">See what's included</span></a>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-    
+
     </>
   );
 };

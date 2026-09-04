@@ -4,20 +4,24 @@ import React from 'react';
 
 const counter_data = [
   {
-    count: 34,
-    title: 'Our Experience',
+    count: 8,
+    text: '',
+    title: 'Services in one account',
   },
   {
-    count: 99,
-    title: 'Customer Satisfaction',
+    count: 5,
+    text: '',
+    title: 'Countries for a business number',
   },
   {
-    count: 184,
-    title: 'Our team member',
+    count: 24,
+    text: '/7',
+    title: 'Monitored and kept online',
   },
   {
-    count: 541,
-    title: 'Porject Complete',
+    count: 15,
+    text: '',
+    title: 'Minutes to your first mailbox',
   },
 ]
 
@@ -31,7 +35,7 @@ const CounterAreaHomeOne = ({style_2, style_3} : any) => {
               <div key={i} className="col-lg-3 col-sm-6 col-xs-12 no-padding">
                 <div className="single-project">
                   <h2 className="counter-num">
-                    <Count number={item.count} add_style={true} />
+                    <Count number={item.count} text={item.text} add_style={true} />
                   </h2>
                   <h4>{item.title}</h4>
                 </div>

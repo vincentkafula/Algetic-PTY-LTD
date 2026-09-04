@@ -102,7 +102,7 @@ const HeaderOne = () => {
           <div className="row">
             <div className="col-20 align-self-center">
               <div className="site-logo">
-                <Link href="/"><img src="assets/img/logo-top.png" alt="" /></Link>
+                <Link href="/"><img src="/assets/img/logo-full.png" alt="Altegic Solutions" style={{ height: 44, width: 'auto' }} /></Link>
               </div>
             </div>
 
@@ -126,7 +126,7 @@ const HeaderOne = () => {
             </div>
 
             <div className="col-20 d-none d-xl-block text-end align-self-center">
-              <Link href="/contact" className="btn_one">Get started now</Link>
+              <Link href="/login" className="btn_one">Create an account</Link>
             </div>
             
             <div id="sm_menu_ham" onClick={handleActive} className={`${open ? 'open' : ''}`}>

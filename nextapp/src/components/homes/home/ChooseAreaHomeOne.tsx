@@ -11,32 +11,14 @@ const ChooseAreaHomeOne = () => {
           <div className="row">
             <div className="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
               <div className="ab_content">
-                <span>Why choose us</span>
-                <h2>Cyber security skills gap widens as demand for experts continues to soar.</h2>
-                <p>Lorem ipsum dolor sit amet consectetuer adipiscing elitenean commo doligula eget dolorenean massa.In enim justo, rhoncus ut, imperdiet avene natis vitae justo nullam dictum felis eu pede mollis pretium Inte ger tincid unt cras dapibus.</p>
+                <span>Ready when you are</span>
+                <h2>Your business email and phone number, live by this afternoon.</h2>
+                <p>No sales call, no contract to sign first. Create an account, add what you need, and you're set up — cancel anytime if it's not the right fit.</p>
               </div>
               <div className="row">
-                <div className="col-lg-4 col-sm-4 col-xs-12 no-padding">
-                  <div className="single-project2">
-                    <h2 className="counter-num">94%</h2>
-                    <h4>Quality services</h4>
-                  </div>
-                </div>
-                <div className="col-lg-4 col-sm-4 col-xs-12 no-padding">
-                  <div className="single-project2">
-                    <h2 className="counter-num">69%</h2>
-                    <h4>Skilled Staff</h4>
-                  </div>
-                </div>
-                <div className="col-lg-4 col-sm-4 col-xs-12 no-padding">
-                  <div className="single-project2">
-                    <h2 className="counter-num">99%</h2>
-                    <h4>Support team</h4>
-                  </div>
-                </div> 
                 <div className="skill_btn">
-                  <Link href="/service" className="btn_one">Get your services <i className="ti-arrow-top-right"></i></Link>
-                  <a href="#" className="btn_two">Contact with us <i className="ti-arrow-top-right"></i></a>
+                  <Link href="/login" className="btn_one">Create an account <i className="ti-arrow-top-right"></i></Link>
+                  <a href="#service" className="btn_two">See what's included <i className="ti-arrow-top-right"></i></a>
                 </div>
               </div>
             </div>
