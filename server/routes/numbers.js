@@ -1,11 +1,12 @@
 const express = require('express');
-const crypto = require('crypto');
 const router = express.Router();
 
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { twilioClient, isTwilioConfigured } = require('../twilioClient');
 const trunking = require('../services/trunking');
+const { getMonthlyNumberCostUsdCents } = require('../services/twilioPricing');
+const { createOrderWithCheckout } = require('../services/orders');
 
 // Every route below requires a logged-in account; numbers and trunks are
 // always scoped to req.user.id so one customer never sees another's data.
@@ -118,53 +119,27 @@ router.post('/trunk/reset-password', async (req, res) => {
  * password can only be seen again via trunk/reset-password.
  */
 router.post('/provision', async (req, res) => {
-  const { phoneNumber, customerLabel } = req.body || {};
+  const { phoneNumber, country, customerLabel } = req.body || {};
   if (!phoneNumber) return res.status(400).json({ error: 'phoneNumber is required' });
+  if (!country) return res.status(400).json({ error: 'country is required' });
   if (!isTwilioConfigured()) {
     return res.status(500).json({ error: 'Server is missing TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN in .env' });
   }
 
-  let bought;
   try {
-    bought = await twilioClient.incomingPhoneNumbers.create({ phoneNumber });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-
-  try {
-    const { record: trunk, generatedPassword } = await trunking.ensureTrunkForAccount(req.user.id);
-    await trunking.attachNumberToTrunk(trunk.trunkSid, bought.sid);
-
-    const record = {
-      id: crypto.randomUUID(),
+    const baseUsdCents = await getMonthlyNumberCostUsdCents(country);
+    const result = await createOrderWithCheckout({
       ownerId: req.user.id,
-      phoneNumber: bought.phoneNumber,
-      twilioSid: bought.sid,
-      customerLabel: customerLabel || null,
-      provisionedAt: new Date().toISOString(),
-      trunkId: trunk.id,
-      sipSetup: {
-        domain: trunk.domainName,
-        username: trunk.sipUsername,
-        password: generatedPassword,
-        passwordNote: generatedPassword
-          ? 'Save this now — it will not be shown again. Use trunk/reset-password to issue a new one later.'
-          : 'This number uses your account\'s existing trunk credentials, issued when you provisioned your first number. Use trunk/reset-password if you need a new password.',
-        inboundNote: 'Inbound calls to this number reach your registered SIP endpoint once you set an origination address via trunk/origination — see the SIP Trunk panel.'
-      }
-    };
-    await db.numbers.insert(record);
-    res.status(201).json(record);
+      ownerEmail: req.user.email,
+      fulfillmentType: 'number',
+      fulfillmentData: { phoneNumber, customerLabel: customerLabel || null },
+      baseUsdCents,
+      itemName: phoneNumber,
+      itemDescription: `Phone number: ${phoneNumber} (first month)`
+    });
+    res.status(201).json(result);
   } catch (err) {
-    // The number was already purchased in Twilio at this point. Roll it
-    // back so a trunk failure doesn't leave an orphaned, billed number
-    // with no local record and no way to manage it from the dashboard.
-    try {
-      await twilioClient.incomingPhoneNumbers(bought.sid).remove();
-    } catch (cleanupErr) {
-      console.error('Failed to roll back purchased number after trunk error:', cleanupErr.message);
-    }
-    res.status(err.status || 500).json({ error: `Number purchased but trunk setup failed, so the number was released: ${err.message}` });
+    res.status(err.status || 500).json({ error: err.message });
   }
 });
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { redirectToPayfastCheckout } from '../../lib/payfastCheckout';
 
 export default function VoicePanel({ authedFetch }) {
   const [country, setCountry] = useState('US');
@@ -61,17 +62,17 @@ export default function VoicePanel({ authedFetch }) {
   }
 
   async function provisionNumber(phoneNumber) {
+    setProvisionResult({ loading: true });
     try {
       const res = await authedFetch('/api/numbers/provision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber })
+        body: JSON.stringify({ phoneNumber, country })
       });
       const data = await res.json();
       if (!res.ok) { setProvisionResult({ error: data.error }); return; }
-      setProvisionResult({ success: data });
-      loadNumbers();
-      loadTrunk();
+      setProvisionResult({ redirecting: true });
+      redirectToPayfastCheckout(data.payfastUrl, data.checkoutFields);
     } catch (err) {
       setProvisionResult({ error: err.message });
     }
@@ -156,26 +157,14 @@ export default function VoicePanel({ authedFetch }) {
           <div className="credential" key={r.phoneNumber}>
             <div className="row">
               <span>{r.friendlyName}</span>
-              <button className="primary voice" onClick={() => provisionNumber(r.phoneNumber)}>Provision</button>
+              <button className="primary voice" onClick={() => provisionNumber(r.phoneNumber)}>Buy this number</button>
             </div>
           </div>
         ))}
 
+        {provisionResult?.loading && <p style={{ color: 'var(--muted)' }}>Preparing checkout…</p>}
+        {provisionResult?.redirecting && <p style={{ color: 'var(--muted)' }}>Redirecting to payment…</p>}
         {provisionResult?.error && <p style={{ color: 'var(--danger)' }}>{provisionResult.error}</p>}
-        {provisionResult?.success && (
-          <>
-            <div className="credential">
-              <div className="row"><span>Number</span><span className="value">{provisionResult.success.phoneNumber}</span></div>
-              <div className="row"><span>SIP domain</span><span className="value">{provisionResult.success.sipSetup.domain}</span></div>
-              <div className="row"><span>SIP username</span><span className="value">{provisionResult.success.sipSetup.username}</span></div>
-              {provisionResult.success.sipSetup.password && (
-                <div className="row"><span>SIP password</span><span className="value">{provisionResult.success.sipSetup.password}</span></div>
-              )}
-            </div>
-            <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 8 }}>{provisionResult.success.sipSetup.passwordNote}</p>
-            <p style={{ color: 'var(--muted)', fontSize: 12 }}>{provisionResult.success.sipSetup.inboundNote}</p>
-          </>
-        )}
       </div>
 
       <div className="panel-box">

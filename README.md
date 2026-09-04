@@ -251,9 +251,24 @@ uses the exact same functions).
 
 ## Voice: SIP trunking
 
-- Number search and purchase (`routes/numbers.js`) calls real Twilio APIs,
-  and releasing a number calls Twilio to release it (stops billing), not
-  just deletes the local row.
+- Number search (`routes/numbers.js`) calls real Twilio APIs and is free
+  (no charge, no account interaction beyond the lookup). **Purchasing**
+  a number is now gated behind real payment, same pattern as domain
+  registration: `POST /provision` fetches the real monthly cost from
+  Twilio's own Pricing API (`services/twilioPricing.js` — a genuinely
+  different Twilio resource from number search, which doesn't return
+  pricing at all), creates a payment order, and returns a PayFast
+  checkout — it does not purchase anything itself anymore. The actual
+  Twilio purchase + trunk attachment (`services/trunking.js`'s
+  `provisionNumberForAccount`) only happens in `routes/
+  paymentWebhooks.js`, once PayFast confirms payment. Releasing a number
+  still calls Twilio directly to release it (stops billing), unchanged.
+- **A real, stated gap: no recurring billing.** The customer is charged
+  once, covering the number's first month — Twilio keeps billing Altegic
+  every month the number stays active, but nothing here re-charges the
+  customer for month 2 onward. PayFast supports recurring/subscription
+  billing via a separate token-based API; wiring that in is real,
+  separate follow-up work, not something silently assumed to be covered.
 - Each account gets its own dedicated Twilio Elastic SIP Trunk and
   Credential List (`server/services/trunking.js`), created automatically the
   first time that account provisions a number. Every number an account

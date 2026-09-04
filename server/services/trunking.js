@@ -194,10 +194,61 @@ async function resetCredential(ownerId) {
   return { record: updated, generatedPassword: password };
 }
 
+/**
+ * Actually purchases a Twilio number, attaches it to the account's SIP
+ * trunk, and creates the local record — the real provisioning work,
+ * called from routes/paymentWebhooks.js once PayFast confirms payment
+ * (moved out of routes/numbers.js's provision endpoint, which now only
+ * creates a payment order — see that file for why).
+ */
+async function provisionNumberForAccount(ownerId, phoneNumber, customerLabel) {
+  const bought = await twilioClient.incomingPhoneNumbers.create({ phoneNumber });
+
+  try {
+    const { record: trunk, generatedPassword } = await ensureTrunkForAccount(ownerId);
+    await attachNumberToTrunk(trunk.trunkSid, bought.sid);
+
+    const record = {
+      id: crypto.randomUUID(),
+      ownerId,
+      phoneNumber: bought.phoneNumber,
+      twilioSid: bought.sid,
+      customerLabel: customerLabel || null,
+      provisionedAt: new Date().toISOString(),
+      trunkId: trunk.id,
+      sipSetup: {
+        domain: trunk.domainName,
+        username: trunk.sipUsername,
+        password: generatedPassword,
+        passwordNote: generatedPassword
+          ? 'Save this now — it will not be shown again. Use trunk/reset-password to issue a new one later.'
+          : 'This number uses your account\'s existing trunk credentials, issued when you provisioned your first number. Use trunk/reset-password if you need a new password.',
+        inboundNote: 'Inbound calls to this number reach your registered SIP endpoint once you set an origination address via trunk/origination — see the SIP Trunk panel.'
+      }
+    };
+    await db.numbers.insert(record);
+    return record;
+  } catch (err) {
+    // The number was already purchased in Twilio at this point — and,
+    // unlike the pre-payment version of this flow, the customer has
+    // ALSO already paid. Roll back the Twilio purchase so it isn't
+    // orphaned and billed forever, but the payment itself still needs a
+    // human to notice (the order is marked fulfillment_failed by the
+    // caller) — there is no automatic refund built here.
+    try {
+      await twilioClient.incomingPhoneNumbers(bought.sid).remove();
+    } catch (cleanupErr) {
+      console.error('Failed to roll back purchased number after trunk error:', cleanupErr.message);
+    }
+    throw err;
+  }
+}
+
 module.exports = {
   ensureTrunkForAccount,
   attachNumberToTrunk,
   setOriginationUri,
   resetCredential,
-  publicTrunk
+  publicTrunk,
+  provisionNumberForAccount
 };
