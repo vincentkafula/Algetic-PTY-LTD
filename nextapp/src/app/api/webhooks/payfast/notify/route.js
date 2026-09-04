@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const db = require('@/lib/db');
 const payfast = require('@/lib/services/payfast');
 const { getGoDaddyQuote, registerGoDaddyDomain } = require('@/lib/godaddyClient');
+const { provisionNumberForAccount } = require('@/lib/services/trunking');
 
 // ---------------------------------------------------------------------------
 // Ported from server/routes/paymentWebhooks.js. PayFast's Instant
@@ -123,6 +124,8 @@ async function processItn(posted, remoteIp) {
       await fulfillDomainOrder(order);
       break;
     case 'number':
+      await fulfillNumberOrder(order);
+      break;
     case 'mailbox':
       console.log(`PayFast ITN: order ${order.id} paid, fulfillmentType "${order.fulfillmentType}" not wired to real provisioning yet in the Next.js version`);
       break;
@@ -175,6 +178,36 @@ async function fulfillDomainOrder(order) {
   } catch (err) {
     console.error('PayFast ITN: domain registration FAILED after payment — needs manual follow-up', {
       orderId: order.id, domain, error: err.message
+    });
+    await db.orders.update((o) => o.id === order.id, {
+      status: 'fulfillment_failed',
+      fulfillmentError: err.message,
+      updatedAt: new Date().toISOString()
+    });
+  }
+}
+
+/**
+ * Actually purchases the phone number with Twilio, now that payment has
+ * cleared — see services/trunking.js's provisionNumberForAccount for the
+ * real work (buy + attach to trunk + create the local record).
+ *
+ * HONEST GAP, stated directly: this charges the customer once, covering
+ * the number's first month. Twilio bills Altegic for this number every
+ * month it stays active — there is NO recurring billing built here to
+ * keep charging the customer for month 2 onward.
+ */
+async function fulfillNumberOrder(order) {
+  const { phoneNumber, customerLabel } = order.fulfillmentData;
+  try {
+    await provisionNumberForAccount(order.ownerId, phoneNumber, customerLabel);
+    await db.orders.update((o) => o.id === order.id, {
+      status: 'fulfilled',
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('PayFast ITN: number provisioning FAILED after payment — needs manual follow-up', {
+      orderId: order.id, phoneNumber, error: err.message
     });
     await db.orders.update((o) => o.id === order.id, {
       status: 'fulfillment_failed',
