@@ -41,16 +41,23 @@ export default function DomainsPanel({ authedFetch, health }) {
   useEffect(() => { loadDnsRecords(dnsDomainId); }, [dnsDomainId, loadDnsRecords]);
 
   async function searchDomain() {
-    if (!searchInput.trim()) { setSearchResult({ error: 'Enter a domain name.' }); return; }
+    const trimmed = searchInput.trim();
+    if (!trimmed) { setSearchResult({ error: 'Enter a domain name.' }); return; }
+    if (!trimmed.includes('.')) {
+      setSearchResult({
+        error: `"${trimmed}" needs an extension to be a real domain — try "${trimmed}.com" (or .co.za, .net, etc). Domain registries check availability by the full name, extension included.`
+      });
+      return;
+    }
     setSearchResult({ loading: true });
     setQuote(null);
     setRegisterResult(null);
     try {
-      const res = await authedFetch(`/api/domains/search?domain=${encodeURIComponent(searchInput.trim())}`);
+      const res = await authedFetch(`/api/domains/search?domain=${encodeURIComponent(trimmed)}`);
       const data = await res.json();
       if (!res.ok) { setSearchResult({ error: data.error }); return; }
-      if (!data.available) { setSearchResult({ unavailable: true, domain: searchInput.trim() }); return; }
-      setSearchResult({ available: true, domain: searchInput.trim(), prices: data.prices });
+      if (!data.available) { setSearchResult({ unavailable: true, domain: trimmed }); return; }
+      setSearchResult({ available: true, domain: trimmed, prices: data.prices });
     } catch (err) {
       setSearchResult({ error: err.message });
     }
