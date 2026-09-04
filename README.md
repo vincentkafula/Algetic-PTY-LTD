@@ -153,6 +153,19 @@ Mailgun is built for **sending and inbound routing** (forward mail, hit a
 webhook), not for storing mail behind an IMAP login the way Outlook expects.
 This starter now does both send and receive for real:
 
+- **Creating a mailbox is gated behind real customer payment**, same
+  pattern as domains and numbers — but Mailgun has no natural per-mailbox
+  price to mark up (it bills by email volume, not "per mailbox"), so
+  there's no API to fetch a real cost from. `MAILBOX_MONTHLY_PRICE_USD_CENTS`
+  in `.env` is a real business decision, deliberately left unset by
+  default rather than defaulted to some invented number — `POST /api/
+  mailboxes` returns a clear "pricing not configured" error until it's
+  set, tested directly. Once set, `routes/mailboxes.js` creates a payment
+  order and returns a PayFast checkout; the actual Mailgun route creation
+  (`mailgunClient.js`'s `createMailboxForAccount`) only happens in
+  `routes/paymentWebhooks.js`, once payment clears. Same recurring-billing
+  gap as phone numbers: the customer pays once, covering the first month,
+  and nothing re-charges them for month 2 onward yet.
 - **Sending**: `POST /api/mailboxes/:id/send` calls the Mailgun Messages API
   directly from a mailbox's address, and records the sent message.
 - **Receiving**: if `PUBLIC_BASE_URL` and `MAILGUN_WEBHOOK_SIGNING_KEY` are

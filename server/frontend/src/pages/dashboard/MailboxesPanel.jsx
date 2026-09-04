@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { redirectToPayfastCheckout } from '../../lib/payfastCheckout';
 
 export default function MailboxesPanel({ authedFetch }) {
   const [localPart, setLocalPart] = useState('');
@@ -48,10 +49,8 @@ export default function MailboxesPanel({ authedFetch }) {
       });
       const data = await res.json();
       if (!res.ok) { setCreateResult({ error: data.error }); return; }
-      setCreateResult({ success: data });
-      setLocalPart('');
-      setForwardTo('');
-      loadMailboxes();
+      setCreateResult({ redirecting: true });
+      redirectToPayfastCheckout(data.payfastUrl, data.checkoutFields);
     } catch (err) {
       setCreateResult({ error: err.message });
     } finally {
@@ -127,7 +126,7 @@ export default function MailboxesPanel({ authedFetch }) {
         </div>
         <div className="form-row">
           <input value={forwardTo} onChange={(e) => setForwardTo(e.target.value)} placeholder="forward/store to (optional)" style={{ flex: 1, minWidth: 220 }} />
-          <button className="primary" disabled={creating} onClick={createMailbox}>Create mailbox</button>
+          <button className="primary" disabled={creating} onClick={createMailbox}>Continue to payment</button>
         </div>
         <CreateResultView result={createResult} />
       </div>
@@ -214,6 +213,7 @@ export default function MailboxesPanel({ authedFetch }) {
 function CreateResultView({ result }) {
   if (!result) return null;
   if (result.loading) return <p style={{ color: 'var(--muted)' }}>Creating…</p>;
+  if (result.redirecting) return <p style={{ color: 'var(--muted)' }}>Redirecting to payment…</p>;
   if (result.error) return <p style={{ color: 'var(--danger)' }}>{result.error}</p>;
   if (result.success) {
     const data = result.success;

@@ -9,12 +9,29 @@ const { requireAuth } = require('../middleware/auth');
 const {
   MAILGUN_DOMAIN,
   MAILGUN_BASE_URL,
-  PUBLIC_BASE_URL,
   isMailgunConfigured,
-  isInboundCaptureConfigured,
   authHeader,
-  sendMailAs
+  sendMailAs,
+  createMailboxForAccount
 } = require('../mailgunClient');
+const { createOrderWithCheckout } = require('../services/orders');
+
+/**
+ * Mailgun has no natural per-mailbox price to mark up (unlike GoDaddy's
+ * domain quotes or Twilio's number pricing) — Mailgun bills by email
+ * volume, not "per mailbox." This is a real business decision, not a
+ * technical one, so it's deliberately NOT hardcoded here as some
+ * invented number. Set MAILBOX_MONTHLY_PRICE_USD_CENTS in .env once a
+ * real price is decided; until then, this throws a clear error rather
+ * than silently charging customers a made-up amount.
+ */
+function getMailboxMonthlyPriceUsdCents() {
+  const configured = parseInt(process.env.MAILBOX_MONTHLY_PRICE_USD_CENTS, 10);
+  if (!isNaN(configured) && configured > 0) return configured;
+  const err = new Error('Mailbox pricing has not been configured yet (set MAILBOX_MONTHLY_PRICE_USD_CENTS in .env)');
+  err.status = 500;
+  throw err;
+}
 
 // Every route below requires a logged-in account; mailboxes are always
 // scoped to req.user.id so one customer never sees another's data.
@@ -32,10 +49,16 @@ router.get('/', (req, res) => {
 /**
  * POST /api/mailboxes
  * body: { localPart: "sales", forwardTo: "..." }
- * Creates sales@MAILGUN_DOMAIN.
+ * Does NOT create sales@MAILGUN_DOMAIN directly anymore — creates a
+ * payment order and returns a PayFast checkout, mirroring domains
+ * (routes/domains.js) and numbers (routes/numbers.js). The actual
+ * mailbox creation (mailgunClient.js's createMailboxForAccount) only
+ * happens in routes/paymentWebhooks.js, once PayFast confirms payment.
  *
  * Inbound mail handling depends on whether PUBLIC_BASE_URL and
- * MAILGUN_WEBHOOK_SIGNING_KEY are set (see server/.env.example):
+ * MAILGUN_WEBHOOK_SIGNING_KEY are set (see server/.env.example) — this
+ * decision happens inside createMailboxForAccount at fulfillment time,
+ * not here:
  * - If configured: Mailgun forwards inbound mail to this app's own
  *   webhook (routes/webhooks.js), which stores it so it shows up in the
  *   dashboard and via GET /api/mailboxes/:id/messages. If forwardTo is
@@ -61,86 +84,23 @@ router.post('/', async (req, res) => {
   }
 
   const address = `${localPart}@${MAILGUN_DOMAIN}`;
-
   const dup = db.mailboxes.find((m) => m.ownerId === req.user.id && m.address === address);
   if (dup) return res.status(409).json({ error: `${address} already exists on your account` });
 
-  // Generated up front so it can be embedded in the webhook callback URL
-  // Mailgun will POST inbound mail to.
-  const mailboxId = crypto.randomUUID();
-  const inboundCaptureEnabled = isInboundCaptureConfigured();
-
   try {
-    const params = new URLSearchParams();
-    params.append('priority', '0');
-    params.append('description', `Route for ${address}`);
-    params.append('expression', `match_recipient("${address}")`);
-
-    if (inboundCaptureEnabled) {
-      const webhookUrl = `${PUBLIC_BASE_URL}/api/webhooks/mailgun/inbound?mailboxId=${mailboxId}`;
-      params.append('action', `forward("${webhookUrl}")`);
-      if (forwardTo) params.append('action', `forward("${forwardTo}")`);
-    } else {
-      params.append('action', `forward("${forwardTo || address}")`);
-    }
-    params.append('action', 'stop()');
-
-    const response = await fetch(`${MAILGUN_BASE_URL}/routes`, {
-      method: 'POST',
-      headers: {
-        Authorization: authHeader(),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: params
-    });
-
-    const rawBody = await response.text();
-    let data;
-    try {
-      data = JSON.parse(rawBody);
-    } catch {
-      // Mailgun returned something non-JSON (e.g. an HTML error page) -
-      // usually a bad domain/key/base URL. Surface a clear message instead
-      // of crashing on JSON.parse.
-      return res.status(response.status || 502).json({
-        error: 'Mailgun did not return a valid response. Check MAILGUN_DOMAIN and MAILGUN_BASE_URL in .env.',
-        status: response.status
-      });
-    }
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data.message || 'Mailgun error', data });
-    }
-
-    // Generates the credential for this mailbox's OWN webmail login — a
-    // separate authentication system from the Altegic account that just
-    // created it (see middleware/mailboxAuth.js). Shown once, right here;
-    // never stored or retrievable in plaintext again, same discipline as
-    // every other credential this app issues.
-    const webmailPassword = crypto.randomBytes(9).toString('base64url');
-    const webmailPasswordHash = await bcrypt.hash(webmailPassword, 10);
-
-    const record = {
-      id: mailboxId,
+    const baseUsdCents = getMailboxMonthlyPriceUsdCents();
+    const result = await createOrderWithCheckout({
       ownerId: req.user.id,
-      address,
-      createdAt: new Date().toISOString(),
-      smtp: { host: `smtp.${MAILGUN_DOMAIN}`, port: 587, security: 'STARTTLS' },
-      imapNote: 'Mailgun has no native IMAP - pair with a mail store (Dovecot) or an IMAP-capable provider for real Outlook login.',
-      mailgunRouteId: data.route ? data.route.id : null,
-      inboundCaptureEnabled,
-      inboundNote: inboundCaptureEnabled
-        ? 'Inbound mail is captured and shown in this dashboard (GET /api/mailboxes/:id/messages).'
-        : 'PUBLIC_BASE_URL / MAILGUN_WEBHOOK_SIGNING_KEY are not set, so inbound mail only plain-forwards and will not appear in this dashboard — see server/.env.example.',
-      webmailPasswordHash
-    };
-    await db.mailboxes.insert(record);
-    res.status(201).json({
-      ...record,
-      webmailPassword,
-      webmailPasswordNote: 'Save this now — it will not be shown again. This is the password for this mailbox\'s OWN webmail login (a separate login from your Altegic account) — give it to whoever owns this address. Use the reset endpoint to issue a new one later.'
+      ownerEmail: req.user.email,
+      fulfillmentType: 'mailbox',
+      fulfillmentData: { localPart, forwardTo: forwardTo || null },
+      baseUsdCents,
+      itemName: address,
+      itemDescription: `Mailbox: ${address} (first month)`
     });
+    res.status(201).json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 });
 
