@@ -15,7 +15,10 @@ const callCentreWebhookRoutes = require('./routes/callCentreWebhooks');
 const domainRoutes = require('./routes/domains');
 const projectRoutes = require('./routes/projects');
 const mvnoRoutes = require('./routes/mvno');
+const paymentRoutes = require('./routes/payments');
+const paymentWebhookRoutes = require('./routes/paymentWebhooks');
 const { isMailgunConfigured, isInboundCaptureConfigured, PUBLIC_BASE_URL } = require('./mailgunClient');
+const { isConfigured: isPayfastConfigured } = require('./services/payfast');
 const { isTwilioConfigured } = require('./twilioClient');
 const { isGoDaddyConfigured } = require('./godaddyClient');
 
@@ -44,6 +47,8 @@ app.use('/api/call-centre', callCentreRoutes);
 app.use('/api/domains', domainRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/mvno', mvnoRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/webhooks/payfast', paymentWebhookRoutes);
 // Not behind requireAuth — Twilio calls these directly. Authenticity comes
 // from verifying Twilio's own X-Twilio-Signature header inside each route.
 app.use('/api/webhooks/twilio', callCentreWebhookRoutes);
@@ -62,6 +67,7 @@ app.get('/api/health', (req, res) => {
     teamCallingConfigured: isTwilioConfigured() && Boolean(PUBLIC_BASE_URL),
     callCentreConfigured: isTwilioConfigured() && Boolean(PUBLIC_BASE_URL),
     domainsConfigured: isGoDaddyConfigured(),
+    paymentsConfigured: isPayfastConfigured() && Boolean(PUBLIC_BASE_URL),
     supportedCountries: (process.env.SUPPORTED_NUMBER_COUNTRIES || 'US,CA,GB').split(',')
   });
 });

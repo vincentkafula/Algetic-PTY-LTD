@@ -28,7 +28,8 @@ const DEFAULT_DATA = {
   callAgents: [],
   domains: [],
   projects: [],
-  sipDomains: []
+  sipDomains: [],
+  orders: []
 };
 
 function ensureStore() {
@@ -114,5 +115,6 @@ module.exports = {
   callAgents: collection('callAgents'),
   domains: collection('domains'),
   projects: collection('projects'),
-  sipDomains: collection('sipDomains')
+  sipDomains: collection('sipDomains'),
+  orders: collection('orders')
 };
