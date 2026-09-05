@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 
 const { requireAuth } = require('@/lib/auth');
 const { makeRng } = require('@/lib/mvnoDemo');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/mvno/subscribers
  * A sample page, not a full subscriber base — this is a demo, not a real
  * customer database.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -29,3 +30,4 @@ export async function GET(request) {
   }));
   return NextResponse.json({ demo: true, data: subscribers });
 }
+export const GET = withSanitizedErrors(GET_impl);

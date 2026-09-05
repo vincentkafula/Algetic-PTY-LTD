@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const { requireAuth } = require('@/lib/auth');
 const trunking = require('@/lib/services/trunking');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/numbers/trunk/origination
@@ -12,7 +13,7 @@ const trunking = require('@/lib/services/trunking');
  * Trunking cannot accept a device that isn't reachable at a fixed
  * address. See services/trunking.js for the fuller explanation.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -31,3 +32,4 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message }, { status: err.status || 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

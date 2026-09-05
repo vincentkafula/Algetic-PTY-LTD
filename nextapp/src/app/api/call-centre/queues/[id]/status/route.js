@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -12,7 +13,7 @@ function isConfigured() {
  * GET /api/call-centre/queues/:id/status
  * Live queue depth from Twilio — how many callers are currently waiting.
  */
-export async function GET(request, { params }) {
+async function GET_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -33,3 +34,4 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);

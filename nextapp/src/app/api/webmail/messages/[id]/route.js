@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireMailboxAuth } = require('@/lib/mailboxAuth');
 const { VALID_FOLDERS, effectiveFolder } = require('@/lib/webmailFolders');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/webmail/messages/:id
  */
-export async function GET(request, { params }) {
+async function GET_impl(request, { params }) {
   let mailbox;
   try {
     mailbox = requireMailboxAuth(request);
@@ -28,7 +29,7 @@ export async function GET(request, { params }) {
  * Spam and Trash actually get populated (a person clicking a button),
  * not automated filtering.
  */
-export async function PATCH(request, { params }) {
+async function PATCH_impl(request, { params }) {
   let mailbox;
   try {
     mailbox = requireMailboxAuth(request);
@@ -66,7 +67,7 @@ export async function PATCH(request, { params }) {
  * Permanent delete — intended for use from Trash, but a direct delete
  * from any folder is allowed too via the API.
  */
-export async function DELETE(request, { params }) {
+async function DELETE_impl(request, { params }) {
   let mailbox;
   try {
     mailbox = requireMailboxAuth(request);
@@ -80,3 +81,6 @@ export async function DELETE(request, { params }) {
   await db.messages.remove((m) => m.id === msg.id);
   return new NextResponse(null, { status: 204 });
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const PATCH = withSanitizedErrors(PATCH_impl);
+export const DELETE = withSanitizedErrors(DELETE_impl);

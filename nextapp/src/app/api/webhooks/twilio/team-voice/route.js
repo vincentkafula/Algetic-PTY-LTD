@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const twilio = require('twilio');
 const db = require('@/lib/db');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
@@ -46,7 +47,7 @@ function xmlResponse(twiml) {
 /**
  * POST /api/webhooks/twilio/team-voice
  */
-export async function POST(request) {
+async function POST_impl(request) {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const signature = request.headers.get('x-twilio-signature');
   const formData = await request.formData().catch(() => null);
@@ -106,3 +107,4 @@ export async function POST(request) {
 
   return xmlResponse(twiml);
 }
+export const POST = withSanitizedErrors(POST_impl);

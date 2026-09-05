@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/domains/:id/status
@@ -10,7 +11,7 @@ const { isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
  * updates the local record. Registration is async on GoDaddy's side —
  * a 201 from /register doesn't mean the domain is live yet.
  */
-export async function GET(request, { params }) {
+async function GET_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -39,3 +40,4 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);

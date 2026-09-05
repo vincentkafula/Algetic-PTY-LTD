@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { issueToken, publicUser, isValidEmail } = require('@/lib/authTokens');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/auth/signup
@@ -11,7 +12,7 @@ const { issueToken, publicUser, isValidEmail } = require('@/lib/authTokens');
  * Creates a customer account for this reseller platform. Each account's
  * mailboxes and phone numbers are private to that account.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   if (!process.env.JWT_SECRET) {
     return NextResponse.json({ error: 'Server is missing JWT_SECRET in .env' }, { status: 500 });
   }
@@ -43,3 +44,4 @@ export async function POST(request) {
 
   return NextResponse.json({ token: issueToken(user), user: publicUser(user) }, { status: 201 });
 }
+export const POST = withSanitizedErrors(POST_impl);

@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/numbers
  * List numbers provisioned by the logged-in account.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -18,3 +19,4 @@ export async function GET(request) {
   const provisioned = db.numbers.filter((n) => n.ownerId === user.id);
   return NextResponse.json({ provisioned });
 }
+export const GET = withSanitizedErrors(GET_impl);

@@ -4,6 +4,7 @@ const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { MAILGUN_DOMAIN, isMailgunConfigured } = require('@/lib/mailgunClient');
 const { createOrderWithCheckout } = require('@/lib/services/orders');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * Mailgun has no natural per-mailbox price to mark up (unlike GoDaddy's
@@ -25,7 +26,7 @@ function getMailboxMonthlyPriceUsdCents() {
 /**
  * GET /api/mailboxes
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -44,7 +45,7 @@ export async function GET(request) {
  * actual mailbox creation only happens in the ITN webhook once payment
  * clears.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -85,3 +86,5 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message }, { status: err.status || 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

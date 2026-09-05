@@ -4,12 +4,13 @@ const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { isMailgunConfigured, sendMailAs } = require('@/lib/mailgunClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/mailboxes/:id/send
  * body: { to, subject, text }
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -56,3 +57,4 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/call-centre/menus
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -25,7 +26,7 @@ export async function GET(request) {
  * queue id), "menu" (target = another menu id, for submenus), "hangup"
  * (target = optional closing message).
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -59,3 +60,5 @@ export async function POST(request) {
   await db.ivrMenus.insert(record);
   return NextResponse.json(record, { status: 201 });
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

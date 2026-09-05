@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const { requireAuth } = require('@/lib/auth');
 const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
 const { findOwnedDomain } = require('@/lib/domainOwnership');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * PUT /api/domains/:id/dns/:type/:name
@@ -10,7 +11,7 @@ const { findOwnedDomain } = require('@/lib/domainOwnership');
  * Replaces every record of this type+name in one call — the safe way to
  * "update" a record (POST only appends and will reject a duplicate).
  */
-export async function PUT(request, { params }) {
+async function PUT_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -58,7 +59,7 @@ export async function PUT(request, { params }) {
  * delete-by-id in the zone endpoint — deletion is by type+name, same
  * granularity as the replace operation above).
  */
-export async function DELETE(request, { params }) {
+async function DELETE_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -87,3 +88,5 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const PUT = withSanitizedErrors(PUT_impl);
+export const DELETE = withSanitizedErrors(DELETE_impl);

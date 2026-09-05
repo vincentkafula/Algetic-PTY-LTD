@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const { requireAuth } = require('@/lib/auth');
 const { isGoDaddyConfigured, getGoDaddyQuote } = require('@/lib/godaddyClient');
 const pricing = require('@/lib/services/pricing');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/domains/quote
@@ -13,7 +14,7 @@ const pricing = require('@/lib/services/pricing');
  * fetches its own fresh quote right before charging anyone, rather than
  * reusing one that could be stale by then.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   try {
     requireAuth(request);
   } catch (err) {
@@ -42,3 +43,4 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message, data: err.data }, { status: err.status || 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

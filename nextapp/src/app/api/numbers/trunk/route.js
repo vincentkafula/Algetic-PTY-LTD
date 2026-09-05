@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const trunking = require('@/lib/services/trunking');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/numbers/trunk
@@ -10,7 +11,7 @@ const trunking = require('@/lib/services/trunking');
  * number has been provisioned yet, since a trunk is created lazily on
  * first provision.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -22,3 +23,4 @@ export async function GET(request) {
   if (!record) return NextResponse.json({ error: 'No trunk yet — provision a number first' }, { status: 404 });
   return NextResponse.json({ trunk: trunking.publicTrunk(record) });
 }
+export const GET = withSanitizedErrors(GET_impl);

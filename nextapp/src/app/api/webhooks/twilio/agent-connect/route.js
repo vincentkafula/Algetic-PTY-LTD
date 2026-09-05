@@ -1,12 +1,13 @@
 const db = require('@/lib/db');
 const { verifyTwilioSignature, rejectUnsigned, xmlResponse, VoiceResponse } = require('@/lib/callCentreVoice');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/webhooks/twilio/agent-connect?queueId=<id>
  * TwiML fetched when an agent answers the outbound call Altegic placed
  * to ring them — bridges them to the oldest waiting caller in the queue.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   const formData = await request.formData().catch(() => null);
   const posted = formData ? Object.fromEntries(formData.entries()) : {};
 
@@ -28,3 +29,4 @@ export async function POST(request) {
   dial.queue(queue.twilioQueueName);
   return xmlResponse(twiml);
 }
+export const POST = withSanitizedErrors(POST_impl);

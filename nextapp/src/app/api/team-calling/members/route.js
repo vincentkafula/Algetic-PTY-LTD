@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const { requireAuth } = require('@/lib/auth');
 const { isTwilioConfigured } = require('@/lib/twilioClient');
 const sipDomain = require('@/lib/services/sipDomain');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -11,7 +12,7 @@ function isConfigured() {
 /**
  * GET /api/team-calling/members
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -35,7 +36,7 @@ export async function GET(request) {
  * Adds a member, or resets their password if the username already
  * exists. Password is supplied by the caller (not generated).
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -59,3 +60,5 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message }, { status: err.status || 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

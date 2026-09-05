@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { createOrderWithCheckout } = require('@/lib/services/orders');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 // ---------------------------------------------------------------------------
 // Ported from server/routes/payments.js. Generic order + checkout
@@ -21,7 +22,7 @@ const { createOrderWithCheckout } = require('@/lib/services/orders');
  * POST /api/payments/orders
  * body: { fulfillmentType, fulfillmentData, baseUsdCents, itemName, itemDescription }
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -55,7 +56,7 @@ export async function POST(request) {
  * GET /api/payments/orders
  * List this account's orders.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -67,3 +68,5 @@ export async function GET(request) {
   const safe = orders.map(({ baseUsdCents, exchangeRate, markupPercent, ...rest }) => rest);
   return NextResponse.json({ orders: safe });
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

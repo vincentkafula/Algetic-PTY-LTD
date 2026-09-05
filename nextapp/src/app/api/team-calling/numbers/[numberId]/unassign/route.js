@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { isTwilioConfigured, twilioClient } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/team-calling/numbers/:numberId/unassign
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -30,3 +31,4 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

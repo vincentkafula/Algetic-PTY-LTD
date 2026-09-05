@@ -4,6 +4,7 @@ const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
 const { cancelSubscription, isRecurringBillingConfigured } = require('@/lib/services/payfastRecurring');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * DELETE /api/numbers/:id
@@ -14,7 +15,7 @@ const { cancelSubscription, isRecurringBillingConfigured } = require('@/lib/serv
  * have), and removes the local record. Only the owning account can
  * release its own number.
  */
-export async function DELETE(request, { params }) {
+async function DELETE_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -54,4 +55,4 @@ export async function DELETE(request, { params }) {
   await db.numbers.remove((n) => n.id === record.id);
   return new NextResponse(null, { status: 204 });
 }
-
+export const DELETE = withSanitizedErrors(DELETE_impl);

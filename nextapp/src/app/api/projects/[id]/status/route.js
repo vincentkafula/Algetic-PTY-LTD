@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 const VALID_STATUSES = ['Requested', 'In Progress', 'Delivered', 'Cancelled'];
 
@@ -9,7 +10,7 @@ const VALID_STATUSES = ['Requested', 'In Progress', 'Delivered', 'Cancelled'];
  * PATCH /api/projects/:id/status
  * body: { status }
  */
-export async function PATCH(request, { params }) {
+async function PATCH_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -30,3 +31,4 @@ export async function PATCH(request, { params }) {
   const updated = await db.projects.update((p) => p.id === project.id, { status, updatedAt: new Date().toISOString() });
   return NextResponse.json(updated);
 }
+export const PATCH = withSanitizedErrors(PATCH_impl);

@@ -4,6 +4,7 @@ const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { isTwilioConfigured, twilioClient } = require('@/lib/twilioClient');
 const sipDomain = require('@/lib/services/sipDomain');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -18,7 +19,7 @@ function isConfigured() {
  * Centre menu it was on first, same mutual-exclusivity rule as the rest
  * of the numbers feature.
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -69,3 +70,4 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

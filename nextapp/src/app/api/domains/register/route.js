@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const { requireAuth } = require('@/lib/auth');
 const { isGoDaddyConfigured, getGoDaddyQuote } = require('@/lib/godaddyClient');
 const { createOrderWithCheckout } = require('@/lib/services/orders');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/domains/register
@@ -18,7 +19,7 @@ const { createOrderWithCheckout } = require('@/lib/services/orders');
  * domain worth more. This is the ONLY price this endpoint trusts: what
  * GoDaddy itself says, fetched server-side, right now.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -52,3 +53,4 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message, data: err.data }, { status: err.status || 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/mailboxes/:id/messages
  * Lists inbound and outbound message history captured for this mailbox,
  * most recent first.
  */
-export async function GET(request, { params }) {
+async function GET_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -25,3 +26,4 @@ export async function GET(request, { params }) {
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   return NextResponse.json({ messages });
 }
+export const GET = withSanitizedErrors(GET_impl);

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -11,7 +12,7 @@ function isConfigured() {
 /**
  * DELETE /api/call-centre/queues/:id
  */
-export async function DELETE(request, { params }) {
+async function DELETE_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -38,3 +39,4 @@ export async function DELETE(request, { params }) {
   await db.callQueues.remove((q) => q.id === queue.id);
   return new NextResponse(null, { status: 204 });
 }
+export const DELETE = withSanitizedErrors(DELETE_impl);

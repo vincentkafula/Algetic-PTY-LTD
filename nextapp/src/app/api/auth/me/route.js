@@ -3,13 +3,14 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { publicUser } = require('@/lib/authTokens');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/auth/me
  * Returns the logged-in account, so the dashboard can confirm the token
  * is still valid and show who's signed in.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let authedUser;
   try {
     authedUser = requireAuth(request);
@@ -23,3 +24,4 @@ export async function GET(request) {
   }
   return NextResponse.json({ user: publicUser(user) });
 }
+export const GET = withSanitizedErrors(GET_impl);

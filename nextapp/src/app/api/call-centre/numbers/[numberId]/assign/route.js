@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -15,7 +16,7 @@ function isConfigured() {
  * it from any SIP trunk it was on — a number can't be on a trunk AND
  * have its own Voice URL honored at the same time.
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -56,3 +57,4 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

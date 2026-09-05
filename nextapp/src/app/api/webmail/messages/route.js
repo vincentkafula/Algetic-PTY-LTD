@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireMailboxAuth } = require('@/lib/mailboxAuth');
 const { VALID_FOLDERS, effectiveFolder } = require('@/lib/webmailFolders');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/webmail/messages?folder=inbox
@@ -10,7 +11,7 @@ const { VALID_FOLDERS, effectiveFolder } = require('@/lib/webmailFolders');
  * it shows every starred message regardless of which folder it's
  * actually filed in, same as Gmail.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let mailbox;
   try {
     mailbox = requireMailboxAuth(request);
@@ -35,3 +36,4 @@ export async function GET(request) {
     messages: filtered.map((m) => ({ ...m, folder: effectiveFolder(m) }))
   });
 }
+export const GET = withSanitizedErrors(GET_impl);

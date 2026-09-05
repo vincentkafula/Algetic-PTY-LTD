@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/payments/orders/:id
@@ -14,7 +15,7 @@ const { requireAuth } = require('@/lib/auth');
  * current docs before writing this) — not just object destructuring
  * like the Express version's req.params.id.
  */
-export async function GET(request, { params }) {
+async function GET_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -32,3 +33,4 @@ export async function GET(request, { params }) {
   const { baseUsdCents, exchangeRate, markupPercent, ...customerSafe } = order;
   return NextResponse.json(customerSafe);
 }
+export const GET = withSanitizedErrors(GET_impl);

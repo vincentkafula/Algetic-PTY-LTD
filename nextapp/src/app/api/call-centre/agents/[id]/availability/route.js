@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * PATCH /api/call-centre/agents/:id/availability
  * body: { available: true|false }
  */
-export async function PATCH(request, { params }) {
+async function PATCH_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -26,3 +27,4 @@ export async function PATCH(request, { params }) {
   const updated = await db.callAgents.update((a) => a.id === agent.id, { available });
   return NextResponse.json(updated);
 }
+export const PATCH = withSanitizedErrors(PATCH_impl);

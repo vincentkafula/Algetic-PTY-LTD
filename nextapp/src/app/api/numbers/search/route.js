@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/numbers/search?country=US&areaCode=415
  * Searches for available numbers to provision.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   try {
     requireAuth(request);
   } catch (err) {
@@ -45,3 +46,4 @@ export async function GET(request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);

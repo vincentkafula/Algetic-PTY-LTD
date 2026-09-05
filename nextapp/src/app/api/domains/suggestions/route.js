@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 
 const { requireAuth } = require('@/lib/auth');
 const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/domains/suggestions?query=my+bakery&tlds=com,net
  * Natural-language / keyword domain name suggestions.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   try {
     requireAuth(request);
   } catch (err) {
@@ -33,3 +34,4 @@ export async function GET(request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);

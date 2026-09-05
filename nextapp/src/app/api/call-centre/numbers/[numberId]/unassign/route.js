@@ -3,13 +3,14 @@ import { NextResponse } from 'next/server';
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/call-centre/numbers/:numberId/unassign
  * Clears the Voice URL. The number is left with no call handling at all
  * — re-provisioning trunk attachment is a separate step, not automatic.
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -32,3 +33,4 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

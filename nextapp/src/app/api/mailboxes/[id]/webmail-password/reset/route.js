@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/mailboxes/:id/webmail-password/reset
@@ -11,7 +12,7 @@ const { requireAuth } = require('@/lib/auth');
  * credential from the Altegic account). Returns the new password once —
  * there is no way to retrieve the old one, by design.
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -33,3 +34,4 @@ export async function POST(request, { params }) {
     webmailPasswordNote: 'Save this now — it will not be shown again.'
   });
 }
+export const POST = withSanitizedErrors(POST_impl);

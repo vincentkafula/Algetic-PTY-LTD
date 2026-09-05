@@ -6,6 +6,7 @@ const payfast = require('@/lib/services/payfast');
 const { getGoDaddyQuote, registerGoDaddyDomain } = require('@/lib/godaddyClient');
 const { provisionNumberForAccount } = require('@/lib/services/trunking');
 const { createMailboxForAccount } = require('@/lib/mailgunClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 // ---------------------------------------------------------------------------
 // Ported from server/routes/paymentWebhooks.js. PayFast's Instant
@@ -41,7 +42,7 @@ const { createMailboxForAccount } = require('@/lib/mailgunClient');
 // "paid, awaiting fulfillment" for now.
 // ---------------------------------------------------------------------------
 
-export async function POST(request) {
+async function POST_impl(request) {
   const formData = await request.formData().catch(() => null);
   const posted = formData ? Object.fromEntries(formData.entries()) : {};
 
@@ -267,3 +268,4 @@ async function fulfillMailboxOrder(order) {
     });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

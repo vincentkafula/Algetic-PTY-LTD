@@ -4,6 +4,7 @@ const { requireAuth } = require('@/lib/auth');
 const { isTwilioConfigured } = require('@/lib/twilioClient');
 const { getMonthlyNumberCostUsdCents } = require('@/lib/services/twilioPricing');
 const { createOrderWithCheckout } = require('@/lib/services/orders');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/numbers/provision
@@ -14,7 +15,7 @@ const { createOrderWithCheckout } = require('@/lib/services/orders');
  * the ITN webhook once payment clears (services/trunking.js's
  * provisionNumberForAccount).
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -47,3 +48,4 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message }, { status: err.status || 500 });
   }
 }
+export const POST = withSanitizedErrors(POST_impl);

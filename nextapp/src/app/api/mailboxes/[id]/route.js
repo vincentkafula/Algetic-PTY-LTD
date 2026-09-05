@@ -4,6 +4,7 @@ const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { MAILGUN_BASE_URL, isMailgunConfigured, authHeader } = require('@/lib/mailgunClient');
 const { cancelSubscription, isRecurringBillingConfigured } = require('@/lib/services/payfastRecurring');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * DELETE /api/mailboxes/:id
@@ -13,7 +14,7 @@ const { cancelSubscription, isRecurringBillingConfigured } = require('@/lib/serv
  * charged monthly for it), and removes the local record along with that
  * mailbox's captured message history.
  */
-export async function DELETE(request, { params }) {
+async function DELETE_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -50,4 +51,4 @@ export async function DELETE(request, { params }) {
   await db.messages.remove((msg) => msg.mailboxId === record.id);
   return new NextResponse(null, { status: 204 });
 }
-
+export const DELETE = withSanitizedErrors(DELETE_impl);

@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
 const { twilioClient, isTwilioConfigured } = require('@/lib/twilioClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -12,7 +13,7 @@ function isConfigured() {
 /**
  * GET /api/call-centre/queues
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -30,7 +31,7 @@ export async function GET(request) {
  * <Enqueue>/<Dial><Queue> address queues by name, so the Twilio-side
  * queue has to exist.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -66,3 +67,5 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

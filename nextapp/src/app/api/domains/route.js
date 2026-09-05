@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/domains
  * List domains this account has registered through Altegic.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -18,3 +19,4 @@ export async function GET(request) {
   const domains = db.domains.filter((d) => d.ownerId === user.id);
   return NextResponse.json({ domains });
 }
+export const GET = withSanitizedErrors(GET_impl);

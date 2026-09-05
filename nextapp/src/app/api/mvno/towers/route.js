@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 
 const { requireAuth } = require('@/lib/auth');
 const { makeRng, REGIONS, TECH } = require('@/lib/mvnoDemo');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/mvno/towers
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -30,3 +31,4 @@ export async function GET(request) {
   });
   return NextResponse.json({ demo: true, data: towers });
 }
+export const GET = withSanitizedErrors(GET_impl);

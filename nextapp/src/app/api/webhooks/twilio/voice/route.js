@@ -1,11 +1,12 @@
 const db = require('@/lib/db');
 const { verifyTwilioSignature, rejectUnsigned, xmlResponse, buildMenuTwiml, VoiceResponse } = require('@/lib/callCentreVoice');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/webhooks/twilio/voice?menuId=<id>
  * Entry point when someone calls a number assigned to a menu.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   const formData = await request.formData().catch(() => null);
   const posted = formData ? Object.fromEntries(formData.entries()) : {};
 
@@ -22,3 +23,4 @@ export async function POST(request) {
 
   return xmlResponse(buildMenuTwiml(menu));
 }
+export const POST = withSanitizedErrors(POST_impl);

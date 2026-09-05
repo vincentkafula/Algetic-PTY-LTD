@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 
 const { requireAuth } = require('@/lib/auth');
 const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/domains/search?domain=example.com
  * Read-only availability check. No charges, no account interaction on
  * GoDaddy's side beyond the lookup itself.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   try {
     requireAuth(request);
   } catch (err) {
@@ -32,3 +33,4 @@ export async function GET(request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);

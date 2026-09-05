@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * DELETE /api/projects/:id
  */
-export async function DELETE(request, { params }) {
+async function DELETE_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -20,3 +21,4 @@ export async function DELETE(request, { params }) {
   await db.projects.remove((p) => p.id === project.id);
   return new NextResponse(null, { status: 204 });
 }
+export const DELETE = withSanitizedErrors(DELETE_impl);

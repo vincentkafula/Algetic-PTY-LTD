@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const bcrypt = require('bcryptjs');
 const db = require('@/lib/db');
 const { issueMailboxToken } = require('@/lib/mailboxAuth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/webmail/login
@@ -12,7 +13,7 @@ const { issueMailboxToken } = require('@/lib/mailboxAuth');
  * wrong, so this can't be used to enumerate which addresses exist on
  * the platform.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   const body = await request.json().catch(() => ({}));
   const { email, password } = body || {};
   if (!email || !password) {
@@ -29,3 +30,4 @@ export async function POST(request) {
 
   return NextResponse.json({ token: issueMailboxToken(mailbox), address: mailbox.address });
 }
+export const POST = withSanitizedErrors(POST_impl);

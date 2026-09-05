@@ -1,11 +1,12 @@
 const db = require('@/lib/db');
 const { verifyTwilioSignature, rejectUnsigned, xmlResponse, buildMenuTwiml, notifyAgents, VoiceResponse } = require('@/lib/callCentreVoice');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/webhooks/twilio/gather?menuId=<id>
  * Twilio posts the caller's pressed digit here (as "Digits").
  */
-export async function POST(request) {
+async function POST_impl(request) {
   const formData = await request.formData().catch(() => null);
   const posted = formData ? Object.fromEntries(formData.entries()) : {};
 
@@ -86,3 +87,4 @@ export async function POST(request) {
   fallback.hangup();
   return xmlResponse(fallback);
 }
+export const POST = withSanitizedErrors(POST_impl);

@@ -4,12 +4,13 @@ const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireMailboxAuth } = require('@/lib/mailboxAuth');
 const { isMailgunConfigured, sendMailAs } = require('@/lib/mailgunClient');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * POST /api/webmail/send
  * body: { to, subject, text }
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let mailbox;
   try {
     mailbox = requireMailboxAuth(request);
@@ -48,3 +49,4 @@ export async function POST(request) {
   await db.messages.insert(record);
   return NextResponse.json(record, { status: 201 });
 }
+export const POST = withSanitizedErrors(POST_impl);

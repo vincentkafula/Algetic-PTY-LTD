@@ -3,12 +3,13 @@ import { NextResponse } from 'next/server';
 const { requireAuth } = require('@/lib/auth');
 const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
 const { findOwnedDomain } = require('@/lib/domainOwnership');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/domains/:id/dns?type=A&name=www
  * Lists DNS records for this domain. type/name filter is optional.
  */
-export async function GET(request, { params }) {
+async function GET_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -47,7 +48,7 @@ export async function GET(request, { params }) {
  * exists, or if it would conflict with an existing one — that rejection
  * is passed through as-is rather than papered over.
  */
-export async function POST(request, { params }) {
+async function POST_impl(request, { params }) {
   let user;
   try {
     user = requireAuth(request);
@@ -85,3 +86,5 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

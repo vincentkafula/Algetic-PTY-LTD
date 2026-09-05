@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 // ---------------------------------------------------------------------------
 // Ported from server/routes/projects.js. Website, software development,
@@ -25,7 +26,7 @@ const VALID_TYPES = ['website', 'software', 'internet', 'ip-phone'];
 /**
  * GET /api/projects
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -41,7 +42,7 @@ export async function GET(request) {
  * body: { type: "website"|"software"|"internet"|"ip-phone", title, description, budget? }
  * budget is a free-text field, not parsed or validated as a number.
  */
-export async function POST(request) {
+async function POST_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -72,3 +73,5 @@ export async function POST(request) {
   await db.projects.insert(record);
   return NextResponse.json(record, { status: 201 });
 }
+export const GET = withSanitizedErrors(GET_impl);
+export const POST = withSanitizedErrors(POST_impl);

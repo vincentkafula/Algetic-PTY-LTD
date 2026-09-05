@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 
 const { requireMailboxAuth } = require('@/lib/mailboxAuth');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
  * GET /api/webmail/me
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let mailbox;
   try {
     mailbox = requireMailboxAuth(request);
@@ -14,3 +15,4 @@ export async function GET(request) {
   }
   return NextResponse.json({ address: mailbox.address });
 }
+export const GET = withSanitizedErrors(GET_impl);

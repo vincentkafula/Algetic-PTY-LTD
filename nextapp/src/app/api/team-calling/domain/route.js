@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const { requireAuth } = require('@/lib/auth');
 const { isTwilioConfigured } = require('@/lib/twilioClient');
 const sipDomain = require('@/lib/services/sipDomain');
+const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 function isConfigured() {
   return isTwilioConfigured() && Boolean(process.env.PUBLIC_BASE_URL);
@@ -13,7 +14,7 @@ function isConfigured() {
  * Returns (creating on first call) this account's SIP Domain name —
  * what a softphone registers to, as username@domainName.
  */
-export async function GET(request) {
+async function GET_impl(request) {
   let user;
   try {
     user = requireAuth(request);
@@ -30,3 +31,4 @@ export async function GET(request) {
     return NextResponse.json({ error: err.message }, { status: err.status || 500 });
   }
 }
+export const GET = withSanitizedErrors(GET_impl);
