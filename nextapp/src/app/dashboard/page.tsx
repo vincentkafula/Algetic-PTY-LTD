@@ -11,6 +11,7 @@ import TeamCallingPanel from '@/components/dashboard/TeamCallingPanel';
 import CallCentrePanel from '@/components/dashboard/CallCentrePanel';
 import DomainsPanel from '@/components/dashboard/DomainsPanel';
 import ProjectsPanel from '@/components/dashboard/ProjectsPanel';
+import MvnoPanel from '@/components/dashboard/MvnoPanel';
 
 // ---------------------------------------------------------------------------
 // Ported from server/frontend/src/pages/dashboard/Dashboard.jsx. Same
@@ -19,11 +20,10 @@ import ProjectsPanel from '@/components/dashboard/ProjectsPanel';
 // directly as possible rather than introduce a different navigation
 // architecture mid-migration.
 //
-// PANELS ARE PLACEHOLDERS FOR NOW. Each real panel (Mailboxes, Voice, Team
-// Calling, Call Centre, Domains, Projects, MVNO) is its own future phase,
-// same incremental discipline as every backend phase in this migration —
-// building all 7 at once here would be exactly the kind of large,
-// unverified pass this whole project has deliberately avoided.
+// All 7 panels (Mailboxes, Voice, Team Calling, Call Centre, Domains,
+// Projects, MVNO) are now wired in, each built and verified as its own
+// phase rather than all at once — same incremental discipline as every
+// backend phase in this migration.
 // ---------------------------------------------------------------------------
 
 const NAV_ITEMS = [
@@ -105,7 +105,7 @@ export default function DashboardPage() {
         {view === 'voice' && <VoicePanel authedFetch={authedFetch} />}
         {view === 'sipnet' && <TeamCallingPanel authedFetch={authedFetch} health={health} />}
         {view === 'callcentre' && <CallCentrePanel authedFetch={authedFetch} health={health} />}
-        {view === 'mvno' && <ComingSoon label="MVNO (demo)" />}
+        {view === 'mvno' && <MvnoPanel authedFetch={authedFetch} />}
         {view === 'domains' && <DomainsPanel authedFetch={authedFetch} health={health} />}
         {view === 'projects' && <ProjectsPanel authedFetch={authedFetch} />}
       </div>
@@ -122,13 +122,4 @@ function HealthBanner({ health }: { health: any }) {
     return <div className="status-banner ok">Connected — supported number countries: {health.supportedCountries.join(', ')}</div>;
   }
   return <div className="status-banner warn">Some services are still being set up on this account — a few features below may not be available yet.</div>;
-}
-
-function ComingSoon({ label }: { label: string }) {
-  return (
-    <div>
-      <h1>{label}</h1>
-      <p style={{ color: 'var(--muted)' }}>This panel is being rebuilt as part of the ongoing platform migration — check back shortly.</p>
-    </div>
-  );
 }
