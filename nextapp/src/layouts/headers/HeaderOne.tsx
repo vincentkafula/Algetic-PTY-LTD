@@ -17,60 +17,35 @@ const menu_data: DataType[] = [
   {
     id: 1,
     title: 'Home',
-    link: '#',
-    has_dropdown: true,
-    sub_menus: [
-      { title: 'Home 01', link: '/' },
-      { title: 'Home 02', link: '/home-2' },
-      { title: 'Home 03', link: '/home-3' },
-    ]
+    link: '/',
+    has_dropdown: false,
   },
   {
     id: 2,
     title: 'About',
-    link: '#',
-    has_dropdown: true,
-    sub_menus: [
-      { title: 'About 01', link: '/about' },
-      { title: 'About 02', link: '/about-2' },
-    ]
+    link: '/about',
+    has_dropdown: false,
   },
   {
     id: 3,
     title: 'Services',
-    link: '#',
-    has_dropdown: true,
-    sub_menus: [
-      { title: 'Services', link: '/service' },
-      { title: 'Services Deails', link: '/service-details' },
-    ]
+    link: '/service',
+    has_dropdown: false,
   },
   {
     id: 4,
-    title: 'Pages',
-    link: '#',
-    has_dropdown: true,
-    sub_menus: [
-      { title: 'Project', link: '/project' },
-      { title: 'Project Details', link: '/project-details' },
-      { title: 'Pricing Plan', link: '/pricing' },
-      { title: 'Team', link: '/team' },
-      { title: 'Faq Page', link: '/faq' },
-      { title: '404', link: '/404' },
-    ]
+    title: 'Pricing',
+    link: '/pricing',
+    has_dropdown: false,
   },
   {
     id: 5,
-    title: 'Blog',
-    link: '#',
-    has_dropdown: true,
-    sub_menus: [
-      { title: 'Blog', link: '/blog' },
-      { title: 'Blog Details', link: '/blog-details' },
-    ]
+    title: 'Team',
+    link: '/team',
+    has_dropdown: false,
   },
   {
-    id: 5,
+    id: 6,
     title: 'Contact',
     link: '/contact',
     has_dropdown: false,
