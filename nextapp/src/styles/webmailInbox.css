@@ -1,0 +1,43 @@
+  .wm-app { display: flex; min-height: 100vh; }
+  .wm-sidebar {
+    width: 220px; flex-shrink: 0; background: var(--panel);
+    border-right: 1px solid var(--line-soft); padding: 20px 14px;
+    display: flex; flex-direction: column;
+  }
+  .wm-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; padding: 0 6px 18px; display: flex; align-items: center; gap: 8px; }
+  .wm-compose-btn {
+    background: linear-gradient(90deg, var(--mail), var(--platform)); color: var(--ink);
+    border: none; border-radius: 9px; padding: 12px; font-weight: 700; font-size: 13.5px;
+    cursor: pointer; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .wm-folder-link {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 9px 10px; border-radius: 8px; color: var(--muted); font-size: 13.5px;
+    cursor: pointer; margin-bottom: 2px; border-left: 2px solid transparent;
+  }
+  .wm-folder-link:hover, .wm-folder-link.active { background: var(--panel-raised); color: var(--text); border-left: 2px solid var(--mail); }
+  .wm-folder-link .badge { background: var(--platform-dim); color: var(--platform); border-radius: 8px; padding: 1px 7px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
+  .wm-sidebar-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--muted); }
+  .wm-sidebar-footer .addr { color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; word-break: break-all; margin-bottom: 8px; }
+
+  .wm-main { flex: 1; padding: 24px 32px; max-width: 860px; }
+  .wm-main h1 { font-size: 20px; margin: 0 0 18px; }
+
+  .wm-empty { color: var(--muted); text-align: center; padding: 60px 20px; font-size: 13.5px; }
+  .wm-msg-row {
+    display: grid; grid-template-columns: 24px 200px 1fr 60px; gap: 12px; align-items: center;
+    padding: 12px 10px; border-bottom: 1px solid var(--line-soft); cursor: pointer; font-size: 13.5px;
+  }
+  .wm-msg-row:hover { background: var(--panel); }
+  .wm-star { color: var(--line); cursor: pointer; font-size: 15px; }
+  .wm-star.on { color: var(--voice); }
+  .wm-msg-from { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wm-msg-subject { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wm-msg-time { color: var(--muted-dim); font-size: 11.5px; text-align: right; }
+
+  .wm-read-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .wm-read-header h2 { font-size: 18px; margin: 0 0 8px; }
+  .wm-read-meta { font-size: 13px; color: var(--muted); }
+  .wm-read-meta strong { color: var(--text); }
+  .wm-read-body { white-space: pre-wrap; line-height: 1.7; font-size: 14px; color: var(--text); padding: 20px 0; border-top: 1px solid var(--line-soft); margin-top: 16px; }
+  .wm-read-actions { display: flex; gap: 10px; margin-top: 20px; }
