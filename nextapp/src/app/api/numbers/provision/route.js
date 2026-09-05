@@ -39,7 +39,8 @@ export async function POST(request) {
       fulfillmentData: { phoneNumber, customerLabel: customerLabel || null },
       baseUsdCents,
       itemName: phoneNumber,
-      itemDescription: `Phone number: ${phoneNumber} (first month)`
+      itemDescription: `Phone number: ${phoneNumber} (monthly)`,
+      isRecurring: true
     });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {

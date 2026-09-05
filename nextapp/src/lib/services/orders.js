@@ -24,7 +24,19 @@ const payfast = require('./payfast');
  * price) rather than returning a partial/invalid result — callers (Route
  * Handlers) are expected to catch and translate to an HTTP error.
  */
-async function createOrderWithCheckout({ ownerId, ownerEmail, fulfillmentType, fulfillmentData, baseUsdCents, itemName, itemDescription }) {
+/**
+ * Creates a pending order priced in ZAR (converted + marked up from a
+ * provider's real USD cost) and returns everything needed to render a
+ * PayFast checkout form. Throws on any failure (not configured, bad
+ * price) rather than returning a partial/invalid result — callers (Route
+ * Handlers) are expected to catch and translate to an HTTP error.
+ *
+ * isRecurring: when true, creates a PayFast Subscription (monthly,
+ * indefinite - cycles: 0, billed until cancelled) instead of a once-off
+ * payment. Used for numbers and mailboxes, which cost Altegic money every
+ * month they stay active, unlike a one-time domain registration.
+ */
+async function createOrderWithCheckout({ ownerId, ownerEmail, fulfillmentType, fulfillmentData, baseUsdCents, itemName, itemDescription, isRecurring }) {
   const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL;
 
   if (!payfast.isConfigured()) {
@@ -52,6 +64,8 @@ async function createOrderWithCheckout({ ownerId, ownerEmail, fulfillmentType, f
     exchangeRate: price.exchangeRate,
     markupPercent: price.markupPercent,
     customerZarCents: price.customerZarCents,
+    isRecurring: Boolean(isRecurring),
+    subscriptionToken: null,
     payfastPaymentId: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -66,7 +80,8 @@ async function createOrderWithCheckout({ ownerId, ownerEmail, fulfillmentType, f
     returnUrl: `${PUBLIC_BASE_URL}/checkout/return?order=${order.id}`,
     cancelUrl: `${PUBLIC_BASE_URL}/checkout/cancel?order=${order.id}`,
     notifyUrl: `${PUBLIC_BASE_URL}/api/webhooks/payfast/notify`,
-    email: ownerEmail
+    email: ownerEmail,
+    subscription: isRecurring ? { frequency: 3, cycles: 0 } : undefined
   });
 
   return {

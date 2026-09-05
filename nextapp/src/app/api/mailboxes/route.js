@@ -77,7 +77,8 @@ export async function POST(request) {
       fulfillmentData: { localPart, forwardTo: forwardTo || null },
       baseUsdCents,
       itemName: address,
-      itemDescription: `Mailbox: ${address} (first month)`
+      itemDescription: `Mailbox: ${address} (monthly)`,
+      isRecurring: true
     });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {

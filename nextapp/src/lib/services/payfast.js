@@ -81,9 +81,27 @@ function generateSignature(fields) {
  * amountZarCents is converted to PayFast's expected "123.45" string
  * format here so callers never have to remember that detail.
  */
-function buildCheckoutFields({ orderId, amountZarCents, itemName, itemDescription, returnUrl, cancelUrl, notifyUrl, email }) {
+/**
+ * subscription, when provided, turns this into a PayFast Subscription
+ * checkout instead of a once-off payment: { frequency, cycles }.
+ * frequency: 3 = Monthly (see PayFast's documented frequency table;
+ * this app only ever uses monthly billing, so other values are never
+ * passed in practice, but the field is fully general). cycles: 0 means
+ * indefinite (bills until cancelled) — used for both numbers and
+ * mailboxes, since neither has a fixed contract length.
+ *
+ * A passphrase is REQUIRED for subscriptions per PayFast's own
+ * documentation (unlike once-off checkout, where it's optional) — this
+ * throws a clear, specific error here rather than letting PayFast
+ * reject the request with a generic signature-mismatch failure that
+ * would be much harder to diagnose.
+ */
+function buildCheckoutFields({ orderId, amountZarCents, itemName, itemDescription, returnUrl, cancelUrl, notifyUrl, email, subscription }) {
   if (!isConfigured()) {
     throw new Error('PayFast is not configured (PAYFAST_MERCHANT_ID / PAYFAST_MERCHANT_KEY missing)');
+  }
+  if (subscription && !PASSPHRASE) {
+    throw new Error('PAYFAST_PASSPHRASE is required for subscription (recurring billing) checkouts');
   }
   const fields = {
     merchant_id: MERCHANT_ID,
@@ -97,6 +115,11 @@ function buildCheckoutFields({ orderId, amountZarCents, itemName, itemDescriptio
     item_name: itemName.slice(0, 100), // PayFast's documented max length
     item_description: (itemDescription || '').slice(0, 255)
   };
+  if (subscription) {
+    fields.subscription_type = '1';
+    fields.frequency = String(subscription.frequency);
+    fields.cycles = String(subscription.cycles);
+  }
   const signature = generateSignature(fields);
   return { ...fields, signature };
 }

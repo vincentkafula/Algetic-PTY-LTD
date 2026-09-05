@@ -115,6 +115,13 @@ async function processItn(posted, remoteIp) {
   await db.orders.update((o) => o.id === order.id, {
     status: 'paid',
     payfastPaymentId: posted.pf_payment_id || null,
+    // PayFast includes a `token` field in the ITN specifically for
+    // subscription (recurring) payments — the unique ID needed for all
+    // future management calls (fetch/pause/cancel) on this subscription.
+    // Absent entirely for once-off payments (e.g. domains), so this is
+    // null for those, not an empty string — keeps "does this order have
+    // a live subscription" a simple truthy check everywhere else.
+    subscriptionToken: posted.token || null,
     updatedAt: new Date().toISOString()
   });
 
@@ -201,7 +208,15 @@ async function fulfillDomainOrder(order) {
 async function fulfillNumberOrder(order) {
   const { phoneNumber, customerLabel } = order.fulfillmentData;
   try {
-    await provisionNumberForAccount(order.ownerId, phoneNumber, customerLabel);
+    const record = await provisionNumberForAccount(order.ownerId, phoneNumber, customerLabel);
+    // Stored on the number record itself (not just the order) so the
+    // DELETE /api/numbers/:id route — which looks up the number, not the
+    // order — can find and cancel the underlying PayFast subscription.
+    // Without this, releasing a number would stop the service but leave
+    // the customer being charged monthly for a number they no longer have.
+    if (order.subscriptionToken) {
+      await db.numbers.update((n) => n.id === record.id, { subscriptionToken: order.subscriptionToken });
+    }
     await db.orders.update((o) => o.id === order.id, {
       status: 'fulfilled',
       updatedAt: new Date().toISOString()
@@ -230,7 +245,13 @@ async function fulfillNumberOrder(order) {
 async function fulfillMailboxOrder(order) {
   const { localPart, forwardTo } = order.fulfillmentData;
   try {
-    await createMailboxForAccount(order.ownerId, localPart, forwardTo);
+    const record = await createMailboxForAccount(order.ownerId, localPart, forwardTo);
+    // Same reasoning as fulfillNumberOrder above — stored on the mailbox
+    // record so DELETE /api/mailboxes/:id can cancel the underlying
+    // subscription, not just remove the mailbox.
+    if (order.subscriptionToken) {
+      await db.mailboxes.update((m) => m.id === record.id, { subscriptionToken: order.subscriptionToken });
+    }
     await db.orders.update((o) => o.id === order.id, {
       status: 'fulfilled',
       updatedAt: new Date().toISOString()
