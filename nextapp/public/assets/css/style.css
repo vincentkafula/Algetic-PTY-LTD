@@ -29,12 +29,13 @@ Version      : 1.0
 * ----------------------------------------------------------------------------------------
 */
 body {
-	color: rgba(255,255,255,0.8);
+	color: rgba(255,255,255,0.85);
 	font-family: 'Exo', sans-serif;
 	font-size: 16px;
 	font-weight: 400;
 	line-height: 28px;
-	background:#232C4D;
+	background: linear-gradient(180deg, #232C4D 0%, #2A3560 45%, #232C4D 100%);
+	background-attachment: fixed;
 	overflow-x:hidden;
 	}
 	html,
@@ -220,24 +221,28 @@ body {
 	.btn_one {
 		background-image: -webkit-linear-gradient(to right, #0196E7 0%, #FF6B9D 51%, #FF6B9D 100%); 
 		background-image: linear-gradient(to right, #0196E7 0%, #FF6B9D 51%, #FF6B9D 100%);
-		border-radius: 3px;
+		border-radius: 50px;
 		background-size: 200% auto;
 		border-style: none;
 		color: #fff;
 		font-weight: 600;
 		padding: 14px 33px;
-		text-transform: uppercase;
+		text-transform: none;
+		letter-spacing: 0.01em;
 		z-index: 1;
 		overflow: hidden;
 		display: inline-block;
 		-webkit-transition: all 0.3s ease 0s;
 		transition: all 0.3s ease 0s;
 		font-size: 15px;
+		box-shadow: 0 10px 25px rgba(1, 150, 231, 0.28);
 	}
 	.btn_one i{margin-right:5px;}
 	.btn_one:hover{
 	background-position: right center;
 	color:#fff;
+	box-shadow: 0 14px 32px rgba(255, 107, 157, 0.32);
+	transform: translateY(-2px);
 	}
 	@media only screen and (max-width:960px){
 	.btn_one{
@@ -248,7 +253,7 @@ body {
 	.btn_two {
 		border: 1px solid #4FD8D1;
 		padding: 10px 30px;
-		border-radius: 2px;
+		border-radius: 50px;
 		color: #4FD8D1;
 		margin-left: 20px;
 		transition: 0.3s;
@@ -256,6 +261,8 @@ body {
 	.btn_two:hover{
 	background:#4FD8D1;
 	color:#000;
+	box-shadow: 0 10px 25px rgba(79, 216, 209, 0.28);
+	transform: translateY(-2px);
 	}
 	@media only screen and (max-width:414px){
 	.btn_two {margin-left:0px;}
@@ -472,7 +479,7 @@ body {
 			bottom: 0;
 			top: 0;
 			right: 0;
-			background: rgba(7, 41, 77, 0.1);
+			background: linear-gradient(135deg, rgba(35, 44, 77, 0.82) 0%, rgba(45, 56, 104, 0.72) 55%, rgba(79, 216, 209, 0.28) 100%);
 	}
 	@media only screen and (max-width:768px){
 	.home_bg {
@@ -1684,36 +1691,64 @@ body {
 		margin-bottom: 40px;
 	}
 /* ---------------------------------------------------------------------
-   Altegic softening pass: gives flat template cards a gentle "raised
-   surface" feel (padding, rounded corners, soft shadow) that the
-   original template didn't apply to these specific elements. Appended
-   at the end so it wins the cascade without needing !important, and
-   only ADDS properties (background/padding/shadow/radius) rather than
-   overriding existing ones, so it can't break anything already working.
+   Altegic softening pass (round 2): gradient card surfaces, gentler
+   shadows, and a hover lift, replacing the flatter round-1 treatment.
+   Appended at the end so it wins the cascade without needing
+   !important, and only ADDS/overrides background+shadow+radius, not
+   text colors or layout, so it can't break contrast anywhere.
    --------------------------------------------------------------------- */
 .single_service {
-  background: rgba(255,255,255,0.03);
-  border-radius: 16px;
-  padding: 28px 24px 32px;
-  box-shadow: 0 12px 30px rgba(10, 14, 30, 0.25);
+  background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 30px 26px 34px;
+  box-shadow: 0 14px 34px rgba(8, 12, 28, 0.28);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .single_service:hover {
   transform: translateY(-6px);
-  box-shadow: 0 18px 40px rgba(10, 14, 30, 0.35);
+  box-shadow: 0 20px 44px rgba(8, 12, 28, 0.38);
+  border-color: rgba(79, 216, 209, 0.35);
 }
 .pricingTable {
-  border-radius: 18px;
-  box-shadow: 0 12px 30px rgba(10, 14, 30, 0.25);
+  background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  border-radius: 22px;
+  box-shadow: 0 14px 34px rgba(8, 12, 28, 0.28);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.pricingTable:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 44px rgba(8, 12, 28, 0.38);
 }
 .single-project, .single-project2 {
-  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  border-radius: 18px;
 }
 .single_team {
-  border-radius: 16px;
-  padding: 24px 16px;
-  background: rgba(255,255,255,0.03);
+  border-radius: 20px;
+  padding: 26px 18px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.single_team:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(8, 12, 28, 0.3);
 }
 .contact, .credential, .panel-box {
-  border-radius: 16px;
+  border-radius: 20px;
+}
+.single-project {
+  transition: transform 0.25s ease;
+}
+.single-project:hover {
+  transform: translateY(-4px);
+}
+/* Softer, rounder inputs/selects/textareas across the whole site,
+   matching the pill-shaped buttons rather than the template's sharp
+   default corners. */
+input[type="text"], input[type="email"], input[type="password"],
+input[type="tel"], input[type="number"], textarea, select,
+.form-control {
+  border-radius: 12px !important;
 }
