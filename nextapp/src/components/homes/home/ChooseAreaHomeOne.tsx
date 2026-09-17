@@ -23,8 +23,19 @@ const ChooseAreaHomeOne = () => {
               </div>
             </div>
             <div className="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-              <div className="sk_img">
-                <img src="assets/img/computer.png" className="img-fluid" alt="image" />
+              <div className="feature-showcase">
+                <div className="feature-showcase-item">
+                  <div className="service-icon-badge"><i className="ti-email"></i></div>
+                  <div><h4>Email</h4><p>sales@yourcompany.com</p></div>
+                </div>
+                <div className="feature-showcase-item">
+                  <div className="service-icon-badge"><i className="ti-mobile"></i></div>
+                  <div><h4>Voice</h4><p>A number that's really yours</p></div>
+                </div>
+                <div className="feature-showcase-item">
+                  <div className="service-icon-badge"><i className="ti-world"></i></div>
+                  <div><h4>Domains</h4><p>Your name, live on the web</p></div>
+                </div>
               </div>
             </div> 
           </div>

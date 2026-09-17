@@ -471,6 +471,8 @@ body {
 	.home_bg {
 		height: 800px;
 		position:relative;
+		background: linear-gradient(135deg, #1B2340 0%, #2A3560 45%, #234A5E 100%);
+		overflow: hidden;
 	}
 	.home_bg::before {    
 		position: absolute;
@@ -479,7 +481,9 @@ body {
 			bottom: 0;
 			top: 0;
 			right: 0;
-			background: linear-gradient(135deg, rgba(35, 44, 77, 0.82) 0%, rgba(45, 56, 104, 0.72) 55%, rgba(79, 216, 209, 0.28) 100%);
+			background:
+				radial-gradient(circle at 82% 18%, rgba(79, 216, 209, 0.28) 0%, rgba(79, 216, 209, 0) 45%),
+				radial-gradient(circle at 12% 85%, rgba(1, 150, 231, 0.22) 0%, rgba(1, 150, 231, 0) 50%);
 	}
 	@media only screen and (max-width:768px){
 	.home_bg {
@@ -1751,4 +1755,62 @@ input[type="text"], input[type="email"], input[type="password"],
 input[type="tel"], input[type="number"], textarea, select,
 .form-control {
   border-radius: 12px !important;
+}
+
+/* Soft icon badges replacing the mismatched stock cybersecurity photos
+   on service cards - a colorful gradient circle with a themify-icons
+   glyph, consistent across every service card site-wide. */
+.service-icon-badge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+  background: linear-gradient(135deg, #0196E7 0%, #4FD8D1 100%);
+  box-shadow: 0 10px 24px rgba(1, 150, 231, 0.3);
+}
+.service-icon-badge i {
+  font-size: 30px;
+  color: #fff;
+}
+
+/* Feature showcase panel - replaces the mismatched stock cybersecurity
+   illustrations (a "DATA ACCESS" graphic, a key/shield/laptop image)
+   with a clean, on-brand list of real Altegic services, built entirely
+   from the same icon badges used on the service cards. No external
+   imagery, so nothing here can ever be thematically mismatched again. */
+.feature-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 22px;
+  padding: 30px;
+  box-shadow: 0 16px 36px rgba(8, 12, 28, 0.28);
+}
+.feature-showcase-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.feature-showcase-item .service-icon-badge {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  margin-bottom: 0;
+}
+.feature-showcase-item .service-icon-badge i {
+  font-size: 22px;
+}
+.feature-showcase-item h4 {
+  margin: 0 0 2px;
+  font-size: 17px;
+}
+.feature-showcase-item p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
 }

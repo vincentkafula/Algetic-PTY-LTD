@@ -47,8 +47,7 @@ const slides = [
 const HeroAreaHomeOne = () => {
   return (
     <>
-      <section className="home_bg hb_height hero-slider-wrap"
-        style={{ backgroundImage: `url(/assets/img/bg/home-bg.jpg)`, backgroundSize: "cover", backgroundPosition: "center center" }}>
+      <section className="home_bg hb_height hero-slider-wrap">
         <div className="container">
           <Slider {...slider_settings}>
             {slides.map((slide, i) => (

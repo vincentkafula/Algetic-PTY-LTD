@@ -39,7 +39,16 @@ const AboutArea = () => {
                 <p>Founded to give small businesses the same professional communication
                   tools that larger companies take for granted — without the enterprise
                   price tag or the drawn-out setup.</p>
-                <img src="assets/img/about3.png" className="img-fluid" alt="image" />
+                <div className="feature-showcase">
+                  <div className="feature-showcase-item">
+                    <div className="service-icon-badge"><i className="ti-headphone-alt"></i></div>
+                    <div><h4>Call Centre</h4><p>Menus, queues, and agents</p></div>
+                  </div>
+                  <div className="feature-showcase-item">
+                    <div className="service-icon-badge"><i className="ti-desktop"></i></div>
+                    <div><h4>Website & Software</h4><p>Built when you need it</p></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
