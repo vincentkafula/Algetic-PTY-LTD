@@ -227,12 +227,24 @@ active. This is now closed using PayFast's Subscriptions API (monthly,
   as non-fatal if the cancellation call itself fails (logged clearly for
   manual follow-up) — a failed cancellation attempt never blocks the
   customer from actually deleting their resource.
-- **Domains stay once-off, deliberately** — registering a domain is
-  genuinely a one-time event in this system. (Real-world domain
-  registrations need annual renewal; this app does not yet model
-  renewal at all, for either billing or expiry tracking — a gap that
-  exists in both the Express and Next.js versions, not something new to
-  this rewrite.)
+- **Domains stay once-off for payment purposes, deliberately** —
+  registering a domain is genuinely a one-time charge in this system.
+  Real-world domain registrations need annual renewal, though, so
+  `src/lib/godaddyClient.js`'s `getGoDaddyDomainDetail` and
+  `setDomainAutoRenew` (GET/PATCH `/v1/domains/{domain}`, confirmed
+  against GoDaddy's own current docs — renewal management isn't on v3
+  yet) let a domain's real expiry date and GoDaddy's own auto-renew flag
+  be read and toggled from the dashboard, both free operations with no
+  billing involved. **Manually renewing a domain (charging the customer
+  again and calling `POST /v1/domains/{domain}/renew`) is deliberately
+  NOT built** — pricing that renewal ahead of time requires GoDaddy's
+  `GET /v2/customers/{customerId}/domains/{domain}`, and `customerId` is
+  a separate Shoppers-API identifier this app has no way to resolve yet.
+  Charging a customer without a confirmed real price first, or renewing
+  with GoDaddy before confirming the customer's payment, would each
+  invert the safe payment-before-provisioning order used everywhere else
+  in this app — worth getting right rather than guessing at for a flow
+  that charges real money.
 
 **Not yet verified: an actual PayFast sandbox transaction, start to
 finish, for either the once-off or the subscription flow.** No live
@@ -319,8 +331,11 @@ Stated directly, not glossed over:
    per mailbox) — this is a real business decision, not a technical
    one, and `POST /api/mailboxes` returns a clear "pricing not
    configured" error until it's set rather than guessing at a number.
-3. **Domain renewal isn't modeled at all** (see above) — a pre-existing
-   gap in both versions, not introduced by this rewrite.
+3. **Manual paid domain renewal isn't built** (see above) — expiry
+   tracking and auto-renew toggling are, but the paid manual-renewal
+   flow is blocked on resolving GoDaddy's `customerId` (a separate
+   Shoppers-API identifier), needed to safely price a renewal before
+   charging anyone.
 4. **This is a preview deployment, not production.** It's running as a
    separate Railway service (`altegic-nextjs-preview`), pointed at this
    `nextapp/` folder, completely isolated from the live Express site at

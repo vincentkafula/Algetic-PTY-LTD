@@ -76,4 +76,65 @@ async function registerGoDaddyDomain({ quoteToken, domain, period, agreedAgreeme
   return data;
 }
 
-module.exports = { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader, getGoDaddyQuote, registerGoDaddyDomain };
+/**
+ * Fetches a domain's current registry state via GoDaddy's v1 domain-
+ * detail endpoint — the two fields that matter for renewal tracking are
+ * `expires` (ISO timestamp) and `renewAuto` (boolean). Deliberately a
+ * SEPARATE endpoint from getGoDaddyQuote/registerGoDaddyDomain, which
+ * are v3 (the newer quote-execute registration API) — renewal
+ * management isn't available in v3 yet, confirmed directly against
+ * GoDaddy's own current documentation before writing this, not assumed
+ * to be the same version just because it's the same provider. See
+ * setDomainAutoRenew below for why a full "charge the customer and
+ * renew" flow isn't built yet, even though this read is safe today.
+ */
+async function getGoDaddyDomainDetail(domain) {
+  const response = await fetch(`https://api.godaddy.com/v1/domains/${domain}`, {
+    headers: { Authorization: authHeader(), Accept: 'application/json' }
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const err = new Error(data.message || 'GoDaddy domain detail error');
+    err.status = response.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Toggles GoDaddy's own auto-renew flag for a domain — free to change,
+ * idempotent, no money involved (GoDaddy only actually charges Altegic
+ * when the auto-renewal fires near expiry, not when this flag is set).
+ * Returns nothing meaningful on success (204 No Content).
+ *
+ * HONEST GAP, stated directly: this does NOT re-charge the Altegic
+ * customer for the renewal when GoDaddy's own auto-renewal eventually
+ * fires, and there is no manual "renew now, charge the customer" flow
+ * built yet either. Confirming the renewal price ahead of a manual
+ * renewal requires GET /v2/customers/{customerId}/domains/{domain} —
+ * a genuinely different identifier from anything already stored in
+ * this app (customerId is a UUID tied to the GoDaddy Shoppers API, not
+ * derivable from the PAT itself) — resolving that is real, separate
+ * work, not something to guess at for a feature that charges real
+ * money. What IS safe and built: reading and displaying a domain's
+ * real expiry date and current auto-renew state, and letting an
+ * account toggle GoDaddy's own auto-renew flag, so a domain is at
+ * least visible and controllable rather than silently expiring
+ * unnoticed.
+ */
+async function setDomainAutoRenew(domain, renewAuto) {
+  const response = await fetch(`https://api.godaddy.com/v1/domains/${domain}`, {
+    method: 'PATCH',
+    headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ renewAuto })
+  });
+  if (response.status === 204) return;
+  const data = await response.json().catch(() => ({}));
+  const err = new Error(data.message || 'GoDaddy auto-renew update error');
+  err.status = response.status;
+  err.data = data;
+  throw err;
+}
+
+module.exports = { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader, getGoDaddyQuote, registerGoDaddyDomain, getGoDaddyDomainDetail, setDomainAutoRenew };

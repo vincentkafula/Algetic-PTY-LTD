@@ -115,6 +115,28 @@ export default function DomainsPanel({ authedFetch, health }) {
     } catch (err) { alert(err.message); }
   }
 
+  async function refreshDomainDetail(id) {
+    try {
+      const res = await authedFetch(`/api/domains/${id}/detail`);
+      const data = await res.json();
+      if (!res.ok) { alert(data.error); return; }
+      loadDomains();
+    } catch (err) { alert(err.message); }
+  }
+
+  async function toggleAutoRenew(id, renewAuto) {
+    try {
+      const res = await authedFetch(`/api/domains/${id}/auto-renew`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ renewAuto })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error); return; }
+      loadDomains();
+    } catch (err) { alert(err.message); }
+  }
+
   async function addDnsRecord() {
     if (!dnsDomainId) { setDnsResult({ error: 'Select a domain first.' }); return; }
     if (!dnsName.trim() || !dnsData.trim()) { setDnsResult({ error: 'Name and value are required.' }); return; }
@@ -218,19 +240,31 @@ export default function DomainsPanel({ authedFetch, health }) {
       <div className="panel-box">
         <h2>Your domains</h2>
         <table>
-          <thead><tr><th>Domain</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Domain</th><th>Status</th><th>Expires</th><th>Auto-renew</th><th></th></tr></thead>
           <tbody>
             {domains.length === 0 ? (
-              <tr className="empty-row"><td colSpan={3}>No domains yet</td></tr>
+              <tr className="empty-row"><td colSpan={5}>No domains yet</td></tr>
             ) : domains.map((d) => (
               <tr key={d.id}>
                 <td className="mono">{d.domain}</td>
                 <td>{d.status}</td>
+                <td>{d.expires ? new Date(d.expires).toLocaleDateString() : <button className="link-btn" onClick={() => refreshDomainDetail(d.id)}>Check</button>}</td>
+                <td>
+                  {typeof d.renewAuto === 'boolean' ? (
+                    <input type="checkbox" checked={d.renewAuto} onChange={(e) => toggleAutoRenew(d.id, e.target.checked)} />
+                  ) : (
+                    <button className="link-btn" onClick={() => refreshDomainDetail(d.id)}>Check</button>
+                  )}
+                </td>
                 <td><button className="link-btn" onClick={() => refreshDomainStatus(d.id)}>Refresh status</button></td>
               </tr>
             ))}
           </tbody>
         </table>
+        <p className="hint" style={{ color: 'var(--muted)', fontSize: 12, marginTop: 6 }}>
+          Auto-renew is GoDaddy's own setting — toggling it doesn't charge anything now.
+          Manually renewing a domain here isn't available yet.
+        </p>
       </div>
 
       <div className="panel-box">
