@@ -1814,3 +1814,118 @@ input[type="tel"], input[type="number"], textarea, select,
   font-size: 14px;
   color: rgba(255,255,255,0.65);
 }
+
+/* =========================================================================
+   ALTEGIC LIGHT THEME — direct response to feedback that the dark theme
+   itself reads as "hard" and "not fresh," no matter how it's tuned.
+   Rather than more dark-navy adjustments, this converts the main content
+   to a light, airy theme — the pattern used by Stripe/Notion/Mailchimp-
+   style small-business SaaS sites — while keeping three sections
+   deliberately dark for contrast and rhythm: the hero, the footer, and
+   the page-header (breadcrumb) band every inner page opens with. All
+   three were confirmed BEFORE this change to use their own specific
+   selectors (.hero-text h1, .single_footer p, .section-top-title h1,
+   etc.) rather than bare h1/p/span - so a broad override on generic
+   elements cannot touch them (specific selectors always win), and their
+   own white-on-dark rules are re-asserted below anyway as a safety net.
+   ========================================================================= */
+
+html, body {
+  background: linear-gradient(180deg, #F7F9FD 0%, #F0F3FA 100%) !important;
+  background-attachment: fixed !important;
+}
+body {
+  color: #4A5170 !important;
+  font-family: 'Plus Jakarta Sans', 'Exo', sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+h1, h2, h3, h4, h5, h6 {
+  color: #232C4D !important;
+}
+p, li, span, td, th, label {
+  color: #5B6180 !important;
+}
+a { color: #232C4D !important; }
+a:hover { color: #0196E7 !important; }
+
+/* Section eyebrow labels (span above every h2) stay vibrant on light bg */
+.section-title span, .ab_content span {
+  color: #0196E7 !important;
+  font-weight: 700;
+}
+
+/* Cards: white surface with a soft, visible shadow - translucent-white
+   overlays (the round-1/round-2 treatment) only worked on a dark body;
+   on light they'd be invisible, so these are real white backgrounds now. */
+.single_service, .pricingTable, .single-project, .single-project2,
+.single_team, .contact, .credential, .panel-box, .feature-showcase {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(35, 44, 77, 0.06) !important;
+  box-shadow: 0 12px 30px rgba(35, 44, 77, 0.10) !important;
+}
+.single_service:hover, .single_team:hover, .pricingTable:hover {
+  box-shadow: 0 18px 40px rgba(35, 44, 77, 0.16) !important;
+}
+.single_service h2, .single_service p,
+.pricingTable, .pricingTable .title, .pricingTable-content li,
+.single_team h4, .single_team p,
+.single-project h4, .single-project2 h4,
+.feature-showcase-item h4 {
+  color: #232C4D !important;
+}
+.single_service p, .single_team p, .feature-showcase-item p {
+  color: #5B6180 !important;
+}
+.price-value .amount, .price-value .duration { color: #232C4D !important; }
+.pricingTable .pricing-content li { color: #5B6180 !important; }
+
+/* FAQ accordion + counter/pricing bits that also hardcoded white text */
+.accordion-body, .accordion-button {
+  color: #4A5170 !important;
+  background: #fff !important;
+}
+
+/* Muted body copy used across ab_content / abmv / feature descriptions */
+.ab_content p, .abmv p, .skill_btn + p {
+  color: #5B6180 !important;
+}
+
+/* --- Deliberately kept dark: hero, page-header, footer --- */
+.home_bg, .home_bg *, .section-top, .section-top *,
+.footer, .footer * {
+  color: #fff !important;
+}
+.home_bg .hero-text span, .home_bg .hero-text h1, .home_bg .hero-text p,
+.section-top-title h1, .section-top-title ul li,
+.footer h4, .footer p, .footer a, .footer_copyright p {
+  color: #fff !important;
+}
+.footer a:hover { color: #4FD8D1 !important; }
+
+/* Slightly more generous section spacing for an airier, less cramped feel */
+.section-padding {
+  padding-top: 110px;
+  padding-bottom: 110px;
+}
+
+/* Safety net: buttons/nav must keep their OWN designed colors (white on
+   the gradient .btn_one, teal on the outlined .btn_two) rather than
+   inherit the broad `a { color: dark !important }` link-color rule
+   above — class selectors already win on specificity, but making these
+   !important too removes any doubt. */
+.btn_one, .btn_one:hover {
+  color: #fff !important;
+}
+.btn_two {
+  color: #4FD8D1 !important;
+}
+.btn_two:hover {
+  color: #000 !important;
+}
+#main-menu ul li a {
+  color: #fff !important;
+}
+#main-menu ul li a:hover, #main-menu ul li.active a {
+  color: #4FD8D1 !important;
+}
