@@ -33,6 +33,13 @@ const slides = [
     imageAlt: 'Call centre agents wearing headsets, connected via Yealink call centre solutions'
   },
   {
+    tag: 'Web Development',
+    title: 'Custom websites, real results',
+    text: "Responsive, secure, and built for your business — from a simple brochure site to a full web application, with maintenance and support included.",
+    image: '/assets/img/hero-slides/webdev-solutions.png',
+    imageAlt: 'Web development workspace showing a custom website design across desktop, laptop, tablet, and phone screens'
+  },
+  {
     tag: 'One account, everything included',
     title: 'Business email, phone, and a website — set up today, not next quarter',
     text: "Most small businesses juggle five different logins to get online — one for email, one for phone, one for their domain, one for a developer. Altegic puts all of it behind one login.",
