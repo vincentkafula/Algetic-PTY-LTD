@@ -36,7 +36,8 @@ const PriceAreaHomeOne = () => {
               </div>
             </div> 
             <div className="col-lg-4 col-sm-4 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-              <div className="pricingTable">
+              <div className="pricingTable pricingTable-featured">
+                <span className="featured-badge">Most Popular</span>
                 <div className="pricingTable-header">
                   <h3 className="title">Growing Business</h3>
                 </div>

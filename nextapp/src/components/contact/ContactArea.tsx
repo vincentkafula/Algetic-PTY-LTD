@@ -11,25 +11,23 @@ const ContactArea = () => {
           <div className="row text-center">
             <div className="col-lg-4 col-sm-4 col-xs-12 mt-5 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
               <div className="single_address">
-                <i className="ti-map"></i>
-                <h4>Our Location</h4>
-                <p>3481 Melrose Place, Beverly Hills <br /> CA 90210</p>
+                <i className="ti-world"></i>
+                <h4>Online, wherever you are</h4>
+                <p>Altegic runs as a fully online service — no branch to visit, everything is managed from your account.</p>
               </div>
             </div>
             <div className="col-lg-4 col-sm-4 col-xs-12 mt-5 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
               <div className="single_address sabr">
-                <i className="ti-mobile"></i>
-                <h4>Telephone</h4>
-                <p>(+1) 517 397 7100</p>
-                <p>(+1) 411 315 8138</p>
+                <i className="ti-time"></i>
+                <h4>Response time</h4>
+                <p>We typically respond within one business day.</p>
               </div>
             </div>
             <div className="col-lg-4 col-sm-4 col-xs-12 mt-5 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.3s" data-wow-offset="0">
               <div className="single_address">
                 <i className="ti-email"></i>
-                <h4>Send email</h4>
-                <p>Info@example.com</p>
-                <p>admin@example.com</p>
+                <h4>Send a message</h4>
+                <p>Use the form below and we'll get back to you.</p>
               </div>
             </div>
           </div>

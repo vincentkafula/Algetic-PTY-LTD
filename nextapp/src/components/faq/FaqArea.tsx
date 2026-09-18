@@ -7,28 +7,28 @@ import React, { useState } from 'react';
 const faq_data = [
   {
     id: "One",
-    question: `How does it create content?`,
-    answer: `Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that. Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that.`,
+    question: `How quickly can I get set up?`,
+    answer: `Most services — a mailbox, a phone number, a domain — are ready within minutes of payment clearing. Website, software, internet, and hardware requests go through our team and take longer, since real work is involved.`,
   },
   {
     id: "Two",
-    question: `Is the content original?`,
-    answer: `Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that. Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that.`,
+    question: `Can I cancel anytime?`,
+    answer: `Yes. There's no long-term contract. Cancel a mailbox or number from your dashboard whenever you like, and you won't be charged for the next cycle.`,
   },
   {
     id: "Three",
-    question: `How to write long-form blogs?`,
-    answer: `Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that. Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that.`,
+    question: `Which countries can I get a phone number in?`,
+    answer: `The US, Canada, UK, South Africa, and Zambia today. If you need a country we don't yet support, get in touch and let us know.`,
   },
   {
     id: "Four",
-    question: `How do I view my usage?`,
-    answer: `Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that. Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that.`,
+    question: `Do I need technical knowledge to use this?`,
+    answer: `No. Everything is managed from one dashboard — creating a mailbox, buying a number, registering a domain — with no server setup or technical configuration required on your side.`,
   },
   {
     id: "Five",
-    question: `How does it create content?`,
-    answer: `Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that. Great value and so easy to use and saves me so much time! I was shocked by how much time and brain energy it saved me. Simple & easy gotta love that.`,
+    question: `What happens to my domain when it's about to expire?`,
+    answer: `Your dashboard shows the real expiry date pulled directly from the registry, and you can turn on auto-renew from there. We're still building self-service manual renewal — for now, reach out before your renewal date if you need help.`,
   },
 ]
 

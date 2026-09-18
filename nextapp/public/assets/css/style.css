@@ -1929,3 +1929,76 @@ a:hover { color: #0196E7 !important; }
 #main-menu ul li a:hover, #main-menu ul li.active a {
   color: #4FD8D1 !important;
 }
+
+/* Featured pricing tier - a "Most Popular" highlight was completely
+   absent before (all 3 tiers rendered identically), a missed
+   opportunity both for conversion and for breaking up visual monotony. */
+.pricingTable-featured {
+  border: 2px solid #0196E7 !important;
+  transform: scale(1.04);
+  position: relative;
+  box-shadow: 0 20px 45px rgba(1, 150, 231, 0.18) !important;
+}
+.pricingTable-featured:hover {
+  transform: scale(1.04) translateY(-6px);
+}
+.featured-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, #0196E7, #4FD8D1);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 50px;
+  box-shadow: 0 8px 20px rgba(1, 150, 231, 0.35);
+}
+@media only screen and (max-width: 991px) {
+  .pricingTable-featured { transform: none; }
+  .pricingTable-featured:hover { transform: translateY(-6px); }
+}
+
+/* Soft decorative background blobs behind content sections - a light
+   theme with nothing but flat white/pale-gray risks feeling sterile;
+   these add depth and visual interest without touching any text or
+   card content, and sit behind everything (z-index/pointer-events
+   neutral) so nothing about layout or interactivity changes. */
+.service_area, .ab_one, .ab_two, .team_area, .plan_home_area,
+section.section-padding {
+  position: relative;
+  overflow: hidden;
+}
+.service_area::before, .ab_one::before, .team_area::before,
+.plan_home_area::before {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(1, 150, 231, 0.08) 0%, rgba(1, 150, 231, 0) 70%);
+  top: -120px;
+  right: -100px;
+  pointer-events: none;
+  z-index: 0;
+}
+.ab_one::after, .team_area::after {
+  content: "";
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(79, 216, 209, 0.10) 0%, rgba(79, 216, 209, 0) 70%);
+  bottom: -140px;
+  left: -80px;
+  pointer-events: none;
+  z-index: 0;
+}
+.service_area .container, .ab_one .container, .team_area .container,
+.plan_home_area .container {
+  position: relative;
+  z-index: 1;
+}
