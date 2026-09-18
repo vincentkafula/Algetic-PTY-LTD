@@ -60,8 +60,8 @@ const HeroAreaHomeOne = () => {
           <Slider {...slider_settings}>
             {slides.map((slide, i) => (
               <div key={i}>
-                <div className="row align-items-center">
-                  <div className={slide.image ? 'col-lg-6 col-sm-12 col-xs-12' : 'col-lg-7 col-sm-12 col-xs-12'}>
+                <div className="row align-items-stretch" style={{ minHeight: slide.image ? 460 : undefined }}>
+                  <div className={slide.image ? 'col-lg-5 col-sm-12 col-xs-12' : 'col-lg-7 col-sm-12 col-xs-12'} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div className="hero-text ht_top">
                       <span style={{ display: 'inline-block', color: '#18fef5', fontWeight: 600, letterSpacing: '0.03em', marginBottom: 10, fontSize: 14, textTransform: 'uppercase' }}>{slide.tag}</span>
                       <h1>{slide.title}</h1>
@@ -73,9 +73,9 @@ const HeroAreaHomeOne = () => {
                     </div>
                   </div>
                   {slide.image && (
-                    <div className="col-lg-6 col-sm-12 col-xs-12">
-                      <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-                        <Image src={slide.image} alt={slide.imageAlt || ''} width={1999} height={787} style={{ width: '100%', height: 'auto', display: 'block' }} priority={i === 0} />
+                    <div className="col-lg-7 col-sm-12 col-xs-12" style={{ minHeight: 320 }}>
+                      <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 320, borderRadius: 20, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
+                        <Image src={slide.image} alt={slide.imageAlt || ''} fill sizes="(max-width: 991px) 100vw, 58vw" style={{ objectFit: 'cover', objectPosition: 'center' }} priority={i === 0} />
                       </div>
                     </div>
                   )}
