@@ -34,24 +34,17 @@ const menu_data: DataType[] = [
   },
   {
     id: 4,
-    title: 'Pricing',
-    link: '/pricing',
-    has_dropdown: false,
+    title: 'Pages',
+    link: '#',
+    has_dropdown: true,
+    sub_menus: [
+      { title: 'Pricing', link: '/pricing' },
+      { title: 'Team', link: '/team' },
+      { title: 'FAQ', link: '/faq' },
+    ]
   },
   {
     id: 5,
-    title: 'Team',
-    link: '/team',
-    has_dropdown: false,
-  },
-  {
-    id: 6,
-    title: 'FAQ',
-    link: '/faq',
-    has_dropdown: false,
-  },
-  {
-    id: 7,
     title: 'Contact',
     link: '/contact',
     has_dropdown: false,

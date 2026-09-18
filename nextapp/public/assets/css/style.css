@@ -1929,6 +1929,16 @@ a:hover { color: #0196E7 !important; }
 #main-menu ul li a:hover, #main-menu ul li.active a {
   color: #4FD8D1 !important;
 }
+/* The dropdown submenu panel has its own teal background with black
+   text by original design (#4FD8D1 bg, color: #000) - the broad white-
+   link rule above is a CSS descendant selector, so it also matches
+   these nested links and would otherwise force white text onto that
+   light teal background, which is poor contrast. Restored explicitly,
+   at higher specificity, since the original rule was not !important
+   and would lose to the broad one above without this. */
+#navigation #main-menu ul li ul li a {
+  color: #000 !important;
+}
 
 /* Featured pricing tier - a "Most Popular" highlight was completely
    absent before (all 3 tiers rendered identically), a missed
