@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import MvnoRealOperations from './MvnoRealOperations';
 
 function fmtNum(n) {
   return typeof n === 'number' ? n.toLocaleString() : n;
@@ -73,9 +74,14 @@ export default function MvnoPanel({ authedFetch }) {
     <div>
       <h1>MVNO operations</h1>
       <p className="subtitle">
-        A network operations center preview for a Mobile Virtual Network Operator business —
-        subscriber base, towers, fraud, billing, and support, at a glance.
+        Real subscriber, SIM, and rate plan management above — a genuine operations
+        ledger for running an independent MVNO. Simulated network-scale demo data below,
+        for illustrating what a full operations center looks like at scale.
       </p>
+
+      <MvnoRealOperations authedFetch={authedFetch} />
+
+      <h1 style={{ marginTop: 48 }}>Network preview (demo)</h1>
       <div className="demo-banner">
         ⚠ DEMO DATA — every number on this page is simulated. There is no real telecom
         core network, no real subscribers, and no real cell towers behind this yet.

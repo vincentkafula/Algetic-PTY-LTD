@@ -34,7 +34,10 @@ const DEFAULT_DATA = {
   domains: [],
   projects: [],
   sipDomains: [],
-  orders: []
+  orders: [],
+  mvnoSubscribers: [],
+  mvnoSimInventory: [],
+  mvnoRatePlans: []
 };
 
 function ensureStore() {
@@ -119,5 +122,8 @@ module.exports = {
   domains: collection('domains'),
   projects: collection('projects'),
   sipDomains: collection('sipDomains'),
-  orders: collection('orders')
+  orders: collection('orders'),
+  mvnoSubscribers: collection('mvnoSubscribers'),
+  mvnoSimInventory: collection('mvnoSimInventory'),
+  mvnoRatePlans: collection('mvnoRatePlans')
 };
