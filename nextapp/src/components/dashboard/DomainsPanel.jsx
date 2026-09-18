@@ -6,6 +6,7 @@ import { redirectToPayfastCheckout } from '@/lib/payfastCheckout';
 export default function DomainsPanel({ authedFetch, health }) {
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState(null);
+  const [suggestions, setSuggestions] = useState(null);
   const [quote, setQuote] = useState(null);
   const [agreed, setAgreed] = useState({});
   const [registerResult, setRegisterResult] = useState(null);
@@ -45,24 +46,43 @@ export default function DomainsPanel({ authedFetch, health }) {
 
   async function searchDomain() {
     const trimmed = searchInput.trim();
-    if (!trimmed) { setSearchResult({ error: 'Enter a domain name.' }); return; }
-    if (!trimmed.includes('.')) {
-      setSearchResult({
-        error: `"${trimmed}" needs an extension to be a real domain — try "${trimmed}.com" (or .co.za, .net, etc). Domain registries check availability by the full name, extension included.`
-      });
-      return;
-    }
-    setSearchResult({ loading: true });
+    if (!trimmed) { setSearchResult({ error: 'Enter a business name or domain.' }); return; }
+
     setQuote(null);
     setRegisterResult(null);
+    setSuggestions('loading');
+
+    // A bare word (no dot) can't be checked for exact availability — GoDaddy's
+    // check-availability endpoint needs a real TLD to check against. In that
+    // case, skip straight to suggestions (matching how GoDaddy's own search
+    // treats a bare keyword) rather than showing a confusing error.
+    if (trimmed.includes('.')) {
+      setSearchResult({ loading: true });
+      try {
+        const res = await authedFetch(`/api/domains/search?domain=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (!res.ok) { setSearchResult({ error: data.error }); }
+        else if (!data.available) { setSearchResult({ unavailable: true, domain: trimmed }); }
+        else { setSearchResult({ available: true, domain: trimmed, prices: data.prices }); }
+      } catch (err) {
+        setSearchResult({ error: err.message });
+      }
+    } else {
+      setSearchResult(null);
+    }
+
+    // Always fetch suggestions too, using the bare keyword portion (strip
+    // a trailing extension if one was typed, e.g. "braob.com" -> "braob")
+    // — this is what surfaces alternative TLDs and name variations, same
+    // as GoDaddy's own search results page.
     try {
-      const res = await authedFetch(`/api/domains/search?domain=${encodeURIComponent(trimmed)}`);
+      const keyword = trimmed.includes('.') ? trimmed.split('.')[0] : trimmed;
+      const res = await authedFetch(`/api/domains/suggestions?query=${encodeURIComponent(keyword)}`);
       const data = await res.json();
-      if (!res.ok) { setSearchResult({ error: data.error }); return; }
-      if (!data.available) { setSearchResult({ unavailable: true, domain: trimmed }); return; }
-      setSearchResult({ available: true, domain: trimmed });
+      if (!res.ok) { setSuggestions({ error: data.error }); return; }
+      setSuggestions({ items: data.items || [] });
     } catch (err) {
-      setSearchResult({ error: err.message });
+      setSuggestions({ error: err.message });
     }
   }
 
@@ -189,22 +209,46 @@ export default function DomainsPanel({ authedFetch, health }) {
       <div className="panel-box">
         <h2>Search</h2>
         <div className="form-row">
-          <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="example.com" style={{ flex: 1, minWidth: 200 }} />
-          <button className="primary" onClick={searchDomain}>Check availability</button>
+          <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Your business name, or a full domain like example.com" style={{ flex: 1, minWidth: 200 }} />
+          <button className="primary" onClick={searchDomain}>Search domains</button>
         </div>
 
         {searchResult?.loading && <p style={{ color: 'var(--muted)' }}>Checking…</p>}
         {searchResult?.error && <p style={{ color: 'var(--danger)' }}>{searchResult.error}</p>}
         {searchResult?.unavailable && <p style={{ color: 'var(--danger)' }}>{searchResult.domain} is not available.</p>}
         {searchResult?.available && (
-          <>
-            <div className="credential">
-              <div className="row">
-                <span>{searchResult.domain}</span>
-                <span className="value">Available</span>
-              </div>
+          <div className="credential" style={{ marginBottom: 16 }}>
+            <div className="row">
+              <span>{searchResult.domain}</span>
+              <span className="value" style={{ color: 'var(--mail)' }}>Available</span>
             </div>
-            <button className="primary" style={{ marginTop: 10 }} onClick={() => getDomainQuote(searchResult.domain)}>Get a price quote</button>
+            {(searchResult.prices || []).slice(0, 1).map((p) => (
+              <div className="row" key={p.term + p.period}>
+                <span>Indicative price ({p.period} yr)</span>
+                <span className="value">{p.customerPriceFormatted}</span>
+              </div>
+            ))}
+            <button className="primary" style={{ marginTop: 10 }} onClick={() => getDomainQuote(searchResult.domain)}>Get a locked price quote</button>
+          </div>
+        )}
+
+        {suggestions === 'loading' && <p style={{ color: 'var(--muted)' }}>Finding suggestions…</p>}
+        {suggestions?.error && <p style={{ color: 'var(--danger)' }}>{suggestions.error}</p>}
+        {suggestions?.items && suggestions.items.length === 0 && <p style={{ color: 'var(--muted)' }}>No suggestions found for that search.</p>}
+        {suggestions?.items && suggestions.items.length > 0 && (
+          <>
+            <p className="hint" style={{ color: 'var(--muted)', fontSize: 13, margin: '4px 0 12px' }}>Suggested domains, all available now:</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+              {suggestions.items.map((item) => (
+                <div className="credential" key={item.domain} style={{ margin: 0 }}>
+                  <div className="row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+                    <span className="mono" style={{ fontWeight: 600 }}>{item.domain}</span>
+                    {item.customerPriceFormatted && <span className="value">{item.customerPriceFormatted}</span>}
+                    <button className="primary" style={{ width: '100%', marginTop: 6 }} onClick={() => getDomainQuote(item.domain)}>Get it</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </>
         )}
 
@@ -212,7 +256,8 @@ export default function DomainsPanel({ authedFetch, health }) {
         {quote?.error && <p style={{ color: 'var(--danger)' }}>{quote.error}</p>}
         {quote?.data && (
           <>
-            <div className="credential" style={{ marginTop: 10 }}>
+            <div className="credential" style={{ marginTop: 16 }}>
+              <div className="row"><span>Domain</span><span className="value">{quote.domain}</span></div>
               <div className="row"><span>Price</span><span className="value">{quote.data.customerPriceFormatted}</span></div>
               <div className="row"><span>Quote expires</span><span className="value">{new Date(quote.data.expiresAt).toLocaleTimeString()}</span></div>
             </div>
