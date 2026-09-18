@@ -27,7 +27,7 @@ const PriceAreaHomeOne = () => {
                   <li>Email support</li>
                 </ul>
                 <div className="price-value">
-                  <span className="amount">$99</span>
+                  <span className="amount">R1,799</span>
                   <span className="duration">/mo</span>
                 </div>
                 <div>
@@ -52,7 +52,7 @@ const PriceAreaHomeOne = () => {
                   <li>Priority support</li>
                 </ul>
                 <div className="price-value">
-                  <span className="amount">$199</span>
+                  <span className="amount">R3,699</span>
                   <span className="duration">/mo</span>
                 </div>
                 <div>
@@ -76,7 +76,7 @@ const PriceAreaHomeOne = () => {
                   <li>Dedicated support</li>
                 </ul>
                 <div className="price-value">
-                  <span className="amount">$299</span>
+                  <span className="amount">R5,499</span>
                   <span className="duration">/mo</span>
                 </div>
                 <div>
