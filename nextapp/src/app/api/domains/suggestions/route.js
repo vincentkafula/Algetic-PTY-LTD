@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 
-const { requireAuth } = require('@/lib/auth');
 const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
 const pricing = require('@/lib/services/pricing');
 const { withSanitizedErrors } = require('@/lib/sanitizeError');
+const { checkRateLimit, getClientIp } = require('@/lib/rateLimit');
 
 /**
  * GET /api/domains/suggestions?query=my+bakery&tlds=com,net
+ * PUBLIC — no account login required, same reasoning as
+ * /api/domains/search (see that file's comment). Rate-limited per IP
+ * instead of requiring auth.
+ *
  * Natural-language / keyword domain name suggestions — GoDaddy's engine
  * returns only AVAILABLE domains here (no separate availability check
  * needed for each result). Same ZAR conversion as /api/domains/search;
@@ -14,11 +18,12 @@ const { withSanitizedErrors } = require('@/lib/sanitizeError');
  * frontend.
  */
 async function GET_impl(request) {
-  try {
-    requireAuth(request);
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: err.status || 401 });
+  const ip = getClientIp(request);
+  const { allowed } = checkRateLimit(ip, { windowMs: 60_000, maxRequests: 20 });
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many searches — please wait a moment and try again.' }, { status: 429 });
   }
+
   if (!isGoDaddyConfigured()) {
     return NextResponse.json({ error: 'Server is missing GODADDY_PAT in .env' }, { status: 500 });
   }
@@ -51,4 +56,5 @@ async function GET_impl(request) {
   }
 }
 export const GET = withSanitizedErrors(GET_impl);
+
 

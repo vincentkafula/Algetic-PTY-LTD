@@ -4,7 +4,7 @@ import Wrapper from '@/layouts/Wrapper';
 import React from 'react';
 
 export const metadata = {
-  title: "Cybal Service Details - Cyber Security Next js Template",
+  title: "Service Details - Altegic Solutions",
 };
 
 const index = () => {

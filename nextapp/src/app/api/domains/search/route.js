@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 
-const { requireAuth } = require('@/lib/auth');
 const { GODADDY_BASE_URL, isGoDaddyConfigured, authHeader } = require('@/lib/godaddyClient');
 const pricing = require('@/lib/services/pricing');
 const { withSanitizedErrors } = require('@/lib/sanitizeError');
+const { checkRateLimit, getClientIp } = require('@/lib/rateLimit');
 
 /**
  * GET /api/domains/search?domain=example.com
- * Read-only availability check. No charges, no account interaction on
- * GoDaddy's side beyond the lookup itself.
+ * PUBLIC — no account login required, so a visitor can search before
+ * ever signing up (matching how GoDaddy's own search works). Read-only,
+ * no charges, no account interaction on GoDaddy's side beyond the lookup
+ * itself. Rate-limited per IP instead of requiring auth, since this now
+ * calls a real (rate-limited) GoDaddy API on behalf of anyone, logged in
+ * or not — see rateLimit.js for why.
  *
  * Converts every returned price to ZAR (with markup) before sending it
  * to the frontend — GoDaddy's check-availability response includes raw
@@ -16,14 +20,16 @@ const { withSanitizedErrors } = require('@/lib/sanitizeError');
  * cost anywhere else (see /api/domains/quote), so this shouldn't either.
  * These prices are explicitly "indicative" per GoDaddy's own docs — the
  * authoritative, locked price still only comes from POST
- * /v3/domains/registration-quotes at actual purchase time.
+ * /v3/domains/registration-quotes at actual purchase time (which DOES
+ * require login, via /api/domains/quote).
  */
 async function GET_impl(request) {
-  try {
-    requireAuth(request);
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: err.status || 401 });
+  const ip = getClientIp(request);
+  const { allowed } = checkRateLimit(ip, { windowMs: 60_000, maxRequests: 20 });
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many searches — please wait a moment and try again.' }, { status: 429 });
   }
+
   if (!isGoDaddyConfigured()) {
     return NextResponse.json({ error: 'Server is missing GODADDY_PAT in .env' }, { status: 500 });
   }
@@ -49,4 +55,5 @@ async function GET_impl(request) {
   }
 }
 export const GET = withSanitizedErrors(GET_impl);
+
 

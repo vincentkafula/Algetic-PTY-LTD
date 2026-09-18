@@ -3,7 +3,7 @@ import Wrapper from "@/layouts/Wrapper";
 
 
 export const metadata = {
-  title: "404 error || Cybal - Cyber Security Next js Template",
+  title: "Page Not Found - Altegic Solutions",
 };
 
 const index = () => {

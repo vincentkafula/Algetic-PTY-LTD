@@ -8,7 +8,7 @@ const tech_services = [
   { icon: 'ti-mobile', title: 'Voice', desc: 'A business phone number, answerable from anywhere. Pick a local number in the US, Canada, UK, South Africa, or Zambia — no landline required.' },
   { icon: 'ti-microphone-alt', title: 'Team Calling', desc: 'Register real softphones for your team on a real calling network — call each other directly, or dial out to any phone number.' },
   { icon: 'ti-headphone-alt', title: 'Call Centre', desc: 'IVR menus, call queues, and agents — built on top of your phone numbers, so incoming calls reach the right person automatically.' },
-  { icon: 'ti-world', title: 'Domains', desc: "Your business name, as a website address. Search, see the real price upfront, and register — with DNS management included once it's live." },
+  { icon: 'ti-world', title: 'Domains', desc: "Your business name, as a website address. Search, see the real price upfront, and register — with DNS management included once it's live.", link: '/domains', linkLabel: 'Search domains' },
   { icon: 'ti-signal', title: 'Internet Service', desc: "Need connectivity for your office? We'll help arrange internet service through a trusted provider." },
   { icon: 'ti-tablet', title: 'IP Phones', desc: 'Physical desk phones and wireless headsets, shipped to your office and ready to work with your new phone numbers.' },
 ];
@@ -36,7 +36,7 @@ const ServiceArea = () => {
                   <div className="service-icon-badge"><i className={s.icon}></i></div>
                   <h2>{s.title}</h2>
                   <p>{s.desc}</p>
-                  <Link href="/login">Get started <i className="ti-arrow-top-right"></i></Link>
+                  <Link href={s.link || '/login'}>{s.linkLabel || 'Get started'} <i className="ti-arrow-top-right"></i></Link>
                 </div>
               </div>
             ))}

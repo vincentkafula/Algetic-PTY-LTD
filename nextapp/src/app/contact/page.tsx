@@ -5,7 +5,7 @@ import Wrapper from '@/layouts/Wrapper';
 import React from 'react';
 
 export const metadata = {
-  title: "Cybal Contact - Cyber Security Next js Template",
+  title: "Contact Us - Altegic Solutions",
 };
 
 
