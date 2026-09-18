@@ -298,6 +298,8 @@ body {
 	
 	#navigation{
 		padding: 20px 65px;
+		background: #fff;
+		box-shadow: 0 4px 20px rgba(35, 44, 77, 0.08);
 	}
 	#main-menu{
 	}
@@ -1922,10 +1924,10 @@ a:hover { color: #0196E7 !important; }
   color: #000 !important;
 }
 #main-menu ul li a {
-  color: #fff !important;
+  color: #232C4D !important;
 }
 #main-menu ul li a:hover, #main-menu ul li.active a {
-  color: #4FD8D1 !important;
+  color: #0196E7 !important;
 }
 /* The dropdown submenu panel has its own teal background with black
    text by original design (#4FD8D1 bg, color: #000) - the broad white-
