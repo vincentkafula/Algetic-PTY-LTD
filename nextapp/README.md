@@ -187,6 +187,64 @@ secrets) but the `typ` claim means one can never be used as the other.
 token is rejected on every webmail endpoint, and a webmail token is
 rejected on every account endpoint.
 
+## Account roles and role-based dashboards
+
+Every account carries a `role`, set at signup and embedded in its JWT
+(`src/lib/authTokens.js`). The dashboard shell
+(`src/app/dashboard/page.tsx`) shows a different, focused set of nav
+items and panels depending on the logged-in account's role — all four
+still log in and land on the exact same `/dashboard` path, only what
+renders there differs:
+
+- **`purchasing`** (the default) — Mailboxes, Phone numbers, Team
+  calling, Call centre, Domains, Projects. The general self-service
+  dashboard.
+- **`email`** — Mailboxes only.
+- **`mvno`** — the MVNO operations panel only (both its real,
+  persistent operations ledger and the simulated demo section — see
+  that panel's own comments).
+- **`admin`** — "Altegic management": a platform-wide business
+  overview (`src/components/dashboard/AdminPanel.tsx`) — every
+  account, every order (including real margin figures, deliberately
+  not hidden the way the customer-facing order endpoint hides them),
+  and aggregate stats, via three admin-only routes under
+  `src/app/api/admin/`.
+
+**`admin` is deliberately NOT selectable at public signup.**
+`POST /api/auth/signup`'s `role` field only accepts `purchasing`,
+`email`, or `mvno` (`SELF_SERVICE_ROLES` in `authTokens.js`) — letting
+a public signup form grant admin (cross-account visibility into every
+customer's data and real margins) would be a genuine security hole,
+not a theoretical one. An admin account has to be created directly
+against the data store, e.g.:
+
+```js
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const db = require('./src/lib/db');
+(async () => {
+  const passwordHash = await bcrypt.hash('choose-a-real-password', 10);
+  await db.users.insert({
+    id: crypto.randomUUID(),
+    email: 'you@altegic.co.za',
+    passwordHash,
+    companyName: 'Altegic',
+    role: 'admin',
+    createdAt: new Date().toISOString()
+  });
+})();
+```
+
+Note: this is presentation-layer separation (a focused, uncluttered
+dashboard per job), not the actual security boundary — every panel's
+own API routes already scope data to the logged-in account via
+`ownerId`, and the three admin-only routes specifically check
+`role === 'admin'` server-side (`requireRole` in `src/lib/auth.js`,
+returning 403, not 401, for a logged-in account with the wrong role) —
+so a narrower dashboard nav isn't what's actually stopping a
+`purchasing` account from reading someone else's data or the admin
+endpoints; the API-level role check is.
+
 ## Customer billing (PayFast)
 
 Same pricing engine as the Express version — `services/pricing.js`

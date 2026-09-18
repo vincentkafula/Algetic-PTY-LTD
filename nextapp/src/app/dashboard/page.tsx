@@ -12,6 +12,7 @@ import CallCentrePanel from '@/components/dashboard/CallCentrePanel';
 import DomainsPanel from '@/components/dashboard/DomainsPanel';
 import ProjectsPanel from '@/components/dashboard/ProjectsPanel';
 import MvnoPanel from '@/components/dashboard/MvnoPanel';
+import AdminPanel from '@/components/dashboard/AdminPanel';
 
 // ---------------------------------------------------------------------------
 // Ported from server/frontend/src/pages/dashboard/Dashboard.jsx. Same
@@ -20,26 +21,43 @@ import MvnoPanel from '@/components/dashboard/MvnoPanel';
 // directly as possible rather than introduce a different navigation
 // architecture mid-migration.
 //
-// All 7 panels (Mailboxes, Voice, Team Calling, Call Centre, Domains,
-// Projects, MVNO) are now wired in, each built and verified as its own
-// phase rather than all at once — same incremental discipline as every
-// backend phase in this migration.
+// Role-based dashboards: every account now carries a role (purchasing,
+// email, mvno, or admin — see authTokens.js), granted at signup for the
+// first three, and the account only sees the nav items and panels that
+// belong to its role. This is presentation-layer separation, not the
+// actual security boundary — every panel's own API routes already scope
+// data to the logged-in account via ownerId (or, for the admin-only
+// endpoints, via requireRole), so a role seeing a narrower nav here is
+// about a focused, uncluttered dashboard per job, not the only thing
+// stopping a purchasing-role account from reading someone else's data.
+// All roles still log in and land on the exact same /dashboard path —
+// only what's shown once there differs.
 // ---------------------------------------------------------------------------
 
-const NAV_ITEMS = [
-  { view: 'mail', icon: '✉', label: 'Mailboxes' },
-  { view: 'voice', icon: '☎', label: 'Phone numbers' },
-  { view: 'sipnet', icon: '📶', label: 'Team calling' },
-  { view: 'callcentre', icon: '📞', label: 'Call centre' },
-  { view: 'mvno', icon: '📡', label: 'MVNO (demo)' },
-  { view: 'domains', icon: '🌐', label: 'Domains' },
-  { view: 'projects', icon: '🛠', label: 'Website, software & more' }
-];
+const NAV_BY_ROLE: Record<string, { view: string; icon: string; label: string }[]> = {
+  purchasing: [
+    { view: 'mail', icon: '✉', label: 'Mailboxes' },
+    { view: 'voice', icon: '☎', label: 'Phone numbers' },
+    { view: 'sipnet', icon: '📶', label: 'Team calling' },
+    { view: 'callcentre', icon: '📞', label: 'Call centre' },
+    { view: 'domains', icon: '🌐', label: 'Domains' },
+    { view: 'projects', icon: '🛠', label: 'Website, software & more' }
+  ],
+  email: [
+    { view: 'mail', icon: '✉', label: 'Mailboxes' }
+  ],
+  mvno: [
+    { view: 'mvno', icon: '📡', label: 'MVNO operations' }
+  ],
+  admin: [
+    { view: 'admin', icon: '🏢', label: 'Altegic management' }
+  ]
+};
 
 export default function DashboardPage() {
   useRequireAuth();
   const authedFetch = useAuthedFetch();
-  const [view, setView] = useState('mail');
+  const [view, setView] = useState<string | null>(null);
   const [health, setHealth] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
 
@@ -48,7 +66,11 @@ export default function DashboardPage() {
   // rendered and first client-rendered pass match (avoids a hydration
   // mismatch, a real Next.js-specific concern the Vite version never had).
   useEffect(() => {
-    setUser(getStoredUser());
+    const stored = getStoredUser();
+    setUser(stored);
+    const role = stored?.role || 'purchasing';
+    const nav = NAV_BY_ROLE[role] || NAV_BY_ROLE.purchasing;
+    setView(nav[0].view);
   }, []);
 
   useEffect(() => {
@@ -67,6 +89,9 @@ export default function DashboardPage() {
     window.location.href = '/login';
   }
 
+  const role = user?.role || 'purchasing';
+  const navItems = NAV_BY_ROLE[role] || NAV_BY_ROLE.purchasing;
+
   return (
     <div className="app-shell">
       <div className="sidebar">
@@ -74,7 +99,7 @@ export default function DashboardPage() {
           <img src="/assets/img/logo-full.png" alt="Altegic Solutions" style={{ width: 160, height: 'auto', display: 'block' }} />
         </div>
         <nav>
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <a
               key={item.view}
               href="#"
@@ -108,6 +133,7 @@ export default function DashboardPage() {
         {view === 'mvno' && <MvnoPanel authedFetch={authedFetch} />}
         {view === 'domains' && <DomainsPanel authedFetch={authedFetch} health={health} />}
         {view === 'projects' && <ProjectsPanel authedFetch={authedFetch} />}
+        {view === 'admin' && <AdminPanel authedFetch={authedFetch} />}
       </div>
     </div>
   );

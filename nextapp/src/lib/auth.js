@@ -49,7 +49,26 @@ function requireAuth(req) {
     throw authError('This session is not an account session', 401);
   }
 
-  return { id: payload.sub, email: payload.email };
+  // role === undefined is the same backward-compatibility case — a
+  // session issued before roles existed. Treated as 'purchasing' (the
+  // default role every account effectively had before this system
+  // existed) rather than throwing, so an existing logged-in session
+  // doesn't get abruptly logged out by this change.
+  return { id: payload.sub, email: payload.email, role: payload.role || 'purchasing' };
 }
 
-module.exports = { requireAuth };
+/**
+ * Requires the caller to be logged in AND hold one of the given roles.
+ * Throws 403 (not 401) if logged in but the wrong role — a real,
+ * meaningful distinction for the caller: 401 means "log in again", 403
+ * means "you're logged in, but this isn't for you."
+ */
+function requireRole(req, allowedRoles) {
+  const user = requireAuth(req);
+  if (!allowedRoles.includes(user.role)) {
+    throw authError('Your account does not have access to this', 403);
+  }
+  return user;
+}
+
+module.exports = { requireAuth, requireRole };

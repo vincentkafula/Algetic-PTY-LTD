@@ -122,6 +122,7 @@ function SignupForm() {
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('purchasing');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -133,7 +134,7 @@ function SignupForm() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password, companyName: companyName.trim() || undefined })
+        body: JSON.stringify({ email: email.trim(), password, companyName: companyName.trim() || undefined, role })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -164,6 +165,15 @@ function SignupForm() {
           <label htmlFor="signup-password">Password</label>
           <input id="signup-password" type="password" className="form-control" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <small style={{ color: '#888' }}>At least 8 characters.</small>
+        </div>
+        <div className="form-group col-md-12">
+          <label htmlFor="signup-role">What will you mainly use this for?</label>
+          <select id="signup-role" className="form-control" value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="purchasing">Buying &amp; managing services (mailboxes, numbers, domains)</option>
+            <option value="email">Email management</option>
+            <option value="mvno">MVNO operations</option>
+          </select>
+          <small style={{ color: '#888' }}>This decides which dashboard you land on — you can ask us to change it later if needed.</small>
         </div>
         <div className="col-md-12 text-center" style={{ marginTop: 8 }}>
           <button type="submit" disabled={submitting} className="btn_one" style={{ width: '100%' }}>
