@@ -26,6 +26,13 @@ const slides = [
     imageAlt: 'Yealink T57W IP phone with touchscreen display'
   },
   {
+    tag: 'Call Centre',
+    title: 'Connect with your customers, anywhere',
+    text: 'IVR menus, call queues, and agents — built on your Altegic phone numbers, with real HD voice quality and smart call routing so incoming calls reach the right person.',
+    image: '/assets/img/hero-slides/yealink-callcentre.png',
+    imageAlt: 'Call centre agents wearing headsets, connected via Yealink call centre solutions'
+  },
+  {
     tag: 'One account, everything included',
     title: 'Business email, phone, and a website — set up today, not next quarter',
     text: "Most small businesses juggle five different logins to get online — one for email, one for phone, one for their domain, one for a developer. Altegic puts all of it behind one login.",
@@ -46,9 +53,9 @@ const slides = [
     text: "Search, see the real price upfront, and register — with DNS management included the moment it's yours.",
   },
   {
-    tag: 'Team Calling & Call Centre',
+    tag: 'Team Calling',
     title: 'A real phone system for a growing team',
-    text: 'Softphones for every team member, IVR menus, and call queues — all built on the same account, no separate vendor to manage.',
+    text: 'Register softphones for every team member on a real calling network — call each other directly, or dial out to any number, all on the same account.',
   },
 ];
 
