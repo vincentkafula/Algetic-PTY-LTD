@@ -55,7 +55,7 @@ export default function DomainSearchArea() {
   return (
     <section className="service_area section-padding">
       <div className="container">
-        <div className="section-title text-center" style={{ marginBottom: 40 }}>
+        <div className="section-title text-center" style={{ marginBottom: 36 }}>
           <span>Domain search</span>
           <h2>Find your business name online</h2>
           <p style={{ maxWidth: 560, margin: '12px auto 0' }}>
@@ -64,46 +64,71 @@ export default function DomainSearchArea() {
         </div>
 
         <div className="row justify-content-center">
-          <div className="col-lg-8 col-sm-12 col-xs-12">
-            <div className="form-row">
+          <div className="col-lg-9 col-sm-12 col-xs-12">
+            {/* Large, pill-shaped hero search bar with an inline search icon
+                and button, instead of a plain rectangular input — this is
+                the primary action on the page, so it gets primary visual
+                weight. */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: '#fff',
+                borderRadius: 60,
+                padding: '8px 8px 8px 26px',
+                boxShadow: '0 16px 40px rgba(35, 44, 77, 0.14)',
+                border: '1px solid rgba(35,44,77,0.06)',
+                gap: 10,
+                flexWrap: 'wrap'
+              }}
+            >
+              <i className="ti-search" style={{ color: '#5B6180', fontSize: 18 }}></i>
               <input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') searchDomain(); }}
                 placeholder="Your business name, or a full domain like example.com"
-                style={{ flex: 1, minWidth: 240, padding: '14px 18px', borderRadius: 12, border: '1px solid rgba(35,44,77,0.15)' }}
+                style={{ flex: 1, minWidth: 200, border: 'none', outline: 'none', padding: '12px 4px', fontSize: 16, color: '#232C4D', background: 'transparent' }}
               />
-              <button className="btn_one" onClick={searchDomain}>Search domains</button>
+              <button className="btn_one" onClick={searchDomain} style={{ padding: '14px 30px' }}>Search</button>
             </div>
 
-            {searchResult?.loading && <p style={{ color: '#5B6180', marginTop: 16 }}>Checking…</p>}
-            {searchResult?.error && <p style={{ color: '#e74c3c', marginTop: 16 }}>{searchResult.error}</p>}
-            {searchResult?.unavailable && <p style={{ color: '#e74c3c', marginTop: 16 }}>{searchResult.domain} is not available.</p>}
+            {searchResult?.loading && <p style={{ color: '#5B6180', marginTop: 20, textAlign: 'center' }}>Checking…</p>}
+            {searchResult?.error && <p style={{ color: '#e74c3c', marginTop: 20, textAlign: 'center' }}>{searchResult.error}</p>}
+            {searchResult?.unavailable && <p style={{ color: '#e74c3c', marginTop: 20, textAlign: 'center' }}>{searchResult.domain} is not available.</p>}
             {searchResult?.available && (
-              <div className="single_service" style={{ marginTop: 20, textAlign: 'left' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong>{searchResult.domain}</strong>
-                  <span style={{ color: '#0196E7', fontWeight: 700 }}>Available</span>
+              <div className="single_service" style={{ marginTop: 24, textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div className="service-icon-badge" style={{ margin: 0 }}><i className="ti-check"></i></div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ fontSize: 18 }}>{searchResult.domain}</strong>
+                      <span style={{ color: '#0196E7', fontWeight: 700 }}>Available</span>
+                    </div>
+                    {(searchResult.prices || []).slice(0, 1).map((p: any) => (
+                      <p key={p.term + p.period} style={{ margin: '6px 0 0', color: '#5B6180' }}>Indicative price ({p.period} yr): <strong style={{ color: '#232C4D' }}>{p.customerPriceFormatted}</strong></p>
+                    ))}
+                  </div>
                 </div>
-                {(searchResult.prices || []).slice(0, 1).map((p: any) => (
-                  <p key={p.term + p.period} style={{ margin: '10px 0 0' }}>Indicative price ({p.period} yr): <strong>{p.customerPriceFormatted}</strong></p>
-                ))}
-                <Link href="/login" className="btn_one" style={{ marginTop: 14, display: 'inline-block' }}>Create an account to register</Link>
+                <Link href="/login" className="btn_one" style={{ marginTop: 18, display: 'inline-block' }}>Create an account to register</Link>
               </div>
             )}
 
-            {suggestions === 'loading' && <p style={{ color: '#5B6180', marginTop: 16 }}>Finding suggestions…</p>}
-            {suggestions?.error && <p style={{ color: '#e74c3c', marginTop: 16 }}>{suggestions.error}</p>}
-            {suggestions?.items && suggestions.items.length === 0 && <p style={{ color: '#5B6180', marginTop: 16 }}>No suggestions found for that search.</p>}
+            {suggestions === 'loading' && <p style={{ color: '#5B6180', marginTop: 20, textAlign: 'center' }}>Finding suggestions…</p>}
+            {suggestions?.error && <p style={{ color: '#e74c3c', marginTop: 20, textAlign: 'center' }}>{suggestions.error}</p>}
+            {suggestions?.items && suggestions.items.length === 0 && <p style={{ color: '#5B6180', marginTop: 20, textAlign: 'center' }}>No suggestions found for that search.</p>}
             {suggestions?.items && suggestions.items.length > 0 && (
               <>
-                <p style={{ color: '#5B6180', fontSize: 13, margin: '24px 0 12px' }}>Suggested domains, all available now:</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+                <p style={{ color: '#5B6180', fontSize: 14, margin: '32px 0 16px', textAlign: 'center' }}>Suggested domains, all available now</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 18 }}>
                   {suggestions.items.map((item: any) => (
-                    <div className="single_service" key={item.domain} style={{ textAlign: 'left' }}>
-                      <span style={{ fontWeight: 700, display: 'block' }}>{item.domain}</span>
-                      {item.customerPriceFormatted && <span style={{ color: '#5B6180', display: 'block', margin: '6px 0 12px' }}>{item.customerPriceFormatted}</span>}
-                      <Link href="/login" className="btn_one" style={{ width: '100%', textAlign: 'center', display: 'block' }}>Get it</Link>
+                    <div className="single_service" key={item.domain} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+                      <div className="service-icon-badge" style={{ width: 48, height: 48, marginBottom: 14 }}>
+                        <i className="ti-world" style={{ fontSize: 20 }}></i>
+                      </div>
+                      <span style={{ fontWeight: 700, fontSize: 16, display: 'block', wordBreak: 'break-word' }}>{item.domain}</span>
+                      {item.customerPriceFormatted && <span style={{ color: '#5B6180', display: 'block', margin: '6px 0 16px' }}>{item.customerPriceFormatted} <span style={{ fontSize: 12 }}>/ first year</span></span>}
+                      <Link href="/login" className="btn_one" style={{ width: '100%', textAlign: 'center', display: 'block', marginTop: 'auto' }}>Get it</Link>
                     </div>
                   ))}
                 </div>
