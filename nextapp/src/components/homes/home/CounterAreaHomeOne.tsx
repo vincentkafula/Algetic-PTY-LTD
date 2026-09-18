@@ -4,7 +4,7 @@ import React from 'react';
 
 const counter_data = [
   {
-    count: 8,
+    count: 11,
     text: '',
     title: 'Services in one account',
   },

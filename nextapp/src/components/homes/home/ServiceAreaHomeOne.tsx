@@ -59,7 +59,7 @@ const ServiceAreaHomeOne = () => {
             </div>
             <div className="col-lg-6 col-sm-6 col-xs-12">
               <div className="ser_btn">
-                <Link href="/service" className="btn_two">View all 8 services <i className="ti-arrow-top-right"></i></Link>
+                <Link href="/service" className="btn_two">View all services <i className="ti-arrow-top-right"></i></Link>
               </div>
             </div>
           </div>
