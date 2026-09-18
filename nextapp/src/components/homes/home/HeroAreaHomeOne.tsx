@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image';
 import Link from 'next/link';
 import Slider from 'react-slick';
 
@@ -17,6 +18,13 @@ const slider_settings = {
 };
 
 const slides = [
+  {
+    tag: 'IP Phones',
+    title: 'Real desk phones, ready on day one',
+    text: 'Yealink hardware — shipped to your office and pre-configured to work with your Altegic numbers the moment they arrive. No separate vendor, no manual setup.',
+    image: '/assets/img/hero-slides/yealink-t57w.png',
+    imageAlt: 'Yealink T57W IP phone with touchscreen display'
+  },
   {
     tag: 'One account, everything included',
     title: 'Business email, phone, and a website — set up today, not next quarter',
@@ -53,7 +61,7 @@ const HeroAreaHomeOne = () => {
             {slides.map((slide, i) => (
               <div key={i}>
                 <div className="row align-items-center">
-                  <div className="col-lg-7 col-sm-12 col-xs-12">
+                  <div className={slide.image ? 'col-lg-6 col-sm-12 col-xs-12' : 'col-lg-7 col-sm-12 col-xs-12'}>
                     <div className="hero-text ht_top">
                       <span style={{ display: 'inline-block', color: '#18fef5', fontWeight: 600, letterSpacing: '0.03em', marginBottom: 10, fontSize: 14, textTransform: 'uppercase' }}>{slide.tag}</span>
                       <h1>{slide.title}</h1>
@@ -64,6 +72,13 @@ const HeroAreaHomeOne = () => {
                       <a href="#service" className="video-play"><i className="ti-arrow-right"></i> <span className="video-title">See what's included</span></a>
                     </div>
                   </div>
+                  {slide.image && (
+                    <div className="col-lg-6 col-sm-12 col-xs-12">
+                      <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
+                        <Image src={slide.image} alt={slide.imageAlt || ''} width={1999} height={787} style={{ width: '100%', height: 'auto', display: 'block' }} priority={i === 0} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
