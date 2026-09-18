@@ -11,9 +11,9 @@ const ContactArea = () => {
           <div className="row text-center">
             <div className="col-lg-4 col-sm-4 col-xs-12 mt-5 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
               <div className="single_address">
-                <i className="ti-world"></i>
-                <h4>Online, wherever you are</h4>
-                <p>Altegic runs as a fully online service — no branch to visit, everything is managed from your account.</p>
+                <i className="ti-location-pin"></i>
+                <h4>Our Location</h4>
+                <p>8 Rose Street, Green Point <br /> Cape Town, Western Cape, South Africa</p>
               </div>
             </div>
             <div className="col-lg-4 col-sm-4 col-xs-12 mt-5 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
