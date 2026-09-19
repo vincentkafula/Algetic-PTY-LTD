@@ -425,42 +425,63 @@ the right message for every state (`pending`, `paid`, `fulfilled`,
 
 Stated directly, not glossed over:
 
-1. **No live credentials for anything** — GoDaddy, Twilio, Mailgun,
-   PayFast. Every external API call throughout this whole migration has
-   been verified to correctly *attempt* the real call and fail cleanly
-   (not crash) at the same sandbox network boundary — never a live
-   response. Set real credentials before trusting any of this with a
-   real customer.
+1. **PayFast credentials are the one missing piece for real payment.**
+   GoDaddy, Mailgun, and Twilio all have real credentials configured on
+   the live production service — confirmed directly while migrating it
+   from the Express site. PayFast does not. Every checkout flow
+   (domains, mailboxes, numbers) builds a real order and redirects to
+   PayFast correctly, but nothing can actually charge a customer until
+   `PAYFAST_MERCHANT_ID` / `PAYFAST_MERCHANT_KEY` / `PAYFAST_PASSPHRASE`
+   are set.
 2. **`MAILBOX_MONTHLY_PRICE_USD_CENTS` is unset on purpose.** Mailgun
    has no natural per-mailbox price to mark up (it bills by volume, not
    per mailbox) — this is a real business decision, not a technical
    one, and `POST /api/mailboxes` returns a clear "pricing not
    configured" error until it's set rather than guessing at a number.
-3. **Manual paid domain renewal isn't built** (see above) — expiry
-   tracking and auto-renew toggling are, but the paid manual-renewal
-   flow is blocked on resolving GoDaddy's `customerId` (a separate
-   Shoppers-API identifier), needed to safely price a renewal before
-   charging anyone.
-4. **This is a preview deployment, not production.** It's running as a
-   separate Railway service (`altegic-nextjs-preview`), pointed at this
-   `nextapp/` folder, completely isolated from the live Express site at
-   `commhub-production`. Nothing here has touched that deployment.
+3. **Manual paid domain renewal isn't built** — expiry tracking and
+   auto-renew toggling are, but the paid manual-renewal flow is blocked
+   on resolving GoDaddy's `customerId` (a separate Shoppers-API
+   identifier), needed to safely price a renewal before charging
+   anyone.
+4. **Self-hosted email/hosting is built but not activated.**
+   `emailProvider.js`, `mailcowClient.js`, and the setup scripts/guide
+   are all in this repo, checked against Mailcow's own current docs —
+   but nothing runs until a real VPS exists and `EMAIL_PROVIDER=mailcow`
+   plus the `MAILCOW_*` variables are set. Until then the app correctly
+   keeps using Mailgun, its safe default.
+5. **`altegic-nextjs-preview` is a now-redundant Railway service.**
+   Production (`commhub`) was cut over to this Next.js app directly —
+   the preview service still exists, still auto-deploys every push, and
+   serves no purpose anymore. Worth tearing down to stop paying for it,
+   whenever convenient.
+6. **The admin role has no account yet.** The README documents exactly
+   how to create one directly against the data store — this hasn't
+   been done, so nobody can currently see the "Altegic management"
+   dashboard.
+7. **Blog and Project pages still hold the original template's
+   placeholder content** (fake post titles, stock category tags) —
+   not linked from the nav anymore, but still reachable directly by
+   URL and not yet rewritten or removed.
+8. **Nothing has been tested against a single real provider
+   response.** Every external integration in this whole migration
+   (GoDaddy, Twilio, Mailgun, PayFast) has been verified to correctly
+   *attempt* the real call and fail cleanly at this sandbox's network
+   boundary — never an actual live response. The real credentials
+   being configured is necessary but not sufficient; the first real
+   domain search, number purchase, and mailbox send are still an
+   unknown until someone actually tries them.
 
-## Cutover
+## Cutover — done
 
-Moving this from preview to production is a real decision, not
-something to do casually:
+This happened. Production (`commhub`, serving `www.altegic.co.za`) was
+reconfigured to build from this `nextapp/` folder directly rather than
+`server/` — the Express site is no longer deployed anywhere, though its
+code still exists in this repo. The real credentials already configured
+on that service (GoDaddy, Mailgun, Twilio) carried over automatically,
+since Railway env vars are per-service, not per-root-directory.
 
-- **Replace the Express site outright** — repoint the production domain
-  at this service, decommission the old one. Higher stakes, cleaner
-  end state.
-- **Run both in parallel for a while** — keep the Express site live,
-  bring this up alongside it on its own domain/subdomain, migrate
-  traffic gradually. Lower risk, more moving parts to keep straight
-  (in particular: `server/data/db.json` and `nextapp/data/db.json` are
-  two separate data stores — they do not share customer accounts,
-  mailboxes, or orders).
-
-Either way, this should happen only once there are real credentials to
-test against and at least one real transaction has gone through
-successfully — not before.
+One thing this did NOT do: migrate any data. `server/data/db.json` and
+`nextapp/data/db.json` were always two separate stores — they never
+shared customer accounts, mailboxes, or orders, and nothing here
+copied one into the other. If the Express site had any real signups
+before the cutover, they are not present in this app.
