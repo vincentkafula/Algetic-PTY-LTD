@@ -14,7 +14,7 @@ const tech_services = [
 ];
 
 const business_services = [
-  { icon: 'ti-briefcase', title: 'Business Registration', desc: 'Register your company with CIPC — name reservation, registration certificate, and your SARS income tax number, handled for you.' },
+  { icon: 'ti-briefcase', title: 'Business Registration', desc: 'Register your company with CIPC — name reservation, registration certificate, and your SARS income tax number, handled for you.', link: '/business-registration', linkLabel: 'Learn more' },
   { icon: 'ti-receipt', title: 'Tax Filing with SARS', desc: 'Individual and business tax returns filed with SARS — provisional tax, income tax, and general SARS compliance.' },
   { icon: 'ti-palette', title: 'Web Development', desc: 'A website built for your business, from a simple brochure site to something more custom — submit a request and our team takes it from there.' },
   { icon: 'ti-write', title: 'Company Amendment', desc: 'Update your company details with CIPC — name changes, director changes, registered address updates.' },
@@ -57,7 +57,7 @@ const ServiceArea = () => {
                   <div className="service-icon-badge"><i className={s.icon}></i></div>
                   <h2 style={{ fontSize: 18 }}>{s.title}</h2>
                   <p>{s.desc}</p>
-                  <Link href="/contact">Get a quote <i className="ti-arrow-top-right"></i></Link>
+                  <Link href={s.link || '/contact'}>{s.linkLabel || 'Get a quote'} <i className="ti-arrow-top-right"></i></Link>
                 </div>
               </div>
             ))}
