@@ -5,7 +5,7 @@ const db = require('@/lib/db');
 const payfast = require('@/lib/services/payfast');
 const { getGoDaddyQuote, registerGoDaddyDomain } = require('@/lib/godaddyClient');
 const { provisionNumberForAccount } = require('@/lib/services/trunking');
-const { createMailboxForAccount } = require('@/lib/mailgunClient');
+const { createMailboxForAccount } = require('@/lib/emailProvider');
 const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 // ---------------------------------------------------------------------------
@@ -235,9 +235,9 @@ async function fulfillNumberOrder(order) {
 }
 
 /**
- * Actually creates the mailbox with Mailgun, now that payment has
- * cleared. Note the webmail password createMailboxForAccount generates
- * is effectively unused here — there's no synchronous response to a
+ * Actually creates the mailbox with the configured email provider (see
+ * emailProvider.js), now that payment has cleared. Note the webmail
+ * password createMailboxForAccount generates is effectively unused here — there's no synchronous response to a
  * paying customer's browser at this point, since they've already been
  * redirected to PayFast and back. The customer gets it via the
  * dashboard's "Reset webmail password" action once their order shows as

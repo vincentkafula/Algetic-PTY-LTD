@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireAuth } = require('@/lib/auth');
-const { isMailgunConfigured, sendMailAs } = require('@/lib/mailgunClient');
+const { isEmailConfigured, sendMailAs } = require('@/lib/emailProvider');
 const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
@@ -27,12 +27,12 @@ async function POST_impl(request, { params }) {
   if (!to || !subject || !text) {
     return NextResponse.json({ error: 'to, subject, and text are all required' }, { status: 400 });
   }
-  if (!isMailgunConfigured()) {
-    return NextResponse.json({ error: 'Server is missing MAILGUN_API_KEY / MAILGUN_DOMAIN in .env' }, { status: 500 });
+  if (!isEmailConfigured()) {
+    return NextResponse.json({ error: 'Server is missing email provider configuration in .env' }, { status: 500 });
   }
 
   try {
-    const result = await sendMailAs({ from: mailbox.address, to, subject, text });
+    const result = await sendMailAs({ from: mailbox.address, to, subject, text, mailboxRecord: mailbox });
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
@@ -48,7 +48,7 @@ async function POST_impl(request, { params }) {
       to,
       subject,
       bodyText: text.slice(0, 5000),
-      mailgunMessageId: result.mailgunMessageId,
+      providerMessageId: result.mailgunMessageId || result.mailcowMessageId || null,
       at: new Date().toISOString()
     };
     await db.messages.insert(record);

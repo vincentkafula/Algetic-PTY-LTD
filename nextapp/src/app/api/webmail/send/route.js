@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const crypto = require('crypto');
 const db = require('@/lib/db');
 const { requireMailboxAuth } = require('@/lib/mailboxAuth');
-const { isMailgunConfigured, sendMailAs } = require('@/lib/mailgunClient');
+const { isEmailConfigured, sendMailAs } = require('@/lib/emailProvider');
 const { withSanitizedErrors } = require('@/lib/sanitizeError');
 
 /**
@@ -23,11 +23,16 @@ async function POST_impl(request) {
   if (!to || !subject || !text) {
     return NextResponse.json({ error: 'to, subject, and text are all required' }, { status: 400 });
   }
-  if (!isMailgunConfigured()) {
+  if (!isEmailConfigured()) {
     return NextResponse.json({ error: 'Mail sending is not configured on this server yet' }, { status: 500 });
   }
 
-  const result = await sendMailAs({ from: mailbox.address, to, subject, text });
+  // requireMailboxAuth only decodes the session token (id/address/ownerId)
+  // — the full stored record (needed for Mailcow's own SMTP credentials,
+  // ignored harmlessly by Mailgun) has to be fetched separately.
+  const mailboxRecord = db.mailboxes.find((m) => m.id === mailbox.id);
+
+  const result = await sendMailAs({ from: mailbox.address, to, subject, text, mailboxRecord });
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
@@ -43,7 +48,7 @@ async function POST_impl(request) {
     to,
     subject,
     bodyText: text.slice(0, 5000),
-    mailgunMessageId: result.mailgunMessageId,
+    providerMessageId: result.mailgunMessageId || result.mailcowMessageId || null,
     at: new Date().toISOString()
   };
   await db.messages.insert(record);
