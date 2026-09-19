@@ -127,12 +127,18 @@ server without one almost immediately.
 ### Install
 
 Use `setup-scripts/install-mailcow.sh` (copy it to the VPS and run it
-there — see `setup-scripts/README.md`; it prompts for your mail hostname,
-opens the required firewall ports, and runs the steps below for you), or
-run them directly:
+there — see `setup-scripts/README.md`; it checks for ufw/firewalld and
+warns if either is active, installs the correct prerequisites and a
+current Docker Engine via Docker's own official install script — not
+the distro's own `docker.io` package, which Mailcow's docs specifically
+advise against — then walks through the steps below interactively), or
+run the equivalent commands directly:
 
 ```bash
-sudo apt update && sudo apt install -y git docker.io docker-compose-plugin
+sudo apt update && sudo apt install -y git openssl curl gawk coreutils grep jq
+curl -sSL https://get.docker.com/ | CHANNEL=stable sh
+sudo systemctl enable --now docker
+sudo apt install -y docker-compose-plugin
 git clone https://github.com/mailcow/mailcow-dockerized
 cd mailcow-dockerized
 ./generate_config.sh
@@ -141,8 +147,17 @@ sudo docker compose pull
 sudo docker compose up -d
 ```
 
-Open ports 25, 80, 443, 110, 143, 465, 587, 993, 995 on the server's
-firewall — Mailcow needs all of them.
+Open ports 25, 80, 443, 110, 143, 465, 587, 993, 995, 4190 in your
+**cloud provider's** firewall/security group (Hetzner Cloud Firewall,
+DigitalOcean Cloud Firewall, etc.) — not a host-level firewall. Mailcow's
+own docs explicitly warn against running ufw or firewalld on the same
+host: both conflict with how Docker manages its own iptables rules for
+published ports, and can silently break mail delivery. Use your
+provider's firewall instead, enforced outside the VM.
+
+Also confirm the server's clock is correct and NTP-synced
+(`timedatectl status` should show "NTP synchronized: yes") — this
+matters for TOTP two-factor auth and various mail timestamps.
 
 ### First steps after install
 
