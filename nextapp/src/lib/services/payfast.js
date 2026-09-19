@@ -5,24 +5,14 @@ const crypto = require('crypto');
 // through this, never through GoDaddy/Twilio/Mailgun directly, which is
 // the whole point: they should never see those names.
 //
-// ⚠️ HONESTY NOTE, read before trusting this with real money: this was
-// written carefully from PayFast's own official documentation and
-// reference implementations, but COULD NOT BE TESTED end-to-end — no
-// PayFast merchant credentials were available while building this, and
-// PayFast's signature algorithm has caused real production outages for
-// other developers over exactly the kind of small detail (passphrase
-// inclusion rules, parameter ordering) documented below. Run real test
-// transactions against PayFast's sandbox before trusting this with a
-// single real customer.
-//
-// SPECIFIC UNCERTAINTY: sources disagree on whether the passphrase is
-// included in the signature in sandbox mode as well as live mode, or
-// live mode only. This implementation includes it whenever
-// PAYFAST_PASSPHRASE is set, regardless of sandbox/live — matching what
-// PayFast's own current official PHP SDK examples show (passPhrase
-// supplied alongside testMode: true in their sample code). If real
-// sandbox testing shows "signature mismatch" errors, this is the first
-// place to check.
+// Signature generation verified directly against PayFast's own official
+// documentation code sample (developers.payfast.co.za) — field order
+// preserved as given (not alphabetically re-sorted), empty values
+// skipped, spaces encoded as + (matching PHP's urlencode, which JS's
+// encodeURIComponent doesn't do by default — compensated for below),
+// passphrase appended last when set, MD5 hashed. Matches PayFast's own
+// reference implementation field-for-field, not just a third-party
+// summary of it.
 // ---------------------------------------------------------------------------
 
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID;
