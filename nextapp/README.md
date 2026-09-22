@@ -389,6 +389,49 @@ production — the deliverability risk of a brand-new mail server with no
 sending history, and why the guide recommends running Mailcow as a test
 system for weeks before pointing real mail at it.
 
+## Becoming a real domain registrar (optional, not connected to anything yet)
+
+Altegic resells domains through GoDaddy's reseller API today (see
+`godaddyClient.js`). `src/lib/eppClient.js` is a genuinely different,
+much heavier thing: a generic EPP (Extensible Provisioning Protocol)
+client — the actual protocol registrars use to talk directly to
+registries (Verisign for .com/.net, PIR for .org, etc.), per RFC 5730,
+5731, and 5734. Every command it builds (login, logout, domain check,
+info, create, renew) was verified directly against each RFC's own
+published XML example — including matching their exact `domain:`
+namespace-prefix convention, not just an XML-equivalent alternative —
+and the length-prefixed TCP framing RFC 5734 requires was verified with
+a real byte-level test, not assumed correct.
+
+**This cannot register a real domain as it stands, and won't be able to
+until a real, multi-step business process happens first**, in order:
+Altegic becoming ICANN-accredited (a genuine financial/legal process —
+a non-refundable $3,500 application fee, roughly $70,000 in demonstrated
+liquid working capital, a recurring $4,000/year accreditation fee once
+approved, plus variable and per-domain transaction fees — confirmed
+directly against ICANN's own current documentation, not estimated);
+then separately negotiating technical and contractual terms with each
+individual registry to be sold (accreditation with ICANN does not
+automatically connect to any registry); then that registry issuing
+real, registry-specific connection details (host/port, a client TLS
+certificate for mutual authentication, login credentials — none of
+which registries publish, only share with registrars they've actually
+approved); then passing that registry's own OT&E testing environment.
+Registry-specific EPP extensions beyond this base RFC layer (most
+registries have their own) also aren't implemented here, for the same
+reason — nothing public to build them against yet. Contact object
+creation (RFC 5733), needed before a domain:create can reference a
+registrant, isn't implemented yet either.
+
+`EPP_HOST` / `EPP_PORT` / `EPP_CLIENT_ID` / `EPP_PASSWORD` /
+`EPP_CLIENT_CERT` / `EPP_CLIENT_KEY` being unset is the correct,
+expected state until all of the above is real — `isEppConfigured()`
+reports this plainly rather than the app pretending a connection
+exists. The admin-only `GET /api/admin/epp/test-connection` route
+exists for exactly the moment those variables do get set: it attempts
+a real connect + greeting + login + logout and reports what actually
+happened, rather than a customer-facing feature.
+
 ## Frontend: Home 01 and the dashboard
 
 **Home 01** (the site's root page) uses the Cybal template's actual
