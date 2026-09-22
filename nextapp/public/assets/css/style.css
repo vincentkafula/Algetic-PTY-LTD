@@ -1880,10 +1880,57 @@ a:hover { color: #0196E7 !important; }
 .price-value .amount, .price-value .duration { color: #232C4D !important; }
 .pricingTable .pricing-content li { color: #5B6180 !important; }
 
-/* FAQ accordion + counter/pricing bits that also hardcoded white text */
-.accordion-body, .accordion-button {
+/* FAQ accordion — comprehensive fix. The original template's
+   .accordion-header keeps a hardcoded dark navy background (#2D3868
+   !important) that round 1 of the light-theme work never touched, and
+   .accordion-button:not(.collapsed) is MORE SPECIFIC than the plain
+   .accordion-button override below (the :not() pseudo-class adds
+   specificity), so on an OPEN FAQ item that older, more specific rule
+   wins regardless of source order — reverting the question text back
+   to white despite the override existing. Result: white-on-white when
+   closed (fixed below) or effectively invisible dark-on-dark if only
+   color were "fixed" without also fixing the header's own background.
+   Every specific selector that can carry text color here is covered
+   explicitly, at equal or higher specificity, rather than trusting one
+   broad rule to reach all of them. */
+.accordion-header {
+  background: #fff !important;
+}
+.accordion-body,
+.accordion-button,
+.accordion-button:not(.collapsed) {
   color: #4A5170 !important;
   background: #fff !important;
+}
+.accordion-button::after,
+.accordion-button:not(.collapsed)::after {
+  color: #4A5170 !important;
+}
+.accordion-item {
+  border: 1px solid rgba(35, 44, 77, 0.1) !important;
+}
+.accordion-item:not(:first-of-type) {
+  border-top: 1px solid rgba(35, 44, 77, 0.1) !important;
+}
+
+/* Contact form fields - the original template's inputs/textarea kept a
+   hardcoded dark navy background (#2D3868) with white text, which round
+   1 of the light-theme work never touched (it only changed the .contact
+   CARD's own background via a separate rule - a parent's background
+   never cascades down to override a child's own explicitly-set
+   background). Result: dark boxes sitting inside an otherwise white
+   contact form, jarring and out of place against the rest of the
+   light theme. */
+.contact label {
+  color: #232C4D !important;
+}
+.contact input,
+.contact textarea,
+.contact input:focus,
+.contact textarea:focus {
+  background: #F7F9FD !important;
+  border: 1px solid rgba(35, 44, 77, 0.15) !important;
+  color: #232C4D !important;
 }
 
 /* Muted body copy used across ab_content / abmv / feature descriptions */
